@@ -1,0 +1,1 @@
+import{b as e}from"./react-Cmql9ln9.js";import{t}from"./StaffDirectory-D46Bx8vu.js";var n=e();function r(){return(0,n.jsx)(t,{role:`EDITOR_DESIGNER`,title:`Editors & designers`,subtitle:`Editors retouch selected photos and design album proofs.`})}export{r as default};

@@ -1,0 +1,1 @@
+import{At as e,J as t}from"./index-CS4m2Fvz.js";function n(n=!0){return e({queryKey:[`photos`,`editor-queue`],queryFn:()=>t.get(`/api/photos/editor/queue`),enabled:n})}export{n as t};
