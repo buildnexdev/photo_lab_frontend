@@ -1,1 +1,0 @@
-import{b as e}from"./react-Cmql9ln9.js";import{t}from"./production-Bd6g2f2C.js";var n=e();function r(){return(0,n.jsx)(t,{base:`delivery`,title:`Dispatch & delivery`,subtitle:`Hand over pickups, dispatch couriers with tracking and confirm delivery.`})}export{r as default};

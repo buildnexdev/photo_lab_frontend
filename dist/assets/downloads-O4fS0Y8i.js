@@ -1,0 +1,1 @@
+import{J as e}from"./index-C1518Td0.js";async function t(t){let n=await e.post(`/api/downloads/${t}`),r=document.createElement(`a`);r.href=n.url,r.download=n.fileName,r.rel=`noopener`,document.body.appendChild(r),r.click(),r.remove()}export{t};

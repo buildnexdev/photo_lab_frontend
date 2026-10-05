@@ -448,4 +448,7 @@ function UserMenu({ name, role, profileLink, onLogout }: { name: string; role: R
                         <LogOut className="size-4" /> Sign out
                     </button>
                 </div>
-     
+            )}
+        </div>
+    );
+}

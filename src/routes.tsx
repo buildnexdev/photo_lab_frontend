@@ -11,6 +11,7 @@ import {
     Globe,
     Image,
     Images,
+    Layers,
     LayoutDashboard,
     ListChecks,
     Package as PackageIcon,
@@ -58,6 +59,8 @@ const adminNav: NavSection[] = [
         title: 'Sales',
         items: [
             { to: '/admin/orders', label: 'Orders', icon: ShoppingBag, anyOf: ['orders.view', 'orders.manage'] },
+            { to: '/admin/product-types', label: 'Product types', icon: Layers, anyOf: ['pricing.manage', 'orders.view'] },
+            { to: '/admin/products', label: 'Products & Add', icon: PackageIcon, anyOf: ['pricing.manage', 'orders.view'] },
             { to: '/admin/payments', label: 'Payments', icon: Banknote, anyOf: ['payments.view'] },
             { to: '/admin/services', label: 'Services', icon: Briefcase, anyOf: ['pricing.manage'] },
             { to: '/admin/packages', label: 'Packages', icon: PackageIcon, anyOf: ['pricing.manage'] },
@@ -157,7 +160,6 @@ export const router = createBrowserRouter([
                     </GuestOnly>
                 ),
                 children: [
-                    { index: true, ...page(() => import('./pages/auth/Login')) },
                     { path: 'login', ...page(() => import('./pages/auth/Login')) },
                     { path: 'register', ...page(() => import('./pages/auth/Register')) },
                     { path: 'forgot-password', ...page(() => import('./pages/auth/ForgotPassword')) },
@@ -208,6 +210,8 @@ export const router = createBrowserRouter([
                     { path: 'galleries/:id', ...page(() => import('./pages/admin/GalleryDetail')) },
                     { path: 'photos', ...page(() => import('./pages/admin/Photos')) },
                     { path: 'orders', ...page(() => import('./pages/admin/Orders')) },
+                    { path: 'product-types', ...page(() => import('./pages/admin/ProductTypes')) },
+                    { path: 'products', ...page(() => import('./pages/admin/PhotoProducts')) },
                     { path: 'payments', ...page(() => import('./pages/admin/Payments')) },
                     { path: 'services', ...page(() => import('./pages/admin/Services')) },
                     { path: 'packages', ...page(() => import('./pages/admin/Packages')) },
@@ -225,6 +229,8 @@ export const router = createBrowserRouter([
                     { path: 'notifications', ...notifications },
                 ],
             },
+                { index: true, ...page(() => import('./pages/shop/PhotoShop')) },
+                { path: 'shop', ...page(() => import('./pages/shop/PhotoShop')) },
             {
                 path: 'photographer',
                 element: (

@@ -1,1 +1,0 @@
-import{b as e}from"./react-Cmql9ln9.js";import{t}from"./StaffDirectory-D46Bx8vu.js";var n=e();function r(){return(0,n.jsx)(t,{role:`PHOTOGRAPHER`,title:`Photographers`,subtitle:`Photographers can see their assigned events and upload from the app or web.`})}export{r as default};

@@ -1,0 +1,1 @@
+import{b as e}from"./react-Cmql9ln9.js";import{n as t}from"./production-4Ap8MDdq.js";var n=e();function r(){return(0,n.jsx)(t,{base:`delivery`,title:`Print queue`,subtitle:`Download print files, update progress and mark jobs ready after quality check.`})}export{r as default};

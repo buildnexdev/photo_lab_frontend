@@ -1,0 +1,1 @@
+import{b as e}from"./react-Cmql9ln9.js";import{t}from"./production-4Ap8MDdq.js";var n=e();function r(){return(0,n.jsx)(t,{base:`admin`,title:`Delivery`,subtitle:`Pickups, courier dispatch and hand deliveries.`})}export{r as default};
