@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { CheckCircle2, ChevronLeft, ChevronRight, Download, Heart, Loader2, MessageSquare, ShoppingCart, Trash2, X } from 'lucide-react';

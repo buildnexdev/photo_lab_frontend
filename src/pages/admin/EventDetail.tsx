@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Images, MessageSquare, Pencil, QrCode, Trash2, UserPlus, X } from 'lucide-react';
 import { useMemo, useState } from 'react';

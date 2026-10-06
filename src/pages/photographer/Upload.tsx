@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import clsx from 'clsx';
 import { CheckCircle2, CircleAlert, CloudOff, Copy, ImagePlus, Loader2, Pause, Play, RotateCw, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
@@ -8,6 +11,10 @@ import { Alert, Button, Card, IconButton, PageHeader } from '../../components/ui
 import { UPLOADABLE, useMyAssignments } from '../../lib/events';
 import { bytes, date, num } from '../../lib/format';
 import { useInvalidate } from '../../lib/hooks';
+import { useAuth } from '../../lib/auth';
+import { useQuery } from '@tanstack/react-query';
+import { api, type Paged } from '../../lib/api';
+import { type EventRow } from '../../lib/types';
 import { MAX_FILE_BYTES, useUploadQueue, type UploadItem } from '../../lib/uploadQueue';
 
 const SHOWN = 300;
@@ -23,10 +30,17 @@ const STATUS_LABEL: Record<UploadItem['status'], string> = {
 };
 
 export default function PhotographerUpload() {
+    const { can } = useAuth();
+    const isAdmin = can('photos.manage') || can('events.manage');
     const [params, setParams] = useSearchParams();
     const invalidate = useInvalidate();
-    const q = useMyAssignments('upcoming');
-    const events = useMemo(() => (q.data ?? []).filter((a) => UPLOADABLE.includes(a.status)), [q.data]);
+    
+    const myQ = useMyAssignments('upcoming');
+    const allQ = useQuery({ queryKey: ['events', 'uploadable'], queryFn: () => api.get<Paged<EventRow>>('/api/events', { page: 1, pageSize: 100, sort: 'date', order: 'desc' }), enabled: isAdmin });
+    const q = isAdmin ? allQ : myQ;
+    
+    const events = useMemo(() => ((isAdmin ? allQ.data?.items : myQ.data) ?? []).filter((a) => UPLOADABLE.includes(a.status)), [isAdmin, allQ.data?.items, myQ.data]);
+    
     const paramId = Number(params.get('event')) || null;
     const eventId = events.some((e) => e.id === paramId) ? paramId : events.length === 1 ? events[0].id : null;
     const assignment = events.find((e) => e.id === eventId) ?? null;
@@ -35,8 +49,8 @@ export default function PhotographerUpload() {
     const input = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (assignment?.camera_label) setCamera(assignment.camera_label);
-    }, [assignment?.camera_label]);
+        if (assignment && 'camera_label' in assignment && assignment.camera_label) setCamera(assignment.camera_label);
+    }, [assignment]);
     useEffect(() => {
         localStorage.setItem(CAMERA_KEY, camera);
     }, [camera]);
@@ -55,7 +69,7 @@ export default function PhotographerUpload() {
     return (
         <div>
             <PageHeader title="Upload photos" subtitle={`Originals are stored privately; guests only see watermarked previews. Up to ${Math.round(MAX_FILE_BYTES / 1024 / 1024)} MB per photo.`} />
-            <QueryState query={q}>
+            <QueryState query={q as any}>
                 {() =>
                     events.length === 0 ? (
                         <EmptyState
@@ -203,7 +217,7 @@ export default function PhotographerUpload() {
                                     <Card title="Event">
                                         <p className="font-medium">{assignment.title}</p>
                                         <p className="text-sm text-stone-500">
-                                            {assignment.customer_name} · {num(assignment.my_uploads)} by me · {num(assignment.photo_count)} total
+                                            {assignment.customer_name} · {num((assignment as any).my_uploads ?? 0)} by me · {num(assignment.photo_count)} total
                                         </p>
                                         <Link to={`/photographer/event/${assignment.id}`} className="mt-2 inline-block text-sm text-brand-700 hover:underline">
                                             Live QR & processing status

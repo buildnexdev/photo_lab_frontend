@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { Camera, QrCode } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router';

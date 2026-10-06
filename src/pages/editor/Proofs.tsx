@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { BookImage, CheckCircle2, Plus, Send, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router';

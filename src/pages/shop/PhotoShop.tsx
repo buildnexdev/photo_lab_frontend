@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ChevronRight, Crop, Minus, Move, Plus, RotateCcw, RotateCw, ShoppingBag, Sparkles, Upload, UserRound, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent, type PointerEvent } from 'react';
 import { getCart, getOrders, getProducts, imageFileToDataUrl, saveCart, saveOrders, SHOP_CATEGORIES, type PhotoAdjustment, type ProductCategory, type ShopCartItem, type ShopOrder, type ShopProduct } from '../../lib/photoShop';

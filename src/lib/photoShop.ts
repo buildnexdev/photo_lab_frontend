@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 export type ProductCategory = 'Photo Frames' | 'Photo Cups' | 'Photo Albums' | 'Photo Prints' | 'Customized Gifts';
 
 export interface PhotoPlacement {

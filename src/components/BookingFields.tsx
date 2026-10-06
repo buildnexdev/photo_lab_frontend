@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import type { FieldErrors, UseFormRegister, UseFormWatch } from 'react-hook-form';
 import { money, todayYmd } from '../lib/format';
 import type { Package, Service } from '../lib/site';

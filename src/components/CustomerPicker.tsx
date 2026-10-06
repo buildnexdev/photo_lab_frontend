@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useQuery } from '@tanstack/react-query';
 import { Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';

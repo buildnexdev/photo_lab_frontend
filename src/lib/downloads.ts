@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { api } from './api';
 
 /** Ask the server for a short-lived signed URL to the HD original (only granted for purchased photos) and start the download. */

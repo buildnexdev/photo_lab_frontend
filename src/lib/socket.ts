@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { API_BASE, getAccessToken } from './api';

@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import clsx from 'clsx';
 import {
     ChevronDown,
@@ -169,21 +172,11 @@ function Subheader({
                                 {area ?? 'Studio'}
                             </span>
                         </div>
-                        <p className="text-[11px] font-medium text-slate-500">
-                            FlashLight Photography • Studio Operating Suite
-                        </p>
                     </div>
                 </div>
 
-                {/* RIGHTSIDE CORNER: TIMING CLOCK, AREA SWITCHER, NOTIFICATION BELL, ANIMATED PROFILE AVATAR */}
+                {/* RIGHTSIDE CORNER: NOTIFICATION BELL, ANIMATED PROFILE AVATAR */}
                 <div className="flex items-center gap-2 sm:gap-3">
-                    {/* Live Timing Clock */}
-                    <div className="hidden md:flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50/80 px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs select-none">
-                        <span>{liveTime}</span>
-                    </div>
-
-                    {/* Area Switcher (if multiple roles/areas) */}
-                    {areas.length > 1 && <AreaSwitcher areas={areas} />}
 
                     {/* Notification Bell */}
                     <NotificationBell allLink={notificationsLink} />
@@ -271,8 +264,15 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                                                 )
                                             }
                                         >
-                                            <item.icon className="size-4 shrink-0 text-slate-400 group-hover:text-white transition-colors" aria-hidden />
-                                            <span className="truncate">{item.label}</span>
+                                            {(() => {
+                                                const theme = COLORFUL_ICON_THEMES[getThemeKey(item.to, item.label)] ?? COLORFUL_ICON_THEMES.dashboard;
+                                                return (
+                                                    <div className={clsx('flex size-6 shrink-0 items-center justify-center rounded-lg text-white shadow-sm transition-transform duration-200 group-hover:scale-110 group-hover:shadow-md', theme.bg)}>
+                                                        <item.icon className="size-3.5" aria-hidden />
+                                                    </div>
+                                                );
+                                            })()}
+                                            <span className="truncate text-slate-300 group-hover:text-white transition-colors">{item.label}</span>
                                         </NavLink>
                                     </li>
                                 ))}
@@ -347,28 +347,10 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
 
             {/* Bottom Footer */}
             <footer className="mt-auto border-t border-slate-200/80 bg-white/80 px-4 py-3.5 backdrop-blur-xs sm:px-8">
-                <div className="flex flex-col items-center justify-between gap-2.5 text-xs text-slate-500 sm:flex-row">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-slate-700">
-                            © {new Date().getFullYear()} FlashLight Photography
-                        </span>
-                        <span className="text-slate-300">•</span>
-                        <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-mono font-semibold text-slate-600">
-                            version 1.0.0
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-                        <span>Studio Suite</span>
-                        <span className="text-amber-500 font-bold">•</span>
-                        <a
-                            href="http://localhost:5174"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-bold text-amber-600 hover:text-amber-700 hover:underline transition-colors tracking-wide"
-                        >
-                            Open Public Site →
-                        </a>
-                    </div>
+                <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-600">
+                    © {new Date().getFullYear()} FlashLight Photography 
+                    <span className="inline-block animate-pulse text-rose-500">❤️</span> 
+                    Developed by <a href="https://buildnexdev.in" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">buildnexdev.in</a>
                 </div>
             </footer>
         </div>

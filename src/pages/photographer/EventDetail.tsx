@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { AlertTriangle, ArrowLeft, Copy, Expand, ImageUp, Phone, RotateCw } from 'lucide-react';
 import { useState } from 'react';

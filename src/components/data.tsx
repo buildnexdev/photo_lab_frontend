@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import clsx from 'clsx';
 import { AlertCircle, ChevronLeft, ChevronRight, Inbox, LayoutGrid, Plus, RefreshCw, Search, Table2 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -84,6 +87,14 @@ const TONE_CLASSES: Record<string, string> = {
     red: 'bg-red-50 text-red-700 ring-red-600/20',
     stone: 'bg-stone-100 text-stone-600 ring-stone-500/20',
 };
+
+export const COLORFUL_THEMES = [
+    { bg: 'bg-gradient-to-br from-amber-500 to-orange-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-emerald-500 to-teal-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-sky-500 to-indigo-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-rose-500 to-pink-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-fuchsia-600 to-purple-600', text: 'text-white' },
+];
 
 export function StatusBadge({ status, label, className }: { status: string | null | undefined; label?: string; className?: string }) {
     if (!status) return <span className="text-stone-400">—</span>;
@@ -240,7 +251,22 @@ export function DataTable<T>({
             <div className="p-4 bg-slate-50/50">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {rows.map((r) => {
-                        if (renderCard) return <div key={rowKey(r)}>{renderCard(r)}</div>;
+                        if (renderCard) {
+                            return (
+                                <div
+                                    key={rowKey(r)}
+                                    onClick={onRowClick ? () => onRowClick(r) : undefined}
+                                    onKeyDown={onRowClick ? (e) => e.key === 'Enter' && onRowClick(r) : undefined}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    className={clsx(
+                                        'rounded-2xl border border-slate-200/80 bg-white shadow-xs transition-all flex flex-col justify-between hover:border-amber-400/60 hover:shadow-md overflow-hidden group',
+                                        onRowClick && 'cursor-pointer',
+                                    )}
+                                >
+                                    {renderCard(r)}
+                                </div>
+                            );
+                        }
                         const firstCol = columns[0];
                         const otherCols = columns.slice(1);
                         return (

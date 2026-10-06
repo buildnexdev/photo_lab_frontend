@@ -1,18 +1,21 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { DataTable, EmptyState, QueryState, StatusBadge } from '../../components/data';
+import { DataTable, EmptyState, QueryState, StatusBadge, TableHeaderToolbar, COLORFUL_THEMES } from '../../components/data';
 import { Checkbox, FormGrid, Input, Select, Textarea } from '../../components/form';
 import { Modal, useConfirm } from '../../components/overlay';
 import { useToast } from '../../components/toast';
 import { Button, Card, IconButton, PageHeader } from '../../components/ui';
 import { api, applyFieldErrors } from '../../lib/api';
 import { money, parseJson, toPaise, toRupees } from '../../lib/format';
-import { useInvalidate } from '../../lib/hooks';
-
+import { useInvalidate, useViewMode } from '../../lib/hooks';
+import { clsx } from 'clsx';
 interface PackageRow {
     id: number;
     service_id: number | null;
@@ -57,6 +60,8 @@ export default function AdminPackages() {
     const invalidate = useInvalidate();
     const { ask, dialog } = useConfirm();
     const [editing, setEditing] = useState<PackageRow | 'new' | null>(null);
+    const [viewMode, setViewMode] = useViewMode();
+    const [search, setSearch] = useState('');
     const q = useQuery({ queryKey: ['catalog', 'packages'], queryFn: () => api.get<PackageRow[]>('/api/catalog/packages') });
     const del = useMutation({
         mutationFn: (id: number) => api.send('DELETE', `/api/catalog/packages/${id}`),
@@ -68,18 +73,56 @@ export default function AdminPackages() {
             <PageHeader
                 title="Packages"
                 subtitle="Priced bundles customers can book or buy. Prices include GST."
-                actions={
-                    <Button icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
-                        New package
-                    </Button>
-                }
             />
             <Card padded={false}>
+                <TableHeaderToolbar
+                    search={search}
+                    onSearch={setSearch}
+                    searchPlaceholder="Search packages..."
+                    total={q.data?.length ?? 0}
+                    totalLabel="packages"
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    onAdd={() => setEditing('new')}
+                    addLabel="New package"
+                />
                 <QueryState query={q}>
-                    {(rows) => (
+                    {(rows) => {
+                        const filtered = search ? rows.filter(r => (r.name || '').toLowerCase().includes(search.toLowerCase()) || (r.description || '').toLowerCase().includes(search.toLowerCase()) || (r.service_name || '').toLowerCase().includes(search.toLowerCase())) : rows;
+                        return (
                         <DataTable
-                            rows={rows}
+                            viewMode={viewMode}
+                            rows={filtered}
                             rowKey={(r) => r.id}
+                            renderCard={(r) => {
+                                const theme = COLORFUL_THEMES[(r.id + 1) % COLORFUL_THEMES.length];
+                                return (
+                                    <div className="flex h-full flex-col justify-between p-5">
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className={clsx('flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm', theme.bg, theme.text)}>
+                                                    <Star className="size-5" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-stone-900 flex items-center gap-1.5">{r.name} {r.is_featured ? <Star className="size-3.5 fill-amber-400 text-amber-500" /> : null}</h3>
+                                                    <p className="text-xs text-stone-500">{r.service_name}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-semibold text-stone-800">{money(r.price, true)}</span>
+                                                <span className="text-xs text-stone-500">{r.advance_percent}% adv</span>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-4">
+                                            <StatusBadge status={r.is_active ? 'ACTIVE' : 'INACTIVE'} />
+                                            <div className="flex items-center gap-1">
+                                                <IconButton label="Edit" icon={<Pencil className="size-4" />} onClick={(e) => { e.stopPropagation(); setEditing(r); }} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }}
+
                             onRowClick={setEditing}
                             empty={<EmptyState title="No packages yet" action={<Button onClick={() => setEditing('new')}>Create a package</Button>} />}
                             columns={[
@@ -111,7 +154,7 @@ export default function AdminPackages() {
                                 },
                             ]}
                         />
-                    )}
+                    )}}
                 </QueryState>
             </Card>
             <PackageModal value={editing} onClose={() => setEditing(null)} />

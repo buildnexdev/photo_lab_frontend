@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import clsx from 'clsx';
 import { Camera, Mail, MapPin, Menu, Phone, X } from 'lucide-react';
 import { useEffect, useState } from 'react';

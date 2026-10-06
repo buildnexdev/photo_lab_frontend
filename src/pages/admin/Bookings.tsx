@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Banknote, FilePlus2, Pencil, Send, Trash2 } from 'lucide-react';
@@ -14,7 +17,7 @@ import { OfflinePaymentModal } from '../../components/OfflinePaymentModal';
 import { Drawer, Modal, useConfirm } from '../../components/overlay';
 import { QuotationBuilder } from '../../components/QuotationBuilder';
 import { useToast } from '../../components/toast';
-import { Button, Card, KeyValue } from '../../components/ui';
+import { Button, Card, IconButton, KeyValue } from '../../components/ui';
 import { api, applyFieldErrors, type Paged } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { date, dateTime, money, time, titleCase } from '../../lib/format';
@@ -94,6 +97,15 @@ export default function AdminBookings() {
                                     { key: 'total', header: 'Total', cell: (r) => (r.total_amount ? money(r.total_amount) : '—'), hideOnMobile: true },
                                     { key: 'due', header: 'Due', cell: (r) => money(Math.max(0, r.total_amount - r.paid_amount)), hideOnMobile: true },
                                     { key: 'status', header: 'Status', cell: (r) => <StatusBadge status={r.status} /> },
+                                    {
+                                        key: 'act',
+                                        header: '',
+                                        cell: (r) => (
+                                            <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                                                <IconButton label="Edit" icon={<Pencil className="size-4" />} onClick={() => setForm(r as any)} />
+                                            </div>
+                                        ),
+                                    },
                                 ]}
                             />
                             <Pagination page={d.page} totalPages={d.totalPages} total={d.total} onPage={setPage} />
@@ -201,6 +213,7 @@ function BookingDrawer({ id, onClose, onEdit }: { id: number | null; onClose: ()
     const [offline, setOffline] = useState(false);
     const [cancelOpen, setCancelOpen] = useState(false);
     const [reason, setReason] = useState('');
+    const [activeTab, setActiveTab] = useState<'event' | 'quote' | 'qr' | 'team' | 'finance'>('event');
     const q = useQuery({ queryKey: ['bookings', 'detail', id], queryFn: () => api.get<BookingDetail>(`/api/bookings/${id}`), enabled: !!id });
     const refresh = () => invalidate(['bookings'], ['reports']);
     const manage = can('bookings.manage');
@@ -219,11 +232,10 @@ function BookingDrawer({ id, onClose, onEdit }: { id: number | null; onClose: ()
         <Drawer
             open={!!id}
             onClose={onClose}
-            width="max-w-2xl"
+            width="max-w-[90vw] w-[90vw]"
             title={q.data ? `Booking ${q.data.booking_no}` : 'Booking'}
             footer={
-                q.data &&
-                manage && (
+                activeTab === 'event' && q.data && manage && (
                     <>
                         {!['COMPLETED', 'CANCELLED'].includes(q.data.status) && (
                             <Button variant="ghost" className="text-red-600" onClick={() => setCancelOpen(true)}>
@@ -244,116 +256,176 @@ function BookingDrawer({ id, onClose, onEdit }: { id: number | null; onClose: ()
                 )
             }
         >
+            <div className="mb-6 flex space-x-1 rounded-xl bg-stone-100 p-1">
+                {(
+                    [
+                        { id: 'event', label: 'Manage Event' },
+                        { id: 'quote', label: 'Quotations' },
+                        { id: 'qr', label: 'QR & Links' },
+                        { id: 'team', label: 'Team & Assets' },
+                        { id: 'finance', label: 'Finance' },
+                    ] as const
+                ).map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex-1 rounded-lg py-2.5 text-sm font-medium transition-colors ${
+                            activeTab === tab.id ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700 hover:bg-stone-200/50'
+                        }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
             <QueryState query={q}>
                 {(b) => {
                     const due = b.balance_due;
                     const canQuote = manage && ['ENQUIRY', 'QUOTED', 'ADVANCE_PENDING'].includes(b.status);
                     return (
                         <div className="space-y-6">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <StatusBadge status={b.status} />
-                                <span className="text-xs text-stone-500">
-                                    {titleCase(b.source)} · created {dateTime(b.created_at)}
-                                </span>
-                                {b.event && (
-                                    <Link to={`/admin/events/${b.event.id}`} className="ml-auto text-sm font-medium text-brand-700 hover:underline">
-                                        Event {b.event.event_code} →
-                                    </Link>
-                                )}
-                            </div>
-                            <KeyValue
-                                items={[
-                                    ['Customer', <Link key="c" to={`/admin/customers?open=${b.customer_id}`} className="link">{b.customer_name}</Link>],
-                                    ['Contact', [b.customer_phone, b.customer_email].filter(Boolean).join(' · ')],
-                                    ['Event', b.event_type],
-                                    ['Date', `${date(b.event_date)}${b.start_time ? ` · ${time(b.start_time)}${b.end_time ? `–${time(b.end_time)}` : ''}` : ''}`],
-                                    ['Venue', b.venue],
-                                    ['Guests', b.guests],
-                                    ['Service', b.service_name],
-                                    ['Package', b.package_name ?? 'Custom'],
-                                ]}
-                            />
-                            {b.message && (
-                                <div>
-                                    <p className="text-xs font-medium uppercase text-stone-500">Customer message</p>
-                                    <p className="mt-1 whitespace-pre-wrap text-sm">{b.message}</p>
-                                </div>
-                            )}
-                            {b.internal_notes && <p className="whitespace-pre-wrap rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{b.internal_notes}</p>}
-
-                            <div className="grid grid-cols-2 gap-3 rounded-xl border border-stone-200 p-4 text-sm sm:grid-cols-4">
-                                <div>
-                                    <p className="text-xs uppercase text-stone-500">Total</p>
-                                    <p className="font-semibold">{money(b.total_amount)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs uppercase text-stone-500">Advance</p>
-                                    <p className="font-semibold">{money(b.advance_amount)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs uppercase text-stone-500">Paid</p>
-                                    <p className="font-semibold text-emerald-700">{money(b.paid_amount)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs uppercase text-stone-500">Balance</p>
-                                    <p className="font-semibold">{money(due)}</p>
-                                </div>
-                            </div>
-
-                            <section>
-                                <div className="mb-2 flex items-center justify-between">
-                                    <p className="font-semibold">Quotations</p>
-                                    {canQuote && (
-                                        <Button size="sm" variant="secondary" icon={<FilePlus2 className="size-4" />} onClick={() => setBuilder({ q: null })}>
-                                            New quotation
-                                        </Button>
+                            {activeTab === 'event' && (
+                                <section className="space-y-6">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <StatusBadge status={b.status} />
+                                        <span className="text-xs text-stone-500">
+                                            {titleCase(b.source)} · created {dateTime(b.created_at)}
+                                        </span>
+                                        {b.event && (
+                                            <Link to={`/admin/events/${b.event.id}`} className="ml-auto text-sm font-medium text-brand-700 hover:underline">
+                                                Event {b.event.event_code} →
+                                            </Link>
+                                        )}
+                                    </div>
+                                    <KeyValue
+                                        items={[
+                                            ['Customer', <Link key="c" to={`/admin/customers?open=${b.customer_id}`} className="link">{b.customer_name}</Link>],
+                                            ['Contact', [b.customer_phone, b.customer_email].filter(Boolean).join(' · ')],
+                                            ['Event', b.event_type],
+                                            ['Date', `${date(b.event_date)}${b.start_time ? ` · ${time(b.start_time)}${b.end_time ? `–${time(b.end_time)}` : ''}` : ''}`],
+                                            ['Venue', b.venue],
+                                            ['Guests', b.guests],
+                                            ['Service', b.service_name],
+                                            ['Package', b.package_name ?? 'Custom'],
+                                        ]}
+                                    />
+                                    {b.message && (
+                                        <div>
+                                            <p className="text-xs font-medium uppercase text-stone-500">Customer message</p>
+                                            <p className="mt-1 whitespace-pre-wrap text-sm">{b.message}</p>
+                                        </div>
                                     )}
-                                </div>
-                                {!b.quotations.length && <p className="text-sm text-stone-500">{canQuote ? 'No quotation yet. Create one to send pricing to the customer.' : 'No quotations.'}</p>}
-                                <div className="space-y-3">
-                                    {b.quotations.map((qt) => (
-                                        <div key={qt.id} className="rounded-xl border border-stone-200 p-4">
-                                            <QuotationView q={qt} />
-                                            {manage && qt.status === 'DRAFT' && (
-                                                <div className="mt-3 flex flex-wrap justify-end gap-2">
-                                                    <Button size="sm" variant="ghost" className="text-red-600" icon={<Trash2 className="size-4" />} onClick={async () => (await ask({ title: 'Delete draft quotation?', message: qt.quotation_no, confirmLabel: 'Delete' })) && act.mutate({ method: 'DELETE', path: `/api/bookings/quotations/${qt.id}` })}>
-                                                        Delete
-                                                    </Button>
-                                                    <Button size="sm" variant="secondary" icon={<Pencil className="size-4" />} onClick={() => setBuilder({ q: qt })}>
-                                                        Edit
-                                                    </Button>
-                                                    <Button size="sm" icon={<Send className="size-4" />} loading={act.isPending} onClick={() => act.mutate({ method: 'POST', path: `/api/bookings/quotations/${qt.id}/send` })}>
-                                                        Send to customer
-                                                    </Button>
-                                                </div>
-                                            )}
-                                            {manage && qt.status === 'SENT' && (
-                                                <div className="mt-3 flex flex-wrap justify-end gap-2">
-                                                    <span className="mr-auto self-center text-xs text-stone-500">Customer can accept online. Record their decision if they replied by phone:</span>
-                                                    <Button size="sm" variant="secondary" onClick={() => act.mutate({ method: 'POST', path: `/api/bookings/quotations/${qt.id}/respond`, body: { decision: 'REJECT' } })}>
-                                                        Mark declined
-                                                    </Button>
-                                                    <Button size="sm" variant="success" onClick={() => act.mutate({ method: 'POST', path: `/api/bookings/quotations/${qt.id}/respond`, body: { decision: 'ACCEPT' } })}>
-                                                        Mark accepted
-                                                    </Button>
-                                                </div>
+                                    {b.internal_notes && <p className="whitespace-pre-wrap rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{b.internal_notes}</p>}
+                                </section>
+                            )}
+
+                            {activeTab === 'quote' && (
+                                <section>
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <p className="font-semibold text-lg">Quotations</p>
+                                        {canQuote && (
+                                            <Button size="sm" variant="primary" icon={<FilePlus2 className="size-4" />} onClick={() => setBuilder({ q: null })}>
+                                                Create Quotation
+                                            </Button>
+                                        )}
+                                    </div>
+                                    {(!b.quotations || !b.quotations.length) && (
+                                        <EmptyState title="No quotations" description={canQuote ? 'Create a quotation to send pricing and package details to the customer.' : ''} />
+                                    )}
+                                    <div className="space-y-3">
+                                        {(b.quotations || []).map((qt) => (
+                                            <div key={qt.id} className="rounded-xl border border-stone-200 bg-white p-4 shadow-xs">
+                                                <QuotationView q={qt} />
+                                                {manage && qt.status === 'DRAFT' && (
+                                                    <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-stone-100 pt-4">
+                                                        <Button size="sm" variant="ghost" className="text-red-600" icon={<Trash2 className="size-4" />} onClick={async () => (await ask({ title: 'Delete draft quotation?', message: qt.quotation_no, confirmLabel: 'Delete' })) && act.mutate({ method: 'DELETE', path: `/api/bookings/quotations/${qt.id}` })}>
+                                                            Delete
+                                                        </Button>
+                                                        <Button size="sm" variant="secondary" icon={<Pencil className="size-4" />} onClick={() => setBuilder({ q: qt })}>
+                                                            Edit
+                                                        </Button>
+                                                        <Button size="sm" icon={<Send className="size-4" />} loading={act.isPending} onClick={() => act.mutate({ method: 'POST', path: `/api/bookings/quotations/${qt.id}/send` })}>
+                                                            Send to customer
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                                {manage && qt.status === 'SENT' && (
+                                                    <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-stone-100 pt-4">
+                                                        <span className="mr-auto self-center text-xs text-stone-500">Customer can accept online. Record manual decision:</span>
+                                                        <Button size="sm" variant="secondary" onClick={() => act.mutate({ method: 'POST', path: `/api/bookings/quotations/${qt.id}/respond`, body: { decision: 'REJECT' } })}>
+                                                            Mark declined
+                                                        </Button>
+                                                        <Button size="sm" variant="success" onClick={() => act.mutate({ method: 'POST', path: `/api/bookings/quotations/${qt.id}/respond`, body: { decision: 'ACCEPT' } })}>
+                                                            Mark accepted
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {activeTab === 'qr' && (
+                                <section className="space-y-6">
+                                    <div className="rounded-xl border border-stone-200 bg-stone-50 p-8 text-center">
+                                        <p className="mb-2 font-medium text-stone-900">QR Codes & Upload Links</p>
+                                        <p className="text-sm text-stone-500 mb-6">Create upload links and set security codes (e.g. one for photographer upload, one for customer review).</p>
+                                        <Button variant="secondary" onClick={() => alert('This functionality will be connected to the Galleries & QR module.')}>
+                                            Generate Upload Link
+                                        </Button>
+                                    </div>
+                                </section>
+                            )}
+
+                            {activeTab === 'team' && (
+                                <section className="space-y-6">
+                                    <div className="rounded-xl border border-stone-200 bg-stone-50 p-8 text-center">
+                                        <p className="mb-2 font-medium text-stone-900">Team & Asset Assignment</p>
+                                        <p className="text-sm text-stone-500 mb-6">Assign photographers, editors, and allocate equipment/assets for this booking.</p>
+                                        <Button variant="secondary" onClick={() => alert('This functionality will be connected to the Events module.')}>
+                                            Assign Staff
+                                        </Button>
+                                    </div>
+                                </section>
+                            )}
+
+                            {activeTab === 'finance' && (
+                                <section className="space-y-6">
+                                    <div className="grid grid-cols-2 gap-3 rounded-xl border border-stone-200 bg-white p-4 text-sm sm:grid-cols-4 shadow-xs">
+                                        <div>
+                                            <p className="text-xs uppercase text-stone-500">Total Booking Value</p>
+                                            <p className="font-semibold text-lg">{money(b.total_amount)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs uppercase text-stone-500">Advance Paid</p>
+                                            <p className="font-semibold text-lg">{money(b.advance_amount)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs uppercase text-stone-500">Total Paid</p>
+                                            <p className="font-semibold text-lg text-emerald-600">{money(b.paid_amount)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs uppercase text-stone-500">Balance Due</p>
+                                            <p className="font-semibold text-lg text-rose-600">{money(due)}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mt-6 rounded-xl border border-stone-200 bg-white shadow-xs">
+                                        <div className="flex items-center justify-between border-b border-stone-100 p-4">
+                                            <p className="font-semibold text-lg">Payment History</p>
+                                            {can('payments.manage') && due > 0 && !['ENQUIRY', 'QUOTED', 'CANCELLED'].includes(b.status) && (
+                                                <Button size="sm" variant="primary" icon={<Banknote className="size-4" />} onClick={() => setOffline(true)}>
+                                                    Record payment
+                                                </Button>
                                             )}
                                         </div>
-                                    ))}
-                                </div>
-                            </section>
-
-                            <section>
-                                <div className="mb-2 flex items-center justify-between">
-                                    <p className="font-semibold">Payments</p>
-                                    {can('payments.manage') && due > 0 && !['ENQUIRY', 'QUOTED', 'CANCELLED'].includes(b.status) && (
-                                        <Button size="sm" variant="secondary" icon={<Banknote className="size-4" />} onClick={() => setOffline(true)}>
-                                            Record payment
-                                        </Button>
-                                    )}
-                                </div>
-                                <PaymentList payments={b.payments} />
-                            </section>
+                                        <div className="p-4">
+                                            <PaymentList payments={b.payments || []} />
+                                        </div>
+                                    </div>
+                                </section>
+                            )}
                         </div>
                     );
                 }}

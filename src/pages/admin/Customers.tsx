@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Pencil, Trash2, UserCheck } from 'lucide-react';
@@ -44,17 +47,17 @@ interface CustomerDetail extends Omit<CustomerRow, 'bookings' | 'events' | 'life
 const schema = z
     .object({
         name: z.string().trim().min(2, 'Enter the name').max(120),
-        email: z.string().trim().refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Enter a valid email'),
+        email: z.string().trim().email('Enter a valid email'),
         phone: optionalPhone,
+        password: z.union([z.literal(''), z.string().min(8, 'At least 8 characters')]).optional(),
         address: z.string().trim().max(255),
         city: z.string().trim().max(80),
         state: z.string().trim().max(80),
         pincode: z.string().trim().refine((v) => !v || /^\d{6}$/.test(v), 'Enter a 6-digit PIN code'),
         notes: z.string().trim().max(2000),
     })
-    .refine((v) => v.email || v.phone, { path: ['phone'], message: 'Enter an email or a phone number' });
 type Form = z.infer<typeof schema>;
-const blank: Form = { name: '', email: '', phone: '', address: '', city: '', state: '', pincode: '', notes: '' };
+const blank: Form = { name: '', email: '', phone: '', password: '', address: '', city: '', state: '', pincode: '', notes: '' };
 
 export default function AdminCustomers() {
     const { can } = useAuth();
@@ -253,11 +256,11 @@ function CustomerForm({ value, onClose, onSaved }: { value: CustomerDetail | 'ne
     useEffect(() => {
         if (!value) return;
         if (value === 'new') reset(blank);
-        else reset({ name: value.name, email: value.email ?? '', phone: value.phone ?? '', address: value.address ?? '', city: value.city ?? '', state: value.state ?? '', pincode: value.pincode ?? '', notes: value.notes ?? '' });
+        else reset({ name: value.name, email: value.email ?? '', phone: value.phone ?? '', password: '', address: value.address ?? '', city: value.city ?? '', state: value.state ?? '', pincode: value.pincode ?? '', notes: value.notes ?? '' });
     }, [value, reset]);
 
     const submit = handleSubmit(async (v) => {
-        const body = { name: v.name, email: v.email || null, phone: v.phone || null, address: v.address || null, city: v.city || null, state: v.state || null, pincode: v.pincode || null, notes: v.notes || null };
+        const body = { name: v.name, email: v.email || null, phone: v.phone || null, password: v.password || undefined, address: v.address || null, city: v.city || null, state: v.state || null, pincode: v.pincode || null, notes: v.notes || null };
         try {
             const r = isNew ? await api.send<{ id: number }>('POST', '/api/customers', body) : await api.send<{ id: number }>('PUT', `/api/customers/${(value as CustomerDetail).id}`, body);
             toast.success(r.message);
@@ -288,8 +291,9 @@ function CustomerForm({ value, onClose, onSaved }: { value: CustomerDetail | 'ne
             <form onSubmit={submit} noValidate>
                 <FormGrid>
                     <Input label="Name" required {...register('name')} error={errors.name?.message} />
+                    <Input label="Email" type="email" required {...register('email')} error={errors.email?.message} />
                     <Input label="Phone" type="tel" {...register('phone')} error={errors.phone?.message} />
-                    <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
+                    <Input label={isNew ? 'Password (Optional)' : 'New password'} type="password" autoComplete="new-password" {...register('password')} error={errors.password?.message} hint={isNew ? 'Leave blank if they do not need to log in.' : 'Leave blank to keep the current password. Setting one signs them out.'} />
                     <Input label="City" {...register('city')} error={errors.city?.message} />
                     <Input label="Address" wrapperClassName="sm:col-span-2" {...register('address')} error={errors.address?.message} />
                     <Input label="State" {...register('state')} error={errors.state?.message} />

@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router';

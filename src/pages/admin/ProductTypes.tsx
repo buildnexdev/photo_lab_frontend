@@ -1,6 +1,12 @@
-import { BookOpen, Coffee, Frame, Gift, Image, Layers, Plus, Search, Trash2, Edit3, CheckCircle2, XCircle, X } from 'lucide-react';
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
+import { BookOpen, Coffee, Frame, Gift, Image, Layers, Pencil, Plus, Search, Trash2, Edit3, CheckCircle2, XCircle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getProducts, getProductTypes, saveProductTypes, type ProductType } from '../../lib/photoShop';
+import { clsx } from 'clsx';
+import { COLORFUL_THEMES, DataTable, TableHeaderToolbar, StatusBadge } from '../../components/data';
+import { Card, PageHeader, IconButton } from '../../components/ui';
 
 const iconMap: Record<string, typeof Frame> = {
     Frame,
@@ -17,6 +23,7 @@ export default function ProductTypes() {
     const [search, setSearch] = useState('');
     const [editing, setEditing] = useState<ProductType | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
 
     useEffect(() => {
         saveProductTypes(types);
@@ -60,22 +67,20 @@ export default function ProductTypes() {
     };
 
     return (
-        <div className="space-y-6 p-4 sm:p-6">
-            {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <span className="inline-flex size-2 rounded-full bg-amber-500" />
-                        <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">Catalog Architecture</p>
-                    </div>
-                    <h1 className="mt-1 text-2xl font-bold text-stone-900">Product Types & Categories</h1>
-                    <p className="mt-1 text-sm text-stone-500">
-                        Define product lines, custom options, and categories for the storefront and studio portal.
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => {
+        <div>
+            <PageHeader
+                title="Product Types & Categories"
+                subtitle="Define product lines, custom options, and categories for the storefront and studio portal."
+            />
+            
+            <Card padded={false}>
+                <TableHeaderToolbar
+                    search={search}
+                    onSearch={setSearch}
+                    searchPlaceholder="Search product types by name, code..."
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    onAdd={() => {
                         setEditing({
                             id: `type-${Date.now()}`,
                             name: '',
@@ -86,97 +91,115 @@ export default function ProductTypes() {
                         });
                         setIsCreating(true);
                     }}
-                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-amber-600 px-4 text-sm font-semibold text-white shadow-xs hover:bg-amber-700 transition-colors cursor-pointer"
-                >
-                    <Plus className="size-4" /> Add Product Type
-                </button>
-            </div>
+                    addLabel="Add Product Type"
+                />
 
-            {/* Toolbar */}
-            <div className="flex items-center justify-between gap-4 rounded-2xl border border-stone-200/80 bg-white p-4 shadow-xs">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3.5 top-2.5 size-4 text-stone-400" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search product types by name, code or description..."
-                        className="h-10 w-full rounded-xl border border-stone-200 bg-stone-50/50 pl-10 pr-4 text-sm text-stone-900 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    />
-                </div>
-                <div className="text-xs text-stone-500">
-                    Total Types: <b className="text-stone-900">{types.length}</b> ({types.filter((t) => t.active).length} Active)
-                </div>
-            </div>
+                <DataTable
+                    viewMode={viewMode}
+                    rows={filtered}
+                    rowKey={(r) => r.id}
+                    onRowClick={(r) => {
+                        setEditing(r);
+                        setIsCreating(false);
+                    }}
+                    renderCard={(t) => {
+                        const index = types.findIndex(x => x.id === t.id);
+                        const IconComp = iconMap[t.icon] || Layers;
+                        const count = products.filter((p) => p.category.toLowerCase().includes(t.name.toLowerCase()) || t.name.toLowerCase().includes(p.category.toLowerCase())).length;
+                        const theme = COLORFUL_THEMES[Math.max(0, index) % COLORFUL_THEMES.length];
 
-            {/* Product Types Grid */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filtered.map((t) => {
-                    const IconComp = iconMap[t.icon] || Layers;
-                    const count = products.filter((p) => p.category.toLowerCase().includes(t.name.toLowerCase()) || t.name.toLowerCase().includes(p.category.toLowerCase())).length;
-
-                    return (
-                        <div
-                            key={t.id}
-                            className="group relative flex flex-col justify-between rounded-2xl border border-stone-200/80 bg-white p-5 shadow-xs transition-all hover:border-amber-400/80 hover:shadow-md"
-                        >
-                            <div>
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700">
-                                            <IconComp className="size-5" />
+                        return (
+                            <div className="flex h-full flex-col justify-between p-5">
+                                <div>
+                                    <div className="flex items-center justify-between gap-3 mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className={clsx('flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm', theme.bg, theme.text)}>
+                                                <IconComp className="size-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-semibold text-stone-900">{t.name}</h3>
+                                                <span className="inline-block rounded-md bg-stone-100 px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-stone-600">
+                                                    {t.code}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div>
+                                    </div>
+                                    <p className="text-xs text-stone-600 line-clamp-2">{t.description || 'No description added yet.'}</p>
+                                </div>
+                                <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-4">
+                                    <div className="flex flex-col">
+                                        <StatusBadge status={t.active ? 'ACTIVE' : 'INACTIVE'} />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-xs text-stone-500 font-medium mr-2">
+                                            <b className="text-stone-900 font-semibold">{count}</b> linked
+                                        </span>
+                                        <IconButton label="Edit" icon={<Pencil className="size-4" />} onClick={(e) => { e.stopPropagation(); setEditing(t); setIsCreating(false); }} />
+                                        <IconButton tone="danger" label="Delete" icon={<Trash2 className="size-4" />} onClick={(e) => { e.stopPropagation(); handleDelete(t.id, t.name); }} />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }}
+                    columns={[
+                        {
+                            key: 'type',
+                            header: 'Product Type',
+                            cell: (t) => {
+                                const index = types.findIndex(x => x.id === t.id);
+                                const IconComp = iconMap[t.icon] || Layers;
+                                const theme = COLORFUL_THEMES[Math.max(0, index) % COLORFUL_THEMES.length];
+                                return (
+                                    <div className="flex items-center gap-3 py-1">
+                                        <div className={clsx('flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm', theme.bg, theme.text)}>
+                                            <IconComp className="size-4" />
+                                        </div>
+                                        <div className="min-w-0">
                                             <h3 className="font-semibold text-stone-900">{t.name}</h3>
-                                            <span className="inline-block rounded-md bg-stone-100 px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-stone-600">
+                                            <span className="inline-block rounded-md bg-stone-100 px-2 py-0.5 mt-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-stone-600">
                                                 {t.code}
                                             </span>
                                         </div>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => toggleActive(t.id)}
-                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium cursor-pointer transition-colors ${
-                                            t.active ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                                        }`}
-                                    >
-                                        {t.active ? <CheckCircle2 className="size-3.5" /> : <XCircle className="size-3.5" />}
-                                        {t.active ? 'Active' : 'Disabled'}
-                                    </button>
+                                );
+                            },
+                        },
+                        {
+                            key: 'desc',
+                            header: 'Description',
+                            cell: (t) => <p className="text-xs text-stone-600 truncate max-w-sm">{t.description || '—'}</p>,
+                            hideOnMobile: true
+                        },
+                        {
+                            key: 'linked',
+                            header: 'Products Linked',
+                            cell: (t) => {
+                                const count = products.filter((p) => p.category.toLowerCase().includes(t.name.toLowerCase()) || t.name.toLowerCase().includes(p.category.toLowerCase())).length;
+                                return <span className="text-xs text-stone-500 font-medium"><b className="text-stone-900 font-semibold">{count}</b> linked</span>;
+                            },
+                        },
+                        {
+                            key: 'status',
+                            header: 'Status',
+                            cell: (t) => <StatusBadge status={t.active ? 'ACTIVE' : 'INACTIVE'} />,
+                        },
+                        {
+                            key: 'actions',
+                            header: '',
+                            className: 'text-right',
+                            cell: (t) => (
+                                <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                                    <button type="button" onClick={() => toggleActive(t.id)} className={`hidden sm:inline-flex rounded-lg px-2 py-1.5 text-[10px] font-bold uppercase transition-colors ${t.active ? 'text-emerald-700 hover:bg-emerald-50' : 'text-stone-500 hover:bg-stone-100'}`}>{t.active ? 'Disable' : 'Enable'}</button>
+                                    <IconButton label="Edit" icon={<Pencil className="size-4" />} onClick={() => { setEditing(t); setIsCreating(false); }} />
+                                    <IconButton tone="danger" label="Delete" icon={<Trash2 className="size-4" />} onClick={() => handleDelete(t.id, t.name)} />
                                 </div>
-                                <p className="mt-3 text-xs text-stone-600 leading-relaxed">{t.description || 'No description added yet.'}</p>
-                            </div>
+                            ),
+                        },
+                    ]}
+                />
+            </Card>
 
-                            <div className="mt-5 flex items-center justify-between border-t border-stone-100 pt-3 text-xs">
-                                <span className="text-stone-500 font-medium">
-                                    <b className="text-stone-900 font-semibold">{count}</b> Products linked
-                                </span>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setEditing(t);
-                                            setIsCreating(false);
-                                        }}
-                                        className="rounded-lg p-1.5 text-stone-500 hover:bg-amber-50 hover:text-amber-700 transition-colors cursor-pointer"
-                                        title="Edit type"
-                                    >
-                                        <Edit3 className="size-4" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDelete(t.id, t.name)}
-                                        className="rounded-lg p-1.5 text-stone-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
-                                        title="Delete type"
-                                    >
-                                        <Trash2 className="size-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+
 
             {/* Modal for Add / Edit */}
             {editing && (

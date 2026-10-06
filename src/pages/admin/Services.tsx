@@ -1,17 +1,21 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { DataTable, EmptyState, QueryState, StatusBadge } from '../../components/data';
+import { DataTable, EmptyState, QueryState, StatusBadge, TableHeaderToolbar, COLORFUL_THEMES } from '../../components/data';
 import { Checkbox, FormGrid, Input, Textarea } from '../../components/form';
 import { Modal, useConfirm } from '../../components/overlay';
 import { useToast } from '../../components/toast';
 import { Button, Card, IconButton, PageHeader } from '../../components/ui';
 import { api, applyFieldErrors } from '../../lib/api';
 import { money, toPaise, toRupees } from '../../lib/format';
-import { useInvalidate } from '../../lib/hooks';
+import { useInvalidate, useViewMode } from '../../lib/hooks';
+import { clsx } from 'clsx';
 
 interface ServiceRow {
     id: number;
@@ -40,6 +44,8 @@ export default function AdminServices() {
     const invalidate = useInvalidate();
     const { ask, dialog } = useConfirm();
     const [editing, setEditing] = useState<ServiceRow | 'new' | null>(null);
+    const [viewMode, setViewMode] = useViewMode();
+    const [search, setSearch] = useState('');
     const q = useQuery({ queryKey: ['catalog', 'services'], queryFn: () => api.get<ServiceRow[]>('/api/catalog/services') });
     const del = useMutation({
         mutationFn: (id: number) => api.send('DELETE', `/api/catalog/services/${id}`),
@@ -51,18 +57,53 @@ export default function AdminServices() {
             <PageHeader
                 title="Services"
                 subtitle="What the studio offers. Active services appear on the website and booking form."
-                actions={
-                    <Button icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
-                        New service
-                    </Button>
-                }
             />
             <Card padded={false}>
+                <TableHeaderToolbar
+                    search={search}
+                    onSearch={setSearch}
+                    searchPlaceholder="Search services..."
+                    total={q.data?.length ?? 0}
+                    totalLabel="services"
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    onAdd={() => setEditing('new')}
+                    addLabel="New service"
+                />
                 <QueryState query={q}>
-                    {(rows) => (
+                    {(rows) => {
+                        const filtered = search ? rows.filter(r => (r.name || '').toLowerCase().includes(search.toLowerCase()) || (r.summary || '').toLowerCase().includes(search.toLowerCase())) : rows;
+                        return (
                         <DataTable
-                            rows={rows}
+                            viewMode={viewMode}
+                            rows={filtered}
                             rowKey={(r) => r.id}
+                            renderCard={(r) => {
+                                const theme = COLORFUL_THEMES[Math.abs(r.id) % COLORFUL_THEMES.length];
+                                return (
+                                    <div className="flex h-full flex-col justify-between p-5">
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className={clsx('flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm', theme.bg, theme.text)}>
+                                                    {r.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-stone-900">{r.name}</h3>
+                                                    <p className="text-xs text-stone-500">{r.base_price ? money(r.base_price, true) : 'Free'}</p>
+                                                </div>
+                                            </div>
+                                            {r.summary && <p className="text-xs text-stone-600 line-clamp-2">{r.summary}</p>}
+                                        </div>
+                                        <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-4">
+                                            <StatusBadge status={r.is_active ? 'ACTIVE' : 'INACTIVE'} />
+                                            <div className="flex items-center gap-1">
+                                                <IconButton label="Edit" icon={<Pencil className="size-4" />} onClick={(e) => { e.stopPropagation(); setEditing(r); }} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }}
+
                             onRowClick={setEditing}
                             empty={<EmptyState title="No services yet" action={<Button onClick={() => setEditing('new')}>Add the first service</Button>} />}
                             columns={[
@@ -91,7 +132,7 @@ export default function AdminServices() {
                                 },
                             ]}
                         />
-                    )}
+                    )}}
                 </QueryState>
             </Card>
             <ServiceModal value={editing} onClose={() => setEditing(null)} />

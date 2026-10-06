@@ -1,3 +1,9 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
+// AUTHOR : NANDHAKUMAR
+// DEVELOPER BY: buildnexdev.in
+// Last Edit : 
 import {
     Banknote,
     BarChart3,
@@ -44,49 +50,53 @@ const page = (load: Loader): Pick<RouteObject, 'lazy'> => ({ lazy: async () => (
 const ADMIN_ACCESS = ['dashboard.view', 'customers.view', 'bookings.view', 'events.view', 'galleries.manage', 'photos.manage', 'orders.view', 'payments.view', 'pricing.manage', 'users.manage', 'staff.manage', 'reports.view', 'settings.manage', 'audit.view'];
 
 const adminNav: NavSection[] = [
-    { items: [{ to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, anyOf: ['dashboard.view', 'reports.view'] }] },
     {
-        title: 'Studio',
+        title: 'Master',
         items: [
+            { to: '/admin/staff', label: 'Staff', icon: UserCog, anyOf: ['users.manage', 'staff.manage'] },
             { to: '/admin/customers', label: 'Customers', icon: Users, anyOf: ['customers.view', 'customers.manage'] },
+            { to: '/admin/services', label: 'Services', icon: Briefcase, anyOf: ['pricing.manage'] },
+            { to: '/admin/packages', label: 'Packages', icon: PackageIcon, anyOf: ['pricing.manage'] },
+            { to: '/admin/coupons', label: 'Coupons', icon: Tag, anyOf: ['pricing.manage'] },
+            { to: '/admin/product-types', label: 'Product types', icon: Layers, anyOf: ['pricing.manage', 'orders.view'] },
+            { to: '/admin/products', label: 'Products & Add', icon: PackageIcon, anyOf: ['pricing.manage', 'orders.view'] },
+          
+        ],
+    },
+    {
+        title: 'Operations',
+        items: [
             { to: '/admin/bookings', label: 'Bookings', icon: CalendarCheck, anyOf: ['bookings.view', 'bookings.manage'] },
             { to: '/admin/events', label: 'Events', icon: Calendar, anyOf: ['events.view', 'events.manage'] },
             { to: '/admin/galleries', label: 'Galleries & QR', icon: Images, anyOf: ['galleries.manage'] },
             { to: '/admin/photos', label: 'Photos', icon: Image, anyOf: ['photos.manage'] },
-        ],
-    },
-    {
-        title: 'Sales',
-        items: [
             { to: '/admin/orders', label: 'Orders', icon: ShoppingBag, anyOf: ['orders.view', 'orders.manage'] },
-            { to: '/admin/product-types', label: 'Product types', icon: Layers, anyOf: ['pricing.manage', 'orders.view'] },
-            { to: '/admin/products', label: 'Products & Add', icon: PackageIcon, anyOf: ['pricing.manage', 'orders.view'] },
-            { to: '/admin/payments', label: 'Payments', icon: Banknote, anyOf: ['payments.view'] },
-            { to: '/admin/services', label: 'Services', icon: Briefcase, anyOf: ['pricing.manage'] },
-            { to: '/admin/packages', label: 'Packages', icon: PackageIcon, anyOf: ['pricing.manage'] },
-            { to: '/admin/coupons', label: 'Coupons', icon: Tag, anyOf: ['pricing.manage'] },
-            { to: '/admin/website', label: 'Website content', icon: Globe, anyOf: ['pricing.manage'] },
-        ],
-    },
-    {
-        title: 'Team',
-        items: [
-            { to: '/admin/staff', label: 'Staff', icon: UserCog, anyOf: ['users.manage', 'staff.manage'] },
-            { to: '/admin/photographers', label: 'Photographers', icon: Camera, anyOf: ['users.manage', 'staff.manage'] },
-            { to: '/admin/editors', label: 'Editors', icon: Palette, anyOf: ['users.manage', 'staff.manage'] },
-        ],
-    },
-    {
-        title: 'Production',
-        items: [
             { to: '/admin/printing', label: 'Printing', icon: Printer, anyOf: ['printing.manage'] },
             { to: '/admin/delivery', label: 'Delivery', icon: Truck, anyOf: ['delivery.manage'] },
         ],
     },
     {
-        title: 'Insights',
+        title: 'Finance',
+        items: [
+            { to: '/admin/payments', label: 'Payments', icon: Banknote, anyOf: ['payments.view'] },
+        ],
+    },
+    {
+        title: 'Reports',
         items: [
             { to: '/admin/reports', label: 'Reports', icon: BarChart3, anyOf: ['reports.view'] },
+        ],
+    },
+    {
+        title: 'Assets',
+        items: [
+            // Placeholder for future Assets module
+        ],
+    },
+    {
+        title: 'Settings',
+        items: [
+            { to: '/admin/website', label: 'Website content', icon: Globe, anyOf: ['pricing.manage'] },
             { to: '/admin/settings', label: 'Settings', icon: Settings, anyOf: ['settings.manage', 'pricing.manage', 'roles.manage'] },
             { to: '/admin/audit-logs', label: 'Audit logs', icon: ShieldCheck, anyOf: ['audit.view'] },
         ],
@@ -209,6 +219,7 @@ export const router = createBrowserRouter([
                     { path: 'galleries', ...page(() => import('./pages/admin/Galleries')) },
                     { path: 'galleries/:id', ...page(() => import('./pages/admin/GalleryDetail')) },
                     { path: 'photos', ...page(() => import('./pages/admin/Photos')) },
+                    { path: 'upload', ...page(() => import('./pages/photographer/Upload')) },
                     { path: 'orders', ...page(() => import('./pages/admin/Orders')) },
                     { path: 'product-types', ...page(() => import('./pages/admin/ProductTypes')) },
                     { path: 'products', ...page(() => import('./pages/admin/PhotoProducts')) },
@@ -229,8 +240,8 @@ export const router = createBrowserRouter([
                     { path: 'notifications', ...notifications },
                 ],
             },
-                { index: true, ...page(() => import('./pages/shop/PhotoShop')) },
-                { path: 'shop', ...page(() => import('./pages/shop/PhotoShop')) },
+            { index: true, element: <Navigate to="/login" replace /> },
+            { path: 'shop', ...page(() => import('./pages/shop/PhotoShop')) },
             {
                 path: 'photographer',
                 element: (

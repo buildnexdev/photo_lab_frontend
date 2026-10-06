@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { CheckCircle2, Heart, Images, Loader2, Lock, Printer, RefreshCw, ScanFace, ShoppingCart, Sparkles, X } from 'lucide-react';

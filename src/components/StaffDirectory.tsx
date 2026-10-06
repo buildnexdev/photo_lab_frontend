@@ -1,6 +1,9 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Plus, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -9,11 +12,11 @@ import { ROLE_LABELS, useAuth, type Role } from '../lib/auth';
 import { relative } from '../lib/format';
 import { useInvalidate, useListParams, useOpenParam } from '../lib/hooks';
 import { emailRule, optionalPhone, passwordRule } from '../lib/validation';
-import { DataTable, EmptyState, Pagination, QueryState, SearchInput, StatusBadge } from './data';
+import { DataTable, EmptyState, Pagination, QueryState, SearchInput, StatusBadge, TableHeaderToolbar } from './data';
 import { Field, FormGrid, Input, Select } from './form';
 import { Modal, useConfirm } from './overlay';
 import { useToast } from './toast';
-import { Button, Card, PageHeader } from './ui';
+import { Button, Card } from './ui';
 
 interface UserRow {
     id: number;
@@ -66,34 +69,33 @@ export function StaffDirectory({ role, title, subtitle }: { role?: Role; title: 
     const manage = can('users.manage', 'staff.manage');
     return (
         <div>
-            <PageHeader
-                title={title}
-                subtitle={subtitle}
-                actions={
-                    manage && (
-                        <Button icon={<Plus className="size-4" />} onClick={() => setCreating(1)}>
-                            Add {role ? ROLE_LABELS[role].toLowerCase() : 'staff member'}
-                        </Button>
-                    )
-                }
-            />
-            <Card padded={false}>
-                <div className="flex flex-wrap gap-3 border-b border-stone-100 p-4">
-                    <SearchInput value={search} onChange={setSearch} placeholder="Name, email or phone" className="w-full max-w-xs" />
-                    {!role && <Select wrapperClassName="w-52" aria-label="Role" value={filters.role} onChange={(e) => setFilter('role', e.target.value)} placeholder="All staff roles" options={STAFF_ROLE_CODES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))} />}
-                    <Select
-                        wrapperClassName="w-40"
-                        aria-label="Status"
-                        value={filters.status}
-                        onChange={(e) => setFilter('status', e.target.value)}
-                        placeholder="Any status"
-                        options={[
-                            { value: 'ACTIVE', label: 'Active' },
-                            { value: 'INACTIVE', label: 'Inactive' },
-                            { value: 'LOCKED', label: 'Locked' },
-                        ]}
-                    />
-                </div>
+            <Card padded={false} className="overflow-hidden">
+                <TableHeaderToolbar
+                    total={q.data?.total}
+                    totalLabel="Staff"
+                    search={search}
+                    onSearch={setSearch}
+                    searchPlaceholder="Name, email or phone"
+                    onAdd={manage ? () => setCreating(1) : undefined}
+                    addLabel={`Add ${role ? ROLE_LABELS[role].toLowerCase() : 'staff member'}`}
+                    extraFilters={
+                        <div className="flex flex-wrap items-center gap-2">
+                            {!role && <Select wrapperClassName="w-52" aria-label="Role" value={filters.role} onChange={(e) => setFilter('role', e.target.value)} placeholder="All staff roles" options={STAFF_ROLE_CODES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))} />}
+                            <Select
+                                wrapperClassName="w-40"
+                                aria-label="Status"
+                                value={filters.status}
+                                onChange={(e) => setFilter('status', e.target.value)}
+                                placeholder="Any status"
+                                options={[
+                                    { value: 'ACTIVE', label: 'Active' },
+                                    { value: 'INACTIVE', label: 'Inactive' },
+                                    { value: 'LOCKED', label: 'Locked' },
+                                ]}
+                            />
+                        </div>
+                    }
+                />
                 <QueryState query={q}>
                     {(d) => (
                         <>
@@ -174,7 +176,7 @@ function UserModal({ id, defaultRole, onClose }: { id: number | 'new' | null; de
     const roles = watch('roles') ?? [];
     const isSuper = user?.roles.includes('SUPER_ADMIN');
     const self = typeof id === 'number' && id === user?.id;
-    const toggleRole = (r: Role) => setValue('roles', roles.includes(r) ? roles.filter((x) => x !== r) : [...roles, r], { shouldValidate: true });
+    const selectRole = (r: Role) => setValue('roles', [r], { shouldValidate: true });
 
     const del = useMutation({
         mutationFn: () => api.send('DELETE', `/api/users/${id}`),
@@ -241,11 +243,11 @@ function UserModal({ id, defaultRole, onClose }: { id: number | 'new' | null; de
                         <Input label="Phone" type="tel" {...register('phone')} error={errors.phone?.message} />
                         <Input label={isNew ? 'Password' : 'New password'} type="password" autoComplete="new-password" required={isNew} {...register('password')} error={errors.password?.message} hint={isNew ? 'At least 8 characters with a letter and a number.' : 'Leave blank to keep the current password. Setting one signs them out.'} />
                     </FormGrid>
-                    <Field label="Roles" required error={errors.roles?.message}>
+                    <Field label="Role" required error={errors.roles?.message}>
                         <div className="grid gap-2 sm:grid-cols-2">
-                            {STAFF_ROLE_CODES.filter((r) => r !== 'SUPER_ADMIN' || isSuper).map((r) => (
-                                <label key={r} className="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-sm">
-                                    <input type="checkbox" className="size-4 rounded border-stone-300" checked={roles.includes(r)} onChange={() => toggleRole(r)} disabled={self && r === 'SUPER_ADMIN'} />
+                            {STAFF_ROLE_CODES.filter((r) => r !== 'SUPER_ADMIN' && r !== 'STUDIO_OWNER').map((r) => (
+                                <label key={r} className="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-sm cursor-pointer hover:bg-stone-50 transition-colors">
+                                    <input type="radio" className="size-4 text-brand-600 focus:ring-brand-600" checked={roles.includes(r)} onChange={() => selectRole(r)} disabled={self} />
                                     {ROLE_LABELS[r]}
                                 </label>
                             ))}

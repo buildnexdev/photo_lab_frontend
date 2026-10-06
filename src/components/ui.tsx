@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import clsx from 'clsx';
 import { Loader2 } from 'lucide-react';
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
@@ -73,10 +76,11 @@ export function Card({ className, children, title, actions, padded = true }: { c
 
 export function PageHeader({ title: _title, subtitle: _subtitle, actions, back }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; back?: ReactNode }) {
     return (
-        <>
-            {back && <div className="mb-4">{back}</div>}
-            {actions && <div className="hidden" data-page-actions>{actions}</div>}
-        </>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+            {back && <div>{back}</div>}
+            <div className="flex-1" />
+            {actions && <div className="flex flex-wrap items-center gap-2" data-page-actions>{actions}</div>}
+        </div>
     );
 }
 

@@ -1,7 +1,10 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Ban, Copy, Download, Eye, Images, Pencil, Plus, QrCode, RefreshCw, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowLeft, Ban, Copy, Download, Eye, Images, Pencil, Plus, QrCode, RefreshCw, Trash2, Upload, ImagePlus, Loader2, CheckCircle2, CircleAlert, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router';
 import { z } from 'zod';
@@ -14,6 +17,8 @@ import { api, applyFieldErrors, downloadAuthed, type Paged } from '../../lib/api
 import { date, dateTime, localInputToUtc, num, relative, titleCase, toLocalInput, toPaise, toRupees } from '../../lib/format';
 import { useInvalidate } from '../../lib/hooks';
 import { GALLERY_STATUSES, type GalleryStatus } from '../../lib/types';
+import { useUploadQueue } from '../../lib/uploadQueue';
+import clsx from 'clsx';
 
 interface Album {
     id: number;
@@ -78,7 +83,7 @@ export default function AdminGalleryDetail() {
     const [coverPicking, setCoverPicking] = useState(false);
     const q = useQuery({ queryKey: ['galleries', 'detail', id], queryFn: () => api.get<GalleryAdmin>(`/api/galleries/${id}`), enabled: id > 0 });
     const refresh = () => invalidate(['galleries']);
-
+    
     const post = useMutation({
         mutationFn: ({ path, method = 'POST' }: { path: string; method?: 'POST' | 'DELETE' }) => api.send<{ id?: number; url?: string; qr?: string }>(method, `/api/galleries/${id}${path}`),
         onSuccess: (r, v) => {
@@ -93,7 +98,13 @@ export default function AdminGalleryDetail() {
         onSuccess: setShown,
         onError: (e) => toast.error(e),
     });
-
+    
+    // Uploader
+    const [dragging, setDragging] = useState(false);
+    const input = useRef<HTMLInputElement>(null);
+    const eventId = q.data?.event_id ?? null;
+    const queue = useUploadQueue({ eventId, cameraLabel: '', onUploaded: () => invalidate(['galleries'], ['photos']) });
+    
     return (
         <div>
             <QueryState query={q}>
@@ -123,6 +134,9 @@ export default function AdminGalleryDetail() {
                                     <Link to={`/admin/photos?galleryId=${g.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:bg-stone-50">
                                         <Images className="size-4" /> Photos
                                     </Link>
+                                    <Link to={`/admin/upload?event=${g.event_id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:bg-stone-50">
+                                        <Upload className="size-4" /> Upload
+                                    </Link>
                                     <Button variant="secondary" icon={<Pencil className="size-4" />} onClick={() => setEditing(true)}>
                                         Settings
                                     </Button>
@@ -137,6 +151,102 @@ export default function AdminGalleryDetail() {
                         </div>
                         <div className="grid gap-6 xl:grid-cols-3">
                             <div className="space-y-6 xl:col-span-2">
+                                <Card title="Upload photos">
+                                    <div
+                                        onDragOver={(e) => {
+                                            e.preventDefault();
+                                            if (eventId) setDragging(true);
+                                        }}
+                                        onDragLeave={() => setDragging(false)}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            setDragging(false);
+                                            if (eventId && e.dataTransfer.files.length) queue.add(e.dataTransfer.files);
+                                        }}
+                                        className={clsx(
+                                            'flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-8 text-center transition',
+                                            dragging ? 'border-brand-500 bg-brand-50' : 'border-stone-300 bg-stone-50',
+                                        )}
+                                    >
+                                        <ImagePlus className="mb-3 size-10 text-stone-400" />
+                                        <p className="font-medium">Drag photos here</p>
+                                        <p className="mt-1 text-sm text-stone-500">JPEG, PNG, WebP, HEIC or TIFF</p>
+                                        <Button className="mt-4" onClick={() => input.current?.click()}>
+                                            Select photos
+                                        </Button>
+                                        <input
+                                            ref={input}
+                                            type="file"
+                                            multiple
+                                            hidden
+                                            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/tiff,.heic,.heif,.tif,.tiff"
+                                            onChange={(e) => {
+                                                if (e.target.files?.length) queue.add(e.target.files);
+                                                e.target.value = '';
+                                            }}
+                                        />
+                                    </div>
+                                    {queue.stats.total > 0 && (
+                                        <div className="mt-4 border-t border-stone-200 pt-4">
+                                            <div className="mb-3 flex items-center justify-between">
+                                                <h3 className="text-sm font-semibold text-stone-900">Queue ({num(queue.stats.total)})</h3>
+                                                <div className="flex gap-2">
+                                                    {queue.stats.failed > 0 && (
+                                                        <Button size="sm" variant="secondary" icon={<RefreshCw className="size-3" />} onClick={() => queue.retry()}>
+                                                            Retry failed
+                                                        </Button>
+                                                    )}
+                                                    {queue.stats.done + queue.stats.duplicate + queue.stats.invalid > 0 && (
+                                                        <Button size="sm" variant="ghost" onClick={queue.clearFinished}>
+                                                            Clear finished
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="mb-4">
+                                                <div className="mb-1 flex justify-between text-xs font-medium text-stone-600">
+                                                    <span>{queue.stats.bytes ? Math.round((queue.stats.sentBytes / queue.stats.bytes) * 100) : 0}%</span>
+                                                    <span>{num(queue.stats.done)} / {num(queue.stats.total)}</span>
+                                                </div>
+                                                <div className="h-1.5 overflow-hidden rounded-full bg-stone-100">
+                                                    <div className="h-full bg-brand-500 transition-all" style={{ width: `${queue.stats.bytes ? (queue.stats.sentBytes / queue.stats.bytes) * 100 : 0}%` }} />
+                                                </div>
+                                            </div>
+
+                                            <ul className="max-h-64 divide-y divide-stone-100 overflow-y-auto rounded-lg border border-stone-200 bg-white shadow-xs">
+                                                {queue.items.slice(0, 100).map((item) => (
+                                                    <li key={item.id} className="flex items-center gap-3 px-3 py-2">
+                                                        <span className="shrink-0">
+                                                            {item.status === 'done' ? <CheckCircle2 className="size-4 text-emerald-500" /> :
+                                                             item.status === 'duplicate' ? <Copy className="size-4 text-stone-400" /> :
+                                                             item.status === 'uploading' ? <Loader2 className="size-4 animate-spin text-brand-500" /> :
+                                                             item.status === 'failed' || item.status === 'invalid' ? <CircleAlert className="size-4 text-rose-500" /> :
+                                                             <span className="block size-4 rounded-full border-2 border-stone-300" />}
+                                                        </span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex justify-between gap-2 text-sm">
+                                                                <span className="truncate">{item.file.name}</span>
+                                                                <span className="shrink-0 text-xs text-stone-500">{Math.round(item.file.size / 1024)} KB</span>
+                                                            </div>
+                                                            {item.status === 'uploading' ? (
+                                                                <div className="mt-1 h-1 overflow-hidden rounded-full bg-stone-100">
+                                                                    <div className="h-full bg-brand-400 transition-all" style={{ width: `${Math.round(item.progress * 100)}%` }} />
+                                                                </div>
+                                                            ) : (
+                                                                <p className={clsx('text-xs', item.status === 'failed' || item.status === 'invalid' ? 'text-rose-600' : 'text-stone-500')}>
+                                                                    {item.status}{item.error ? ` · ${item.error}` : ''}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        {item.status === 'failed' && <IconButton label="Retry" icon={<RefreshCw className="size-3" />} onClick={() => queue.retry(item.id)} />}
+                                                        {(item.status === 'queued' || item.status === 'failed' || item.status === 'invalid') && <IconButton label="Remove" icon={<X className="size-3" />} onClick={() => queue.remove(item.id)} />}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </Card>
                                 <Card
                                     title="QR codes"
                                     padded={false}

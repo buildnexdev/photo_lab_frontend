@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -81,7 +84,7 @@ function RolePermissions() {
                 <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
                     <Card padded={false}>
                         <ul className="divide-y divide-stone-100">
-                            {d.roles.map((r) => (
+                            {d.roles.filter(r => r.code !== 'SUPER_ADMIN' && r.code !== 'STUDIO_OWNER').map((r) => (
                                 <li key={r.code}>
                                     <button type="button" onClick={() => setRoleCode(r.code)} className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm ${r.code === roleCode ? 'bg-brand-50 font-semibold text-brand-800' : 'hover:bg-stone-50'}`}>
                                         <span>{ROLE_LABELS[r.code] ?? r.name}</span>

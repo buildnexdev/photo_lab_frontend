@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { BellOff, CheckCheck } from 'lucide-react';

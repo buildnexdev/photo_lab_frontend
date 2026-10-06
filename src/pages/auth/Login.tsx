@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 // AUTHOR: NANDHAKUMAR
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Phone } from 'lucide-react';

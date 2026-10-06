@@ -1,3 +1,6 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 06-10-2026
 /* Shapes returned by the API (snake_case columns as served). Money is always in paise. */
 
 export type BookingStatus = 'ENQUIRY' | 'QUOTED' | 'ADVANCE_PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'DELIVERED' | 'COMPLETED' | 'CANCELLED';
