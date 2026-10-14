@@ -2,7 +2,7 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import clsx from 'clsx';
-import { CheckCircle2, CircleAlert, CloudOff, Copy, ImagePlus, Loader2, Pause, Play, RotateCw, Trash2, X } from 'lucide-react';
+import { CheckCircle2, CircleAlert, CloudOff, Copy, FolderOpen, ImagePlus, Loader2, Pause, Play, Radio, RotateCw, StopCircle, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { EmptyState, QueryState } from '../../components/data';
@@ -16,6 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api, type Paged } from '../../lib/api';
 import { type EventRow } from '../../lib/types';
 import { MAX_FILE_BYTES, useUploadQueue, type UploadItem } from '../../lib/uploadQueue';
+import { useFolderWatcher } from '../../lib/useFolderWatcher';
 
 const SHOWN = 300;
 const CAMERA_KEY = 'photolab.cameraLabel';
@@ -59,6 +60,12 @@ export default function PhotographerUpload() {
     const { stats } = queue;
     const pct = stats.bytes ? Math.round((stats.sentBytes / stats.bytes) * 100) : 0;
 
+    const watcher = useFolderWatcher({
+        onNewFiles: (files) => {
+            if (eventId) queue.add(files);
+        },
+    });
+
     const onDrop = (e: DragEvent) => {
         e.preventDefault();
         setDragging(false);
@@ -98,6 +105,62 @@ export default function PhotographerUpload() {
                                         />
                                         <Input label="Camera label" value={camera} maxLength={40} onChange={(e) => setCamera(e.target.value)} placeholder="e.g. Cam A" hint="Helps the editor sort photos by camera." />
                                     </div>
+                                </Card>
+
+                                {/* ── Live Camera Feed ─────────────────────────────── */}
+                                <Card
+                                    title="Live Camera Feed"
+                                    actions={
+                                        watcher.active ? (
+                                            <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                                                <span className="relative flex size-2">
+                                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                                    <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                                                </span>
+                                                Watching&nbsp;<span className="font-semibold">{watcher.folderName}</span>
+                                            </span>
+                                        ) : null
+                                    }
+                                >
+                                    {!watcher.supported ? (
+                                        <p className="text-sm text-stone-500">
+                                            Live folder watching requires Chrome or Edge 86+. Use the manual file picker below instead.
+                                        </p>
+                                    ) : watcher.active ? (
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div>
+                                                <p className="text-sm text-stone-700">
+                                                    <span className="font-semibold text-emerald-700">{watcher.newCount}</span> new photo{watcher.newCount !== 1 ? 's' : ''} detected · polling every 2 s
+                                                </p>
+                                                <p className="mt-0.5 text-xs text-stone-400">New shots appearing in this folder are added to the queue automatically.</p>
+                                            </div>
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
+                                                icon={<StopCircle className="size-4 text-rose-600" />}
+                                                onClick={watcher.stop}
+                                            >
+                                                Stop
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <p className="text-sm text-stone-500">
+                                                Point to the folder where your camera saves photos (SD card, camera Wi-Fi output, etc.). New images are queued automatically as they arrive.
+                                            </p>
+                                            {watcher.error && (
+                                                <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{watcher.error}</p>
+                                            )}
+                                            <Button
+                                                disabled={!eventId}
+                                                icon={<FolderOpen className="size-4" />}
+                                                onClick={watcher.start}
+                                            >
+                                                <Radio className="mr-1 size-3.5 text-emerald-500" />
+                                                Connect camera folder
+                                            </Button>
+                                        </div>
+                                    )}
                                 </Card>
 
                                 <div

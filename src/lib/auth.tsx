@@ -37,7 +37,7 @@ export const homeFor = (user: SessionUser | null) => {
 interface AuthState {
     user: SessionUser | null;
     status: 'loading' | 'authenticated' | 'anonymous';
-    login: (identifier: string, password: string) => Promise<SessionPayload>;
+    login: (identifier: string, password: string, studio?: string) => Promise<SessionPayload>;
     register: (input: { name: string; email: string; phone?: string; password: string }) => Promise<SessionPayload>;
     acceptSession: (s: SessionPayload) => void;
     logout: () => Promise<void>;
@@ -96,8 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             user,
             status,
             acceptSession,
-            async login(identifier, password) {
-                const s = await api.post<SessionPayload>('/api/auth/login', { identifier, password });
+            async login(identifier, password, studio) {
+                const s = await api.post<SessionPayload>('/api/auth/login', { identifier, password, studio: studio?.trim() || undefined });
                 acceptSession(s);
                 return s;
             },

@@ -76,7 +76,7 @@ const STATUS_TONES: Record<string, string> = {
     IN_PROGRESS: 'sky', UPCOMING: 'sky', PRINTING: 'sky', PRINTED: 'sky', DISPATCHED: 'sky', IN_TRANSIT: 'sky', PREVIEW: 'sky', SELECTED: 'violet', UPLOADED: 'stone', REOPENED: 'sky',
     LIVE: 'rose',
     // reds
-    CANCELLED: 'red', FAILED: 'red', REJECTED: 'red', REFUNDED: 'violet', EXPIRED: 'stone', REVOKED: 'red', EXHAUSTED: 'stone', INACTIVE: 'stone', LOCKED: 'red', ARCHIVED: 'stone',
+    CANCELLED: 'red', FAILED: 'red', REJECTED: 'red', REFUNDED: 'violet', EXPIRED: 'stone', REVOKED: 'red', EXHAUSTED: 'stone', INACTIVE: 'stone', LOCKED: 'red', ARCHIVED: 'stone', SUSPENDED: 'red',
 };
 const TONE_CLASSES: Record<string, string> = {
     emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',

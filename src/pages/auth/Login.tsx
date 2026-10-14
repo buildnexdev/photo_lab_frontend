@@ -14,12 +14,14 @@ import { useAuth } from '../../lib/auth';
 const pwSchema = z.object({
     identifier: z.string().trim().min(1, 'Please enter your phone number'),
     password: z.string().min(1, 'Please enter your password'),
+    studio: z.string().trim().max(80),
 });
 
 export const safeNext = (next: string | null) => (next && next.startsWith('/') && !next.startsWith('//') ? next : null);
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
+    const [showStudio, setShowStudio] = useState(false);
     const [error, setError] = useState('');
 
     const { login } = useAuth();
@@ -29,13 +31,13 @@ export default function Login() {
 
     const pw = useForm<z.infer<typeof pwSchema>>({
         resolver: zodResolver(pwSchema),
-        defaultValues: { identifier: '', password: '' },
+        defaultValues: { identifier: '', password: '', studio: '' },
     });
 
     const submitPassword = pw.handleSubmit(async (v) => {
         setError('');
         try {
-            const s = await login(v.identifier, v.password);
+            const s = await login(v.identifier, v.password, v.studio);
             navigate(next ?? s.home, { replace: true });
         } catch (e) {
             setError(errorMessage(e));
@@ -141,6 +143,21 @@ export default function Login() {
                         )}
                     </div>
 
+                    {showStudio && (
+                        <div>
+                            <label className="mb-2 block text-xs font-sans font-medium uppercase tracking-[0.15em] text-stone-300">
+                                Studio code
+                            </label>
+                            <input
+                                {...pw.register('studio')}
+                                type="text"
+                                autoComplete="organization"
+                                placeholder="sunrise-studio"
+                                className="w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder-stone-500 focus:border-amber-400 focus:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-amber-400 transition-all"
+                            />
+                        </div>
+                    )}
+
                     {/* Login Button */}
                     <button
                         type="submit"
@@ -155,6 +172,9 @@ export default function Login() {
                         ) : (
                             <span>Login</span>
                         )}
+                    </button>
+                    <button type="button" onClick={() => setShowStudio((v) => !v)} className="w-full text-center text-[11px] uppercase tracking-[0.18em] text-stone-400 hover:text-amber-300">
+                        {showStudio ? 'Hide studio code' : 'Signing in to another studio?'}
                     </button>
                 </form>
             </div>

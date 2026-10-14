@@ -42,10 +42,22 @@ interface HeroSlideSetting {
     title: string;
     subtitle: string;
     imageUrl: string;
+    image?: string;
     tag: string;
+    highlightText?: string;
     lens?: string;
     shutter?: string;
     iso?: string;
+}
+
+interface WebsiteProduct {
+    id: string;
+    name: string;
+    category: string;
+    price: number;
+    description: string;
+    features: string[];
+    image?: string;
 }
 
 interface WebsiteSettingsData {
@@ -57,6 +69,7 @@ interface WebsiteSettingsData {
     historyText: string;
     whyChooseUs: string[];
     slides?: HeroSlideSetting[];
+    products?: WebsiteProduct[];
 }
 
 const MAX_UPLOAD = 25 * 1024 * 1024;
@@ -115,7 +128,7 @@ function HeroBannerSettings() {
             setHeroSubtitle(w.heroSubtitle || '');
             setSlides(
                 w.slides?.length
-                    ? w.slides
+                    ? w.slides.map((s) => ({ ...s, imageUrl: s.imageUrl || s.image || '', image: s.image || s.imageUrl || '' }))
                     : [
                           {
                               id: '1',
@@ -161,7 +174,8 @@ function HeroBannerSettings() {
                     'Dedicated Lead Photographers & Master Retouchers',
                     'Transparent All-Inclusive Pricing & Timely Delivery',
                 ],
-                slides,
+                products: currentWebsite.products ?? [],
+                slides: slides.map((s) => ({ ...s, image: s.imageUrl || s.image || '', imageUrl: s.imageUrl || s.image || '' })),
             };
             const res = await api.send('PUT', '/api/settings/website', payload);
             toast.success(res.message || 'Website hero and promotional banner updated');
@@ -412,6 +426,7 @@ function AboutSettings() {
                 heroSubtitle: currentWebsite.heroSubtitle || 'Stories told in light, delivered as they unfold across your celebrations.',
                 historyText: historyText.trim(),
                 whyChooseUs: whyChooseUs.filter((p) => p.trim().length > 0),
+                products: currentWebsite.products ?? [],
                 slides: currentWebsite.slides,
             };
             const res = await api.send('PUT', '/api/settings/website', payload);

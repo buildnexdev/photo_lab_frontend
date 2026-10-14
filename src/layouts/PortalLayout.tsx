@@ -24,6 +24,7 @@ export interface NavItem {
     label: string;
     icon: LucideIcon;
     anyOf?: string[];
+    roles?: Role[];
     end?: boolean;
 }
 
@@ -190,7 +191,7 @@ function Subheader({
 }
 
 export function PortalLayout({ area, sections, profileLink, notificationsLink }: { area: string; sections: NavSection[]; profileLink: string; notificationsLink?: string }) {
-    const { user, can, logout } = useAuth();
+    const { user, can, hasRole, logout } = useAuth();
     const site = useSite();
     const [mobileOpen, setMobileOpen] = useState(false);
     const location = useLocation();
@@ -206,8 +207,14 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
     useEffect(() => setMobileOpen(false), [location.pathname]);
 
     const visible = useMemo(
-        () => sections.map((s) => ({ ...s, items: s.items.filter((i) => !i.anyOf || can(...i.anyOf)) })).filter((s) => s.items.length),
-        [sections, can],
+        () =>
+            sections
+                .map((s) => ({
+                    ...s,
+                    items: s.items.filter((i) => (!i.roles?.length || hasRole(...i.roles)) && (!i.anyOf || can(...i.anyOf))),
+                }))
+                .filter((s) => s.items.length),
+        [sections, can, hasRole],
     );
     const areas = AREA_LINKS.filter((a) => can(...a.anyOf));
 

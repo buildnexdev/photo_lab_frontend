@@ -36,6 +36,7 @@ import {
     Bell,
     Wand2,
     BookImage,
+    Building2,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
@@ -96,6 +97,7 @@ const adminNav: NavSection[] = [
     {
         title: 'Settings',
         items: [
+            { to: '/admin/companies', label: 'Studios', icon: Building2, roles: ['SUPER_ADMIN'] },
             { to: '/admin/website', label: 'Website content', icon: Globe, anyOf: ['pricing.manage'] },
             { to: '/admin/settings', label: 'Settings', icon: Settings, anyOf: ['settings.manage', 'pricing.manage', 'roles.manage'] },
             { to: '/admin/audit-logs', label: 'Audit logs', icon: ShieldCheck, anyOf: ['audit.view'] },
@@ -125,6 +127,7 @@ const photographerNav: NavSection[] = [
             { to: '/photographer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { to: '/photographer/events', label: 'My events', icon: Calendar },
             { to: '/photographer/upload', label: 'Upload', icon: Upload },
+            { to: '/photographer/camera-setup', label: 'Camera setup', icon: Camera },
             { to: '/photographer/tasks', label: 'Tasks', icon: ListChecks },
             { to: '/photographer/profile', label: 'Profile', icon: User },
         ],
@@ -227,6 +230,7 @@ export const router = createBrowserRouter([
                     { path: 'services', ...page(() => import('./pages/admin/Services')) },
                     { path: 'packages', ...page(() => import('./pages/admin/Packages')) },
                     { path: 'coupons', ...page(() => import('./pages/admin/Coupons')) },
+                    { path: 'companies', ...page(() => import('./pages/admin/Companies')) },
                     { path: 'website', ...page(() => import('./pages/admin/Website')) },
                     { path: 'staff', ...page(() => import('./pages/admin/Staff')) },
                     { path: 'photographers', ...page(() => import('./pages/admin/Photographers')) },
@@ -255,6 +259,7 @@ export const router = createBrowserRouter([
                     { path: 'events', ...page(() => import('./pages/photographer/Events')) },
                     { path: 'event/:id', ...page(() => import('./pages/photographer/EventDetail')) },
                     { path: 'upload', ...page(() => import('./pages/photographer/Upload')) },
+                    { path: 'camera-setup', ...page(() => import('./pages/photographer/CameraSetup')) },
                     { path: 'tasks', ...page(() => import('./pages/photographer/Tasks')) },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
