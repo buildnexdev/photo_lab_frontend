@@ -94,5 +94,11 @@ export const packageFeatures = (p: Pick<Package, 'features'>): string[] => {
     }
 };
 
-/** Portfolio images are served via the API (redirect to a signed URL). */
-export const apiAsset = (path: string) => `${(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')}${path}`;
+/** Portfolio images are served via the API (redirect to a signed URL) or local frontend public directory. */
+export const apiAsset = (path: string) => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    if (path.startsWith('/images/') || path.startsWith('/assets/')) return path;
+    const base = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
+    return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+};
