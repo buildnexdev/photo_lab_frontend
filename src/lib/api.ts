@@ -1,10 +1,16 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
-const DEFAULT_PROD_API = 'https://flash-studio.onrender.com';
+const DEFAULT_PROD_API = 'https://flash-studio-backend.onrender.com';
+
+const rawApiUrl = (import.meta.env.VITE_API_URL ?? '').trim();
+const normalizedApiUrl = rawApiUrl.replace(
+    /^https?:\/\/flash-studio\.onrender\.com\/?$/,
+    DEFAULT_PROD_API,
+);
 
 export const API_BASE = (
-    import.meta.env.VITE_API_URL || (import.meta.env.PROD ? DEFAULT_PROD_API : '')
+    normalizedApiUrl || (import.meta.env.PROD ? DEFAULT_PROD_API : '')
 ).replace(/\/$/, '');
 
 const REFRESH_TIMEOUT_MS = 12_000;
