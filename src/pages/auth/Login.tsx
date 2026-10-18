@@ -86,10 +86,10 @@ export default function Login() {
 
                 {/* Login Form: ONLY Phone Number, Password, and Login Button */}
                 <form onSubmit={submitPassword} noValidate className="space-y-5">
-                    {/* Phone Number */}
+                    {/* Identifier: Email or Phone */}
                     <div>
                         <label className="mb-2 block text-xs font-sans font-medium uppercase tracking-[0.15em] text-stone-300">
-                            Phone Number
+                            Email or Phone Number
                         </label>
                         <div className="relative">
                             <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-stone-400">
@@ -98,9 +98,9 @@ export default function Login() {
                             <input
                                 {...pw.register('identifier')}
                                 type="text"
-                                autoComplete="tel"
+                                autoComplete="username"
                                 autoFocus
-                                placeholder="Enter your phone number"
+                                placeholder="e.g. 9000000001 or admin@photolab.test"
                                 className="w-full rounded-xl border border-white/15 bg-white/[0.05] pl-10 pr-4 py-3 text-sm text-white placeholder-stone-500 focus:border-amber-400 focus:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-amber-400 transition-all"
                             />
                         </div>
