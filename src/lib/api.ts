@@ -1,7 +1,11 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
-export const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
+const DEFAULT_PROD_API = 'https://flash-studio.onrender.com';
+
+export const API_BASE = (
+    import.meta.env.VITE_API_URL || (import.meta.env.PROD ? DEFAULT_PROD_API : '')
+).replace(/\/$/, '');
 
 export interface FieldError {
     field: string;
