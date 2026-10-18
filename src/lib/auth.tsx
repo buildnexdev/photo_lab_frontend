@@ -67,7 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [qc]);
 
     useEffect(() => {
+        let cancelled = false;
         const off = onRefresh((s) => {
+            if (cancelled) return;
             if (s) {
                 setUser(s.user);
                 setStatus('authenticated');
@@ -75,10 +77,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         setSessionLostHandler(clear);
         // Restore the session from the httpOnly refresh cookie on page load
-        refreshSession().then((ok) => {
-            if (!ok) setStatus('anonymous');
-        });
+        void refreshSession()
+            .then((ok) => {
+                if (cancelled) return;
+                if (!ok) setStatus('anonymous');
+            })
+            .catch(() => {
+                if (!cancelled) setStatus('anonymous');
+            });
+        const safety = window.setTimeout(() => {
+            if (!cancelled) setStatus((s) => (s === 'loading' ? 'anonymous' : s));
+        }, 15_000);
         return () => {
+            cancelled = true;
+            window.clearTimeout(safety);
             off();
             setSessionLostHandler(null);
         };

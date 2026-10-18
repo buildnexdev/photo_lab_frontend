@@ -7,6 +7,8 @@ export const API_BASE = (
     import.meta.env.VITE_API_URL || (import.meta.env.PROD ? DEFAULT_PROD_API : '')
 ).replace(/\/$/, '');
 
+const REFRESH_TIMEOUT_MS = 12_000;
+
 export interface FieldError {
     field: string;
     message: string;
@@ -76,22 +78,40 @@ export const onRefresh = (fn: RefreshListener) => {
 /** Single-flight refresh: concurrent 401s share one /refresh call. */
 export function refreshSession(): Promise<boolean> {
     if (!refreshing) {
-        refreshing = fetch(`${API_BASE}/api/auth/refresh`, { method: 'POST', credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(async (res) => {
-                if (!res.ok) {
+        refreshing = (async () => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+                    signal: controller.signal,
+                });
+                const type = res.headers.get('content-type') ?? '';
+                if (!res.ok || !type.includes('application/json')) {
                     accessToken = null;
                     refreshListeners.forEach((l) => l(null));
                     return false;
                 }
-                const body = (await res.json()) as { data: SessionPayload };
+                const body = (await res.json()) as { success?: boolean; data?: SessionPayload };
+                if (body.success === false || !body.data?.accessToken || !body.data.user) {
+                    accessToken = null;
+                    refreshListeners.forEach((l) => l(null));
+                    return false;
+                }
                 accessToken = body.data.accessToken;
-                refreshListeners.forEach((l) => l(body.data));
+                refreshListeners.forEach((l) => l(body.data!));
                 return true;
-            })
-            .catch(() => false)
-            .finally(() => {
+            } catch {
+                accessToken = null;
+                refreshListeners.forEach((l) => l(null));
+                return false;
+            } finally {
+                clearTimeout(timer);
                 refreshing = null;
-            });
+            }
+        })();
     }
     return refreshing;
 }
