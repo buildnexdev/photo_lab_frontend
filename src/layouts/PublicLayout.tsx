@@ -2,12 +2,13 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import clsx from 'clsx';
-import { Camera, Mail, MapPin, Menu, Phone, X } from 'lucide-react';
+import { Mail, MapPin, Menu, Phone, X } from 'lucide-react';
+import logo from '../assets/NammaqrLogo.png';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { ButtonLink } from '../components/ui';
-import { homeFor, useAuth } from '../lib/auth';
-import { useSite } from '../lib/site';
+import { homeFor, useAuth } from '../hooks/useAuth';
+import { useSite } from '../utils/site';
 
 const LINKS = [
     { to: '/', label: 'Home', end: true },
@@ -36,10 +37,8 @@ export function PublicLayout() {
             <header className="sticky top-0 z-30 border-b border-stone-200/70 bg-white/90 backdrop-blur">
                 <div className="container-page flex h-16 items-center gap-4">
                     <Link to="/" className="flex items-center gap-2">
-                        <span className="flex size-9 items-center justify-center rounded-lg bg-ink-900 text-brand-400">
-                            <Camera className="size-5" />
-                        </span>
-                        <span className="font-display text-lg font-semibold">{studio?.name ?? 'BuildNexDev Studio'}</span>
+                        <img src={logo} alt="" className="h-10 w-auto" />
+                        <span className="font-display text-lg font-semibold">{studio?.name ?? 'Nammaqr'}</span>
                     </Link>
                     <nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Main">
                         {LINKS.map((l) => (
@@ -95,7 +94,7 @@ export function PublicLayout() {
             <footer className="bg-ink-900 text-stone-300">
                 <div className="container-page grid gap-10 py-12 md:grid-cols-4">
                     <div className="md:col-span-2">
-                        <p className="font-display text-xl font-semibold text-white">{studio?.name ?? 'BuildNexDev Studio'}</p>
+                        <p className="font-display text-xl font-semibold text-white">{studio?.name ?? 'Nammaqr'}</p>
                         <p className="mt-2 max-w-md text-sm text-stone-400">{studio?.tagline}</p>
                         <div className="mt-4 flex flex-wrap gap-2">
                             {(
@@ -159,7 +158,7 @@ export function PublicLayout() {
                 </div>
                 <div className="border-t border-white/10">
                     <p className="container-page py-4 text-xs text-stone-500">
-                        © {new Date().getFullYear()} {studio?.name ?? 'BuildNexDev Studio'}. Platform by BuildNexDev.
+                        © {new Date().getFullYear()} {studio?.name ?? 'Nammaqr'}. Nammaqr Photography.
                     </p>
                 </div>
             </footer>
@@ -170,7 +169,7 @@ export function PublicLayout() {
 export function AuthLayout() {
     const site = useSite();
     const location = useLocation();
-    const studioName = site.data?.studio.name ?? 'BuildNexDev Studio';
+    const studioName = site.data?.studio.name ?? 'Nammaqr';
 
     // Full screen view for login page (both / and /login)
     if (location.pathname === '/login' || location.pathname === '/') {
@@ -196,19 +195,16 @@ export function AuthLayout() {
             {/* Top Minimal Navigation Header */}
             <header className="relative z-10 w-full px-6 py-5 flex items-center justify-between border-b border-white/5 backdrop-blur-xs">
                 <Link to="/" className="flex items-center gap-2 group">
-                    <span className="flex size-9 items-center justify-center rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 group-hover:bg-blue-600/30 group-hover:scale-105 transition-all">
-                        <Camera className="size-5" />
-                    </span>
+                    <img src={logo} alt="" className="h-10 w-auto transition-transform group-hover:scale-105" />
                     <div className="flex items-center gap-1 font-extrabold tracking-tight text-white text-xl font-sans">
-                        <span>buildnexdev</span>
-                        <span className="size-2 rounded-full bg-blue-500 mb-0.5 animate-pulse" />
+                        <span>Nammaqr</span>
                     </div>
                 </Link>
 
                 <div className="flex items-center gap-3">
                     <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">
                         <span className="size-1.5 rounded-full bg-blue-400 animate-ping" />
-                        Enterprise Studio Platform
+                        Nammaqr Photography
                     </div>
                     <Link
                         to="/login"

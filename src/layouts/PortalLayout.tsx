@@ -14,10 +14,11 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { NotificationBell } from '../components/NotificationBell';
-import { useToast } from '../components/toast';
-import { ROLE_LABELS, homeFor, useAuth, type Role } from '../lib/auth';
-import { useSite } from '../lib/site';
+import logo from '../assets/NammaqrLogo.png';
+import { NotificationBell } from '../components/layout/NotificationBell';
+import { useToast } from '../components/ui/Toast';
+import { ROLE_LABELS, homeFor, useAuth, type Role } from '../hooks/useAuth';
+import { useSite } from '../utils/site';
 
 export interface NavItem {
     to: string;
@@ -47,19 +48,19 @@ export const AREA_LINKS: AreaLink[] = [
     { to: '/customer/dashboard', label: 'My account', anyOf: ['customer.portal'] },
 ];
 
-/** FlashLight Photography Brand Logo */
-export function FlashLightBrand({ subtitle = 'STUDIO PLATFORM' }: { subtitle?: string }) {
+/** Nammaqr Photography brand mark */
+export function NammaqrBrand({ subtitle = 'PHOTOGRAPHY' }: { subtitle?: string }) {
     return (
         <div className="group block select-none">
             <div className="flex items-center gap-2.5">
                 <img
-                    src="/images/flashlight-emblem.png"
-                    alt="FlashLight"
-                    className="h-8 w-auto filter drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] transition-transform group-hover:scale-105"
+                    src={logo}
+                    alt="Nammaqr"
+                    className="h-10 w-auto filter drop-shadow-[0_2px_8px_rgba(212,175,55,0.45)] transition-transform group-hover:scale-105"
                 />
                 <div>
                     <span className="block font-serif text-sm font-medium tracking-[0.2em] uppercase text-white leading-none">
-                        Flash Light
+                        Nammaqr
                     </span>
                     <span className="block text-[8px] font-sans font-light tracking-[0.28em] text-amber-400 uppercase mt-1">
                         {subtitle}
@@ -231,7 +232,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
     const brandHeader = (
         <div className="px-4 pt-5 pb-3">
             <Link to={homeFor(user)} className="focus:outline-none block">
-                <FlashLightBrand subtitle={subtitleText} />
+                <NammaqrBrand subtitle={subtitleText} />
             </Link>
             <div className="mt-3.5 border-b border-white/10" />
         </div>
@@ -294,7 +295,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
     const asideFooter = (
         <div className="mt-auto border-t border-white/10 bg-[#090d14] px-4 py-3.5">
             <div className="flex items-center justify-between text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase">
-                <span>FlashLight Studio</span>
+                <span>Nammaqr</span>
                 <span className="flex size-2 items-center justify-center">
                     <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 </span>
@@ -355,7 +356,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
             {/* Bottom Footer */}
             <footer className="mt-auto border-t border-slate-200/80 bg-white/80 px-4 py-3.5 backdrop-blur-xs sm:px-8">
                 <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-600">
-                    © {new Date().getFullYear()} FlashLight Photography 
+                    © {new Date().getFullYear()} Nammaqr Photography 
                     <span className="inline-block animate-pulse text-rose-500">❤️</span> 
                     Developed by <a href="https://buildnexdev.in" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">buildnexdev.in</a>
                 </div>

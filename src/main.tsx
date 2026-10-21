@@ -4,12 +4,13 @@
 import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { RouterProvider } from 'react-router';
-import { ToastProvider } from './components/toast';
+import { Provider } from 'react-redux';
+import { ToastProvider } from './components/ui/Toast';
 import './index.css';
-import { ApiError } from './lib/api';
-import { AuthProvider } from './lib/auth';
-import { router } from './routes';
+import App from './App';
+import { AuthProvider } from './hooks/useAuth';
+import { ApiError } from './services/api';
+import { store } from './store';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -24,12 +25,14 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <ToastProvider>
-                <AuthProvider>
-                    <RouterProvider router={router} />
-                </AuthProvider>
-            </ToastProvider>
-        </QueryClientProvider>
+        <Provider store={store}>
+            <QueryClientProvider client={queryClient}>
+                <ToastProvider>
+                    <AuthProvider>
+                        <App />
+                    </AuthProvider>
+                </ToastProvider>
+            </QueryClientProvider>
+        </Provider>
     </StrictMode>,
 );

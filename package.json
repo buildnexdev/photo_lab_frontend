@@ -2,7 +2,7 @@
   "name": "@photolab/web",
   "version": "1.0.0",
   "private": true,
-  "description": "BuildNexDev Photo Studio Digital Platform - web app",
+  "description": "Nammaqr Photography studio platform",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -19,8 +19,11 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-hook-form": "^7.89.0",
+    "react-redux": "^9.3.0",
     "react-router": "^8.4.0",
     "recharts": "^3.10.1",
+    "redux": "^5.0.1",
+    "redux-saga": "^1.5.1",
     "socket.io-client": "^4.8.4",
     "zod": "^3.25.76"
   },
