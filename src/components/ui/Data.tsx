@@ -6,7 +6,7 @@ import { AlertCircle, ChevronLeft, ChevronRight, Inbox, LayoutGrid, Plus, Refres
 import { useEffect, useState, type ReactNode } from 'react';
 import { errorMessage } from '../../services/api';
 import { titleCase } from '../../utils/format';
-import { Button, Spinner } from './index';
+import { Button, Spinner } from './';
 
 /* ---------------- States ---------------- */
 
@@ -71,16 +71,17 @@ const STATUS_TONES: Record<string, string> = {
     // greens
     CONFIRMED: 'emerald', COMPLETED: 'emerald', SUCCESS: 'emerald', PAID: 'emerald', DELIVERED: 'emerald', APPROVED: 'emerald', PUBLISHED: 'emerald', ACTIVE: 'emerald', READY: 'emerald', ACCEPTED: 'emerald', DONE: 'emerald', GRANTED: 'emerald', RESOLVED: 'emerald', EDITED: 'emerald',
     // ambers
-    ENQUIRY: 'amber', QUOTED: 'amber', ADVANCE_PENDING: 'amber', PENDING: 'amber', PROCESSING: 'amber', CREATED: 'amber', SENT: 'amber', QUEUED: 'amber', SUBMITTED: 'amber', REVISION_REQUESTED: 'amber', PARTIAL: 'amber', UPLOADING: 'amber', EDITING: 'amber', OPEN: 'amber', UNPAID: 'amber', DRAFT: 'stone', ASSIGNED: 'amber',
+    ENQUIRY: 'amber', QUOTED: 'amber', ADVANCE_PENDING: 'amber', PENDING: 'amber', PROCESSING: 'amber', CREATED: 'amber', SENT: 'amber', QUEUED: 'amber', SUBMITTED: 'amber', REVISION_REQUESTED: 'amber', PARTIAL: 'amber', UPLOADING: 'amber', EDITING: 'amber', OPEN: 'amber', UNPAID: 'amber', DRAFT: 'stone', ASSIGNED: 'amber', MAINTENANCE: 'amber', FAIR: 'amber', POOR: 'amber',
+    AVAILABLE: 'emerald', EXCELLENT: 'emerald', GOOD: 'emerald', IN_USE: 'sky',
     // blues
     IN_PROGRESS: 'sky', UPCOMING: 'sky', PRINTING: 'sky', PRINTED: 'sky', DISPATCHED: 'sky', IN_TRANSIT: 'sky', PREVIEW: 'sky', SELECTED: 'violet', UPLOADED: 'stone', REOPENED: 'sky',
     LIVE: 'rose',
     // reds
-    CANCELLED: 'red', FAILED: 'red', REJECTED: 'red', REFUNDED: 'violet', EXPIRED: 'stone', REVOKED: 'red', EXHAUSTED: 'stone', INACTIVE: 'stone', LOCKED: 'red', ARCHIVED: 'stone', SUSPENDED: 'red',
+    CANCELLED: 'red', FAILED: 'red', REJECTED: 'red', REFUNDED: 'violet', EXPIRED: 'stone', REVOKED: 'red', EXHAUSTED: 'stone', INACTIVE: 'stone', LOCKED: 'red', ARCHIVED: 'stone', SUSPENDED: 'red', DAMAGED: 'red', LOST: 'red', RETIRED: 'stone',
 };
 const TONE_CLASSES: Record<string, string> = {
     emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-    amber: 'bg-amber-50 text-amber-800 ring-amber-600/20',
+    amber: 'bg-brand-50 text-brand-700 ring-brand-500/20',
     sky: 'bg-sky-50 text-sky-700 ring-sky-600/20',
     violet: 'bg-violet-50 text-violet-700 ring-violet-600/20',
     rose: 'bg-rose-50 text-rose-700 ring-rose-600/30',
@@ -89,7 +90,7 @@ const TONE_CLASSES: Record<string, string> = {
 };
 
 export const COLORFUL_THEMES = [
-    { bg: 'bg-gradient-to-br from-amber-500 to-orange-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-brand-500 to-orange-600', text: 'text-white' },
     { bg: 'bg-gradient-to-br from-emerald-500 to-teal-600', text: 'text-white' },
     { bg: 'bg-gradient-to-br from-sky-500 to-indigo-600', text: 'text-white' },
     { bg: 'bg-gradient-to-br from-rose-500 to-pink-600', text: 'text-white' },
@@ -157,7 +158,7 @@ export function TableHeaderToolbar({
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
                 {total !== undefined && (
                     <div className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-2xs select-none shrink-0">
-                        <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                        <span className="size-2 rounded-full bg-brand-500 animate-pulse" />
                         <span>{total}</span>
                         <span className="text-slate-500 font-normal">{totalLabel}</span>
                     </div>
@@ -214,7 +215,7 @@ export function TableHeaderToolbar({
                     <button
                         type="button"
                         onClick={onAdd}
-                        className="flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 px-3.5 text-xs font-bold text-stone-950 shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer select-none"
+                        className="flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 px-3.5 text-xs font-bold text-stone-950 shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer select-none"
                     >
                         <Plus className="size-3.5 stroke-[2.5]" />
                         <span>{addLabel}</span>
@@ -259,7 +260,7 @@ export function DataTable<T>({
                                     onKeyDown={onRowClick ? (e) => e.key === 'Enter' && onRowClick(r) : undefined}
                                     tabIndex={onRowClick ? 0 : undefined}
                                     className={clsx(
-                                        'rounded-2xl border border-slate-200/80 bg-white shadow-xs transition-all flex flex-col justify-between hover:border-amber-400/60 hover:shadow-md overflow-hidden group',
+                                        'rounded-2xl border border-slate-200/80 bg-white shadow-xs transition-all flex flex-col justify-between hover:border-brand-200/60 hover:shadow-md overflow-hidden group',
                                         onRowClick && 'cursor-pointer',
                                     )}
                                 >
@@ -276,7 +277,7 @@ export function DataTable<T>({
                                 onKeyDown={onRowClick ? (e) => e.key === 'Enter' && onRowClick(r) : undefined}
                                 tabIndex={onRowClick ? 0 : undefined}
                                 className={clsx(
-                                    'rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all flex flex-col justify-between hover:border-amber-400/40 hover:shadow-md',
+                                    'rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all flex flex-col justify-between hover:border-brand-200/40 hover:shadow-md',
                                     onRowClick && 'cursor-pointer',
                                 )}
                             >
@@ -379,7 +380,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', classN
 export function StatCard({ label, value, hint, icon, tone = 'stone', onClick }: { label: string; value: ReactNode; hint?: ReactNode; icon?: ReactNode; tone?: 'stone' | 'brand' | 'emerald' | 'sky' | 'rose' | 'violet'; onClick?: () => void }) {
     const tones = {
         stone: 'bg-slate-50 text-slate-700 border border-slate-200/70',
-        brand: 'bg-amber-50 text-amber-800 border border-amber-200/70',
+        brand: 'bg-brand-50 text-brand-700 border border-brand-200/70',
         emerald: 'bg-emerald-50 text-emerald-700 border border-emerald-200/70',
         sky: 'bg-sky-50 text-sky-700 border border-sky-200/70',
         rose: 'bg-rose-50 text-rose-700 border border-rose-200/70',
@@ -392,7 +393,7 @@ export function StatCard({ label, value, hint, icon, tone = 'stone', onClick }: 
             onClick={onClick}
             className={clsx(
                 'group flex items-start gap-3.5 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 text-left shadow-xs transition-all duration-200',
-                onClick ? 'hover:border-amber-400/50 hover:shadow-md hover:-translate-y-0.5 cursor-pointer' : '',
+                onClick ? 'hover:border-brand-200/50 hover:shadow-md hover:-translate-y-0.5 cursor-pointer' : '',
             )}
         >
             {icon && <span className={clsx('flex size-11 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105', tones[tone])}>{icon}</span>}

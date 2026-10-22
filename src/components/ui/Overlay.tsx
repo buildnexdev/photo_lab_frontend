@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { X } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Button } from './index';
+import { Button } from './';
 
 function useLockScroll(open: boolean) {
     useEffect(() => {

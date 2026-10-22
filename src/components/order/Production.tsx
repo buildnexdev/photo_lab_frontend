@@ -171,7 +171,7 @@ export function PrintQueue({ base, title, subtitle }: { base: 'admin' | 'deliver
                                                     <button type="button" className="text-xs text-brand-700 hover:underline" onClick={() => setOrderId(r.order_id)}>
                                                         {r.order_no}
                                                     </button>
-                                                    {r.notes && <p className="line-clamp-1 text-xs text-amber-700">{r.notes}</p>}
+                                                    {r.notes && <p className="line-clamp-1 text-xs text-brand-700">{r.notes}</p>}
                                                 </div>
                                             </div>
                                         ),
@@ -416,7 +416,7 @@ function DeliveryModal({ delivery, onClose }: { delivery: DeliveryRow | null; on
                             ['Delivered', delivery.delivered_at ? dateTime(delivery.delivered_at) : null],
                         ]}
                     />
-                    {!['READY', 'DELIVERED'].includes(delivery.order_status) && <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">The order is still {titleCase(delivery.order_status).toLowerCase()}. It can be dispatched once all printing is ready.</p>}
+                    {!['READY', 'DELIVERED'].includes(delivery.order_status) && <p className="rounded-lg bg-brand-50 p-3 text-sm text-brand-700">The order is still {titleCase(delivery.order_status).toLowerCase()}. It can be dispatched once all printing is ready.</p>}
                     <FormGrid>
                         <Select label="Status" value={form.status} onChange={set('status')} options={statusOptions.map((s) => ({ value: s, label: titleCase(s) }))} />
                         <Select

@@ -1,33 +1,56 @@
 import type { SessionPayload, SessionUser } from '../../services/api';
 
-export type Role = 'SUPER_ADMIN' | 'STUDIO_OWNER' | 'MANAGER' | 'PHOTOGRAPHER' | 'EDITOR_DESIGNER' | 'PRINTER_DELIVERY_STAFF' | 'CUSTOMER';
+export type Role = 'SUPER_ADMIN' | 'STUDIO_OWNER' | 'COMPANY_ADMIN' | 'MANAGER' | 'PHOTOGRAPHER' | 'EDITOR_DESIGNER' | 'STAFF' | 'PRINTER_DELIVERY_STAFF' | 'REPORT_MANAGER' | 'FINANCE' | 'CUSTOMER';
 
 export const ROLE_LABELS: Record<Role, string> = {
     SUPER_ADMIN: 'Super Admin',
-    STUDIO_OWNER: 'Studio Owner',
+    STUDIO_OWNER: 'Company Owner',
+    COMPANY_ADMIN: 'Company Admin',
     MANAGER: 'Manager',
     PHOTOGRAPHER: 'Photographer',
-    EDITOR_DESIGNER: 'Editor / Designer',
-    PRINTER_DELIVERY_STAFF: 'Printer / Delivery',
+    EDITOR_DESIGNER: 'Editor',
+    STAFF: 'Staff',
+    PRINTER_DELIVERY_STAFF: 'Print & Delivery Staff',
+    REPORT_MANAGER: 'Report Manager',
+    FINANCE: 'Finance Team',
     CUSTOMER: 'Customer',
 };
 
-const ROLE_ORDER: Role[] = ['SUPER_ADMIN', 'STUDIO_OWNER', 'MANAGER', 'PHOTOGRAPHER', 'EDITOR_DESIGNER', 'PRINTER_DELIVERY_STAFF', 'CUSTOMER'];
+export const ROLE_LEVEL: Record<Role, number> = {
+    SUPER_ADMIN: 100,
+    STUDIO_OWNER: 1,
+    COMPANY_ADMIN: 1,
+    MANAGER: 2,
+    PHOTOGRAPHER: 3,
+    EDITOR_DESIGNER: 4,
+    STAFF: 5,
+    PRINTER_DELIVERY_STAFF: 5,
+    REPORT_MANAGER: 6,
+    FINANCE: 7,
+    CUSTOMER: 0,
+};
 
 const ROLE_HOME: Record<Role, string> = {
     SUPER_ADMIN: '/admin/dashboard',
     STUDIO_OWNER: '/admin/dashboard',
+    COMPANY_ADMIN: '/admin/dashboard',
     MANAGER: '/admin/dashboard',
     PHOTOGRAPHER: '/photographer/dashboard',
     EDITOR_DESIGNER: '/editor/dashboard',
+    STAFF: '/delivery/dashboard',
     PRINTER_DELIVERY_STAFF: '/delivery/dashboard',
+    REPORT_MANAGER: '/admin/reports',
+    FINANCE: '/admin/payments',
     CUSTOMER: '/customer/dashboard',
 };
 
+const rank = (role: Role) => (ROLE_LEVEL[role] === 100 ? 0 : ROLE_LEVEL[role] === 0 ? 1000 : ROLE_LEVEL[role]);
+
 export const homeFor = (user: SessionUser | null) => {
     if (!user) return '/login';
-    const primary = ROLE_ORDER.find((role) => user.roles.includes(role));
-    return primary ? ROLE_HOME[primary] : '/';
+    const known = user.roles.filter((role): role is Role => role in ROLE_HOME);
+    known.sort((a, b) => rank(a) - rank(b));
+    return known[0] ? ROLE_HOME[known[0]] : '/';
 };
 
 export type AuthStatus = 'loading' | 'authenticated' | 'anonymous';

@@ -44,7 +44,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         [push],
     );
     const icons = { success: CheckCircle2, error: XCircle, info: Info, warning: TriangleAlert };
-    const tones = { success: 'text-emerald-600', error: 'text-red-600', info: 'text-sky-600', warning: 'text-amber-600' };
+    const tones = { success: 'text-emerald-600', error: 'text-red-600', info: 'text-sky-600', warning: 'text-brand-700' };
     return (
         <ToastContext.Provider value={api}>
             {children}

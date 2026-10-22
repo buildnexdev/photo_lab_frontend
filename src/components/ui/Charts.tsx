@@ -4,9 +4,9 @@
 import type { ReactNode } from 'react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { money, num, titleCase } from '../../utils/format';
-import { Card } from './index';
+import { Card } from './';
 
-export const CHART_COLORS = ['#b45309', '#0ea5e9', '#10b981', '#8b5cf6', '#f43f5e', '#64748b', '#eab308'];
+export const CHART_COLORS = ['#0f766e', '#0ea5e9', '#10b981', '#8b5cf6', '#f43f5e', '#64748b', '#eab308'];
 
 const shortDay = (d: string) => {
     const [, m, day] = d.split('-').map(Number);

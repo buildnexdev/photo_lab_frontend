@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { todayYmd } from '../../utils/format';
-import { Button } from './index';
+import { Button } from './';
 
 export type RangeKey = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'last_30_days' | 'custom';
 export interface RangeValue {

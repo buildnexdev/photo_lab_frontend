@@ -41,9 +41,9 @@ import {
 import type { ComponentType } from 'react';
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { GuestOnly, RequireAuth } from './guards';
-import { PortalLayout, type NavSection } from '../layouts/PortalLayout';
-import { AuthLayout } from '../layouts/PublicLayout';
-import { RouteError } from '../pages/error/RouteError/RouteError';
+import { PortalLayout, type NavSection } from '../layout/PortalLayout';
+import { AuthLayout } from '../layout/PublicLayout';
+import { RouteError } from '../pages/Error/RouteError';
 
 type Loader = () => Promise<{ default: ComponentType }>;
 const page = (load: Loader): Pick<RouteObject, 'lazy'> => ({ lazy: async () => ({ Component: (await load()).default }) });
@@ -55,12 +55,14 @@ const adminNav: NavSection[] = [
         title: 'Master',
         items: [
             { to: '/admin/staff', label: 'Staff', icon: UserCog, anyOf: ['users.manage', 'staff.manage'] },
+            { to: '/admin/access', label: 'User access', icon: ShieldCheck, end: true, anyOf: ['roles.manage', 'users.manage'] },
+            { to: '/admin/access/assign', label: 'Assign access', icon: UserCog, anyOf: ['users.manage'] },
             { to: '/admin/customers', label: 'Customers', icon: Users, anyOf: ['customers.view', 'customers.manage'] },
             { to: '/admin/services', label: 'Services', icon: Briefcase, anyOf: ['pricing.manage'] },
             { to: '/admin/packages', label: 'Packages', icon: PackageIcon, anyOf: ['pricing.manage'] },
             { to: '/admin/coupons', label: 'Coupons', icon: Tag, anyOf: ['pricing.manage'] },
             { to: '/admin/product-types', label: 'Product types', icon: Layers, anyOf: ['pricing.manage', 'orders.view'] },
-            { to: '/admin/products', label: 'Products & Add', icon: PackageIcon, anyOf: ['pricing.manage', 'orders.view'] },
+            { to: '/admin/products', label: 'Photo products', icon: PackageIcon, anyOf: ['pricing.manage', 'orders.view'] },
           
         ],
     },
@@ -68,12 +70,23 @@ const adminNav: NavSection[] = [
         title: 'Operations',
         items: [
             { to: '/admin/bookings', label: 'Bookings', icon: CalendarCheck, anyOf: ['bookings.view', 'bookings.manage'] },
-            { to: '/admin/events', label: 'Events', icon: Calendar, anyOf: ['events.view', 'events.manage'] },
-            { to: '/admin/galleries', label: 'Galleries & QR', icon: Images, anyOf: ['galleries.manage'] },
             { to: '/admin/photos', label: 'Photos', icon: Image, anyOf: ['photos.manage'] },
             { to: '/admin/orders', label: 'Orders', icon: ShoppingBag, anyOf: ['orders.view', 'orders.manage'] },
             { to: '/admin/printing', label: 'Printing', icon: Printer, anyOf: ['printing.manage'] },
             { to: '/admin/delivery', label: 'Delivery', icon: Truck, anyOf: ['delivery.manage'] },
+        ],
+    },
+    {
+        title: 'Event management',
+        items: [
+            { to: '/admin/events', label: 'Events', icon: Calendar, anyOf: ['events.view', 'events.manage'] },
+            { to: '/admin/galleries', label: 'Galleries and QR', icon: Images, anyOf: ['galleries.manage'] },
+        ],
+    },
+    {
+        title: 'Asset management',
+        items: [
+            { to: '/admin/assets', label: 'Studio equipment', icon: Camera, anyOf: ['events.view', 'events.manage'] },
         ],
     },
     {
@@ -86,12 +99,6 @@ const adminNav: NavSection[] = [
         title: 'Reports',
         items: [
             { to: '/admin/reports', label: 'Reports', icon: BarChart3, anyOf: ['reports.view'] },
-        ],
-    },
-    {
-        title: 'Assets',
-        items: [
-            // Placeholder for future Assets module
         ],
     },
     {
@@ -110,6 +117,7 @@ const customerNav: NavSection[] = [
         items: [
             { to: '/customer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { to: '/customer/bookings', label: 'Bookings', icon: CalendarCheck },
+            { to: '/customer/services', label: 'Services', icon: Briefcase },
             { to: '/customer/events', label: 'Events & albums', icon: Calendar },
             { to: '/customer/galleries', label: 'Galleries', icon: Images },
             { to: '/customer/orders', label: 'Orders', icon: ShoppingBag },
@@ -159,8 +167,8 @@ const deliveryNav: NavSection[] = [
     },
 ];
 
-const profile = page(() => import('../pages/shared/ProfilePage/ProfilePage'));
-const notifications = page(() => import('../pages/shared/NotificationsPage/NotificationsPage'));
+const profile = page(() => import('../pages/Shared/ProfilePage'));
+const notifications = page(() => import('../pages/Shared/NotificationsPage'));
 
 export const router = createBrowserRouter([
     {
@@ -173,17 +181,17 @@ export const router = createBrowserRouter([
                     </GuestOnly>
                 ),
                 children: [
-                    { path: 'login', ...page(() => import('../pages/auth/Login/Login')) },
-                    { path: 'register', ...page(() => import('../pages/auth/Register/Register')) },
-                    { path: 'forgot-password', ...page(() => import('../pages/auth/ForgotPassword/ForgotPassword')) },
-                    { path: 'reset-password', ...page(() => import('../pages/auth/ResetPassword/ResetPassword')) },
+                    { path: 'login', ...page(() => import('../pages/Auth/Login/Login')) },
+                    { path: 'register', ...page(() => import('../pages/Auth/Register/Register')) },
+                    { path: 'forgot-password', ...page(() => import('../pages/Auth/ForgetPassword/ForgotPassword')) },
+                    { path: 'reset-password', ...page(() => import('../pages/Auth/ResetPassword/ResetPassword')) },
                 ],
             },
             {
                 element: <AuthLayout />,
-                children: [{ path: 'verify-otp', ...page(() => import('../pages/auth/VerifyOtp/VerifyOtp')) }],
+                children: [{ path: 'verify-otp', ...page(() => import('../pages/Auth/VerifyOtp/VerifyOtp')) }],
             },
-            { path: 'g/:token', ...page(() => import('../pages/gallery/QrGallery/QrGallery')) },
+            { path: 'g/:token', ...page(() => import('../pages/Gallery/QrGallery')) },
             {
                 path: 'customer',
                 element: (
@@ -193,15 +201,16 @@ export const router = createBrowserRouter([
                 ),
                 children: [
                     { index: true, element: <Navigate to="dashboard" replace /> },
-                    { path: 'dashboard', ...page(() => import('../pages/customer/Dashboard/Dashboard')) },
+                    { path: 'dashboard', ...page(() => import('../pages/Customer/Dashboard')) },
                     { path: 'profile', ...profile },
-                    { path: 'bookings', ...page(() => import('../pages/customer/Bookings/Bookings')) },
-                    { path: 'events', ...page(() => import('../pages/customer/Events/Events')) },
-                    { path: 'galleries', ...page(() => import('../pages/customer/Galleries/Galleries')) },
-                    { path: 'galleries/:id', ...page(() => import('../pages/gallery/OwnerGallery/OwnerGallery')) },
-                    { path: 'orders', ...page(() => import('../pages/customer/Orders/Orders')) },
-                    { path: 'payments', ...page(() => import('../pages/customer/Payments/Payments')) },
-                    { path: 'downloads', ...page(() => import('../pages/customer/Downloads/Downloads')) },
+                    { path: 'bookings', ...page(() => import('../pages/Customer/Bookings')) },
+                    { path: 'services', ...page(() => import('../pages/Customer/Services')) },
+                    { path: 'events', ...page(() => import('../pages/Customer/Events')) },
+                    { path: 'galleries', ...page(() => import('../pages/Customer/Galleries')) },
+                    { path: 'galleries/:id', ...page(() => import('../pages/Gallery/OwnerGallery')) },
+                    { path: 'orders', ...page(() => import('../pages/Customer/Orders')) },
+                    { path: 'payments', ...page(() => import('../pages/Customer/Payments')) },
+                    { path: 'downloads', ...page(() => import('../pages/Customer/Downloads')) },
                     { path: 'notifications', ...notifications },
                 ],
             },
@@ -214,38 +223,41 @@ export const router = createBrowserRouter([
                 ),
                 children: [
                     { index: true, element: <Navigate to="dashboard" replace /> },
-                    { path: 'dashboard', ...page(() => import('../pages/dashboard/Dashboard/Dashboard')) },
-                    { path: 'customers', ...page(() => import('../pages/customer/Customers/Customers')) },
-                    { path: 'bookings', ...page(() => import('../pages/booking/Bookings/Bookings')) },
-                    { path: 'events', ...page(() => import('../pages/event/Events/Events')) },
-                    { path: 'events/:id', ...page(() => import('../pages/admin/EventDetail/EventDetail')) },
-                    { path: 'galleries', ...page(() => import('../pages/admin/Galleries/Galleries')) },
-                    { path: 'galleries/:id', ...page(() => import('../pages/admin/GalleryDetail/GalleryDetail')) },
-                    { path: 'photos', ...page(() => import('../pages/admin/Photos/Photos')) },
-                    { path: 'upload', ...page(() => import('../pages/photographer/Upload/Upload')) },
-                    { path: 'orders', ...page(() => import('../pages/admin/Orders/Orders')) },
-                    { path: 'product-types', ...page(() => import('../pages/admin/ProductTypes/ProductTypes')) },
-                    { path: 'products', ...page(() => import('../pages/admin/PhotoProducts/PhotoProducts')) },
-                    { path: 'payments', ...page(() => import('../pages/admin/Payments/Payments')) },
-                    { path: 'services', ...page(() => import('../pages/admin/Services/Services')) },
-                    { path: 'packages', ...page(() => import('../pages/admin/Packages/Packages')) },
-                    { path: 'coupons', ...page(() => import('../pages/coupon/Coupons/Coupons')) },
-                    { path: 'companies', ...page(() => import('../pages/company/Companies/Companies')) },
-                    { path: 'website', ...page(() => import('../pages/admin/Website/Website')) },
-                    { path: 'staff', ...page(() => import('../pages/admin/Staff/Staff')) },
-                    { path: 'photographers', ...page(() => import('../pages/admin/Photographers/Photographers')) },
-                    { path: 'editors', ...page(() => import('../pages/admin/Editors/Editors')) },
-                    { path: 'printing', ...page(() => import('../pages/admin/Printing/Printing')) },
-                    { path: 'delivery', ...page(() => import('../pages/admin/Delivery/Delivery')) },
-                    { path: 'reports', ...page(() => import('../pages/admin/Reports/Reports')) },
-                    { path: 'settings', ...page(() => import('../pages/admin/Settings/Settings')) },
-                    { path: 'audit-logs', ...page(() => import('../pages/audit/AuditLogs/AuditLogs')) },
+                    { path: 'dashboard', ...page(() => import('../pages/Dashboard/Dashboard')) },
+                    { path: 'customers', ...page(() => import('../pages/Customer/Customers')) },
+                    { path: 'bookings', ...page(() => import('../pages/Booking/Bookings')) },
+                    { path: 'assets', ...page(() => import('../pages/Admin/Assets')) },
+                    { path: 'events', ...page(() => import('../pages/Event/Events')) },
+                    { path: 'events/:id', ...page(() => import('../pages/Admin/EventDetail')) },
+                    { path: 'galleries', ...page(() => import('../pages/Admin/Galleries')) },
+                    { path: 'galleries/:id', ...page(() => import('../pages/Admin/GalleryDetail')) },
+                    { path: 'photos', ...page(() => import('../pages/Admin/Photos')) },
+                    { path: 'upload', ...page(() => import('../pages/Photographer/Upload')) },
+                    { path: 'orders', ...page(() => import('../pages/Admin/Orders')) },
+                    { path: 'product-types', ...page(() => import('../pages/Admin/ProductTypes')) },
+                    { path: 'products', ...page(() => import('../pages/Admin/PhotoProducts')) },
+                    { path: 'payments', ...page(() => import('../pages/Admin/Payments')) },
+                    { path: 'services', ...page(() => import('../pages/Admin/Services')) },
+                    { path: 'packages', ...page(() => import('../pages/Admin/Packages')) },
+                    { path: 'coupons', ...page(() => import('../pages/Coupon/Coupons')) },
+                    { path: 'companies', ...page(() => import('../pages/Company/Companies')) },
+                    { path: 'website', ...page(() => import('../pages/Admin/Website')) },
+                    { path: 'staff', ...page(() => import('../pages/Admin/Staff')) },
+                    { path: 'access', ...page(() => import('../pages/Access/UserAccess')) },
+                    { path: 'access/assign', ...page(() => import('../pages/Access/AssignAccess')) },
+                    { path: 'photographers', ...page(() => import('../pages/Admin/Photographers')) },
+                    { path: 'editors', ...page(() => import('../pages/Admin/Editors')) },
+                    { path: 'printing', ...page(() => import('../pages/Admin/Printing')) },
+                    { path: 'delivery', ...page(() => import('../pages/Admin/Delivery')) },
+                    { path: 'reports', ...page(() => import('../pages/Admin/Reports')) },
+                    { path: 'settings', ...page(() => import('../pages/Admin/Settings')) },
+                    { path: 'audit-logs', ...page(() => import('../pages/Audit/AuditLogs')) },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
                 ],
             },
             { index: true, element: <Navigate to="/login" replace /> },
-            { path: 'shop', ...page(() => import('../pages/shop/PhotoShop/PhotoShop')) },
+            { path: 'shop', ...page(() => import('../pages/Shop/PhotoShop')) },
             {
                 path: 'photographer',
                 element: (
@@ -255,12 +267,12 @@ export const router = createBrowserRouter([
                 ),
                 children: [
                     { index: true, element: <Navigate to="dashboard" replace /> },
-                    { path: 'dashboard', ...page(() => import('../pages/photographer/Dashboard/Dashboard')) },
-                    { path: 'events', ...page(() => import('../pages/photographer/Events/Events')) },
-                    { path: 'event/:id', ...page(() => import('../pages/photographer/EventDetail/EventDetail')) },
-                    { path: 'upload', ...page(() => import('../pages/photographer/Upload/Upload')) },
-                    { path: 'camera-setup', ...page(() => import('../pages/photographer/CameraSetup/CameraSetup')) },
-                    { path: 'tasks', ...page(() => import('../pages/photographer/Tasks/Tasks')) },
+                    { path: 'dashboard', ...page(() => import('../pages/Photographer/Dashboard')) },
+                    { path: 'events', ...page(() => import('../pages/Photographer/Events')) },
+                    { path: 'event/:id', ...page(() => import('../pages/Photographer/EventDetail')) },
+                    { path: 'upload', ...page(() => import('../pages/Photographer/Upload')) },
+                    { path: 'camera-setup', ...page(() => import('../pages/Photographer/CameraSetup')) },
+                    { path: 'tasks', ...page(() => import('../pages/Photographer/Tasks')) },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
                 ],
@@ -274,11 +286,11 @@ export const router = createBrowserRouter([
                 ),
                 children: [
                     { index: true, element: <Navigate to="dashboard" replace /> },
-                    { path: 'dashboard', ...page(() => import('../pages/editor/Dashboard/Dashboard')) },
-                    { path: 'tasks', ...page(() => import('../pages/editor/Tasks/Tasks')) },
-                    { path: 'photos', ...page(() => import('../pages/editor/Photos/Photos')) },
-                    { path: 'albums', ...page(() => import('../pages/editor/Albums/Albums')) },
-                    { path: 'proofs', ...page(() => import('../pages/editor/Proofs/Proofs')) },
+                    { path: 'dashboard', ...page(() => import('../pages/Editor/Dashboard')) },
+                    { path: 'tasks', ...page(() => import('../pages/Editor/Tasks')) },
+                    { path: 'photos', ...page(() => import('../pages/Editor/Photos')) },
+                    { path: 'albums', ...page(() => import('../pages/Editor/Albums')) },
+                    { path: 'proofs', ...page(() => import('../pages/Editor/Proofs')) },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
                 ],
@@ -292,15 +304,15 @@ export const router = createBrowserRouter([
                 ),
                 children: [
                     { index: true, element: <Navigate to="dashboard" replace /> },
-                    { path: 'dashboard', ...page(() => import('../pages/delivery/Dashboard/Dashboard')) },
-                    { path: 'orders', ...page(() => import('../pages/delivery/Orders/Orders')) },
-                    { path: 'printing', ...page(() => import('../pages/delivery/Printing/Printing')) },
-                    { path: 'dispatch', ...page(() => import('../pages/delivery/Dispatch/Dispatch')) },
+                    { path: 'dashboard', ...page(() => import('../pages/Delivery/Dashboard')) },
+                    { path: 'orders', ...page(() => import('../pages/Delivery/Orders')) },
+                    { path: 'printing', ...page(() => import('../pages/Delivery/Printing')) },
+                    { path: 'dispatch', ...page(() => import('../pages/Delivery/Dispatch')) },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
                 ],
             },
-            { path: '*', ...page(() => import('../pages/error/NotFoundPage/NotFoundPage')) },
+            { path: '*', ...page(() => import('../pages/Error/NotFoundPage')) },
         ],
     },
 ]);

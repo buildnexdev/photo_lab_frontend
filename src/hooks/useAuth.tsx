@@ -3,10 +3,10 @@ import { useEffect, useMemo, type ReactNode } from 'react';
 import { onRefresh, refreshSession, setAccessToken, setSessionLostHandler, type SessionPayload } from '../services/api';
 import { enqueueAuth, enqueueLogout } from '../redux/auth/auth.saga';
 import { selectAuthStatus, selectAuthUser } from '../redux/auth/auth.selector';
-import { authClear, authLogin, authLogout, authRegister, authRestore, authRestoreTimeout, authSession, homeFor, ROLE_LABELS, type Role } from '../redux/auth/auth.types';
+import { authClear, authLogin, authLogout, authRegister, authRestore, authRestoreTimeout, authSession, homeFor, ROLE_LABELS, ROLE_LEVEL, type Role } from '../redux/auth/auth.types';
 import { useAppDispatch, useAppSelector } from '../store';
 
-export { homeFor, ROLE_LABELS, type Role };
+export { homeFor, ROLE_LABELS, ROLE_LEVEL, type Role };
 
 interface AuthState {
     user: ReturnType<typeof selectAuthUser>;

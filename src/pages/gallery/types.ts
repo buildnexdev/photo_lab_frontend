@@ -1,11 +1,18 @@
 // Developer by: Buildnexdev.in
-// Devevloper : Nandhakumar@gmail.com
-// Last Edited : 06-10-2026
+// Last Edited : 22-10-2026
+
+export type GalleryView = 'all' | 'favourites' | 'selected' | 'purchased';
+
 export interface GalleryAlbum {
     id: number;
     name: string;
     description: string | null;
     photo_count: number;
+}
+
+export interface GalleryCategory {
+    category: string;
+    n: number;
 }
 
 export interface GalleryInfo {
@@ -21,17 +28,30 @@ export interface GalleryInfo {
     watermark: boolean;
     allowDownload: boolean;
     expiresAt: string | null;
-    scope: 'GALLERY' | 'ALBUM' | 'PHOTO';
+    scope: string;
     isOwner: boolean;
     isStaff: boolean;
     signedIn: boolean;
     photoCount: number;
     latestPhotoId: number | null;
     albums: GalleryAlbum[];
-    categories: { category: string; n: number }[];
+    categories: GalleryCategory[];
     faceSearch: boolean;
-    selection: { canSelect: boolean; count: number; status: string | null; note?: string | null; submittedAt?: string | null };
-    pricing: { photoDownload: number; prints: Record<string, number>; frames: Record<string, number>; canvas: Record<string, number>; courierFee: number; currency: string };
+    selection: {
+        canSelect: boolean;
+        count: number;
+        status: string | null;
+        note?: string | null;
+        submittedAt?: string | null;
+    };
+    pricing: {
+        photoDownload: number;
+        prints: Record<string, number>;
+        frames: Record<string, number>;
+        canvas: Record<string, number>;
+        courierFee: number;
+        currency: string;
+    };
     studio: { name: string; phone: string; whatsapp: string };
 }
 
@@ -41,10 +61,11 @@ export interface GalleryPhoto {
     width: number | null;
     height: number | null;
     status: string;
-    price: number;
     created_at: string;
     category: string | null;
+    tags: unknown;
     thumb_url: string;
+    price: number;
     favourite: boolean;
     selected: boolean;
     purchased: boolean;
@@ -54,10 +75,10 @@ export interface GalleryPhoto {
 export interface PhotoComment {
     id: number;
     body: string;
-    is_staff: number;
+    is_staff: number | boolean;
     created_at: string;
     user_name: string;
-    mine: number;
+    mine: number | boolean;
 }
 
 export interface PhotoDetail {
@@ -73,5 +94,3 @@ export interface PhotoDetail {
     comments: PhotoComment[];
     can_download: boolean;
 }
-
-export type GalleryView = 'all' | 'favourites' | 'selected' | 'purchased';

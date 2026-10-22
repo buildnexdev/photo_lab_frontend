@@ -137,7 +137,7 @@ export function KeyValue({ items, className }: { items: [ReactNode, ReactNode][]
 export function Alert({ tone = 'info', title, children, className }: { tone?: 'info' | 'warning' | 'error' | 'success'; title?: ReactNode; children?: ReactNode; className?: string }) {
     const tones = {
         info: 'border-sky-200 bg-sky-50 text-sky-900',
-        warning: 'border-amber-200 bg-amber-50 text-amber-900',
+        warning: 'border-brand-200 bg-brand-50 text-brand-700',
         error: 'border-red-200 bg-red-50 text-red-900',
         success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
     };

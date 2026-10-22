@@ -36,7 +36,7 @@ interface UserDetail extends UserRow {
     editor_specialties: string | null;
 }
 
-const STAFF_ROLE_CODES: Role[] = ['SUPER_ADMIN', 'STUDIO_OWNER', 'MANAGER', 'PHOTOGRAPHER', 'EDITOR_DESIGNER', 'PRINTER_DELIVERY_STAFF'];
+const STAFF_ROLE_CODES: Role[] = ['SUPER_ADMIN', 'STUDIO_OWNER', 'COMPANY_ADMIN', 'MANAGER', 'PHOTOGRAPHER', 'EDITOR_DESIGNER', 'STAFF', 'PRINTER_DELIVERY_STAFF', 'REPORT_MANAGER', 'FINANCE'];
 
 const schema = (isNew: boolean) =>
     z.object({

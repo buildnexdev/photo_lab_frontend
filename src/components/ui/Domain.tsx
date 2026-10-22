@@ -9,7 +9,7 @@ import { date, dateTime, money, parseJson, titleCase } from '../../utils/format'
 import { formatAddress, ORDER_TYPE_LABELS, type OrderDetail, type PaymentLine, type Quotation } from '../../types';
 import { QueryState, StatusBadge } from './Data';
 import { Modal } from './Overlay';
-import { Button } from './index';
+import { Button } from './';
 
 export function TotalsRow({ label, value, strong, className }: { label: ReactNode; value: ReactNode; strong?: boolean; className?: string }) {
     return (

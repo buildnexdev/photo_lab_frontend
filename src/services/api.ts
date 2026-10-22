@@ -69,7 +69,9 @@ export interface SessionUser {
     name: string;
     email: string | null;
     phone: string | null;
+    companyId: number | null;
     roles: string[];
+    roleLevel: number | null;
     permissions: string[];
     customerId: number | null;
 }
