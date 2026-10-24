@@ -1,0 +1,1 @@
+import{y as e}from"./react-DPoVlDbV.js";import{t}from"./StaffDirectory-BFroTFAC.js";var n=e();function r(){return(0,n.jsx)(t,{role:`PHOTOGRAPHER`,title:`Photographers`,subtitle:`Photographers can see their assigned events and upload from the app or web.`})}export{r as default};

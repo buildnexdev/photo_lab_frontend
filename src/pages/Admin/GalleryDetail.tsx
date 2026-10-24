@@ -3,7 +3,8 @@
 // Last Edited : 06-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Ban, Copy, Download, Eye, Images, Pencil, Plus, QrCode, RefreshCw, Trash2, Upload, ImagePlus, Loader2, CheckCircle2, CircleAlert, X } from 'lucide-react';
+import { ArrowLeft, Ban, Copy, Download, Eye, Images, Pencil, Plus, QrCode, RefreshCw, Trash2, Upload, ImagePlus, CheckCircle2, CircleAlert, X } from 'lucide-react';
+import { NqLoader } from '../../components/brand';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router';
@@ -221,7 +222,7 @@ export default function AdminGalleryDetail() {
                                                         <span className="shrink-0">
                                                             {item.status === 'done' ? <CheckCircle2 className="size-4 text-emerald-500" /> :
                                                              item.status === 'duplicate' ? <Copy className="size-4 text-stone-400" /> :
-                                                             item.status === 'uploading' ? <Loader2 className="size-4 animate-spin text-brand-500" /> :
+                                                             item.status === 'uploading' ? <NqLoader size="xs" label="" aria-hidden /> :
                                                              item.status === 'failed' || item.status === 'invalid' ? <CircleAlert className="size-4 text-rose-500" /> :
                                                              <span className="block size-4 rounded-full border-2 border-stone-300" />}
                                                         </span>

@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { Mail, MapPin, Menu, Phone, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { BrandMark } from '../components/brand';
 import { ButtonLink } from '../components/ui';
 import { homeFor, useAuth } from '../hooks/useAuth';
 import { useSite } from '../utils/site';
@@ -32,16 +33,16 @@ export function PublicLayout() {
     const studio = site.data?.studio;
 
     return (
-        <div className="flex min-h-dvh flex-col bg-stone-50">
-            <header className="sticky top-0 z-30 border-b border-stone-200/70 bg-white/90 backdrop-blur">
-                <div className="container-page flex h-16 items-center gap-4">
+        <div className="public-shell flex min-h-dvh flex-col">
+            <header className="public-topbar sticky top-3 z-30">
+                <div className="container-page flex h-14 items-center gap-4 px-4 sm:px-6">
                     <Link to="/" className="flex items-center gap-2">
-                        <img src="/nammaqr-logo.png" alt="Nammaqr" className="h-12 w-12 object-contain" />
+                        <BrandMark className="h-12 w-12" />
                         <span className="font-display text-lg font-semibold">{studio?.name ?? 'Nammaqr'}</span>
                     </Link>
                     <nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Main">
                         {LINKS.map((l) => (
-                            <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => clsx('rounded-md px-3 py-2 text-sm font-medium', isActive ? 'text-brand-700' : 'text-stone-600 hover:text-stone-900')}>
+                            <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => clsx('rounded-lg px-3 py-2 text-sm font-medium', isActive ? 'bg-accent-50 text-accent-800' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900')}>
                                 {l.label}
                             </NavLink>
                         ))}
@@ -176,11 +177,11 @@ export function AuthLayout() {
     }
 
     return (
-        <div className="relative min-h-dvh flex flex-col justify-between bg-[#070d17] text-slate-100 selection:bg-blue-600 selection:text-white overflow-hidden">
+        <div className="relative min-h-dvh flex flex-col justify-between bg-ink-900 text-slate-100 selection:bg-accent-500 selection:text-ink-900 overflow-hidden">
             {/* Ambient Glowing Orbs */}
-            <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[450px] bg-gradient-to-b from-blue-600/25 via-indigo-600/15 to-transparent blur-3xl rounded-full" />
-            <div className="pointer-events-none absolute -bottom-32 -left-20 w-[450px] h-[450px] bg-blue-700/10 blur-3xl rounded-full" />
-            <div className="pointer-events-none absolute top-1/3 -right-24 w-[400px] h-[400px] bg-indigo-500/10 blur-3xl rounded-full" />
+            <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[450px] bg-gradient-to-b from-accent-500/20 via-accent-700/10 to-transparent blur-3xl rounded-full" />
+            <div className="pointer-events-none absolute -bottom-32 -left-20 w-[450px] h-[450px] bg-accent-700/10 blur-3xl rounded-full" />
+            <div className="pointer-events-none absolute top-1/3 -right-24 w-[400px] h-[400px] bg-accent-500/10 blur-3xl rounded-full" />
 
             {/* Subtle Grid Pattern Overlay */}
             <div
@@ -194,15 +195,15 @@ export function AuthLayout() {
             {/* Top Minimal Navigation Header */}
             <header className="relative z-10 w-full px-6 py-5 flex items-center justify-between border-b border-white/5 backdrop-blur-xs">
                 <Link to="/" className="flex items-center gap-2 group">
-                    <img src="/nammaqr-logo.png" alt="Nammaqr" className="h-14 w-14 object-contain transition-transform group-hover:scale-105" />
+                    <BrandMark variant="light" className="h-12 w-16 transition-transform group-hover:scale-105" />
                     <div className="flex items-center gap-1 font-extrabold tracking-tight text-white text-xl font-sans">
                         <span>Nammaqr</span>
                     </div>
                 </Link>
 
                 <div className="flex items-center gap-3">
-                    <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">
-                        <span className="size-1.5 rounded-full bg-blue-400 animate-ping" />
+                    <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-accent-500/25 bg-accent-500/10 px-3 py-1 text-xs font-medium text-accent-300">
+                        <span className="size-1.5 rounded-full bg-accent-400 animate-ping" />
                         Nammaqr Photography
                     </div>
                     <Link
@@ -223,7 +224,7 @@ export function AuthLayout() {
             <footer className="relative z-10 w-full px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-white/5 text-xs text-slate-500">
                 <p>© {new Date().getFullYear()} {studioName}. All rights reserved.</p>
                 <div className="flex items-center gap-4">
-                    <span className="font-semibold text-blue-400/80 tracking-wide">Buildnexdev.in</span>
+                    <span className="font-semibold text-accent-400/80 tracking-wide">Buildnexdev.in</span>
                 </div>
             </footer>
         </div>

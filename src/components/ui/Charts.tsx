@@ -6,7 +6,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, Line
 import { money, num, titleCase } from '../../utils/format';
 import { Card } from './';
 
-export const CHART_COLORS = ['#0f766e', '#0ea5e9', '#10b981', '#8b5cf6', '#f43f5e', '#64748b', '#eab308'];
+export const CHART_COLORS = ['#c9a24b', '#1f1f23', '#e6c97a', '#8a6a2f', '#be123c', '#78716c', '#4d7c57'];
 
 const shortDay = (d: string) => {
     const [, m, day] = d.split('-').map(Number);
@@ -20,10 +20,31 @@ const compactMoney = (paise: number) => {
     return `₹${r.toFixed(0)}`;
 };
 
-export function ChartCard({ title, children, empty, className }: { title: string; children: ReactNode; empty?: boolean; className?: string }) {
+export const VIVID_COLORS = ['#10b981', '#6366f1', '#f43f5e', '#0ea5e9', '#f59e0b', '#a855f7', '#14b8a6', '#ec4899'];
+
+export function ChartCard({ title, children, empty, className, accent, icon }: { title: string; children: ReactNode; empty?: boolean; className?: string; accent?: string; icon?: ReactNode }) {
+    const heading = accent ? (
+        <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm" style={{ background: accent }}>
+                {icon ?? <span className="size-2 rounded-full bg-white" />}
+            </span>
+            <h2 className="truncate font-semibold text-stone-900">{title}</h2>
+        </div>
+    ) : (
+        title
+    );
     return (
-        <Card title={title} className={className}>
-            <div className="h-64">{empty ? <div className="flex h-full items-center justify-center text-sm text-stone-400">No data for this period</div> : children}</div>
+        <Card title={heading} className={className}>
+            <div className="h-60">
+                {empty ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-stone-400">
+                        {accent && <span className="size-10 rounded-full opacity-15" style={{ background: accent }} />}
+                        No data for this period
+                    </div>
+                ) : (
+                    children
+                )}
+            </div>
         </Card>
     );
 }
@@ -68,14 +89,14 @@ export function TrendChart({ data, dataKey, kind = 'area', isMoney, color = CHAR
     );
 }
 
-export function DonutChart({ data, nameKey, valueKey }: { data: Record<string, unknown>[]; nameKey: string; valueKey: string }) {
+export function DonutChart({ data, nameKey, valueKey, colors = CHART_COLORS }: { data: Record<string, unknown>[]; nameKey: string; valueKey: string; colors?: string[] }) {
     const rows = data.map((d) => ({ name: titleCase(String(d[nameKey])), value: Number(d[valueKey]) }));
     return (
         <ResponsiveContainer width="100%" height="100%">
             <PieChart>
                 <Pie data={rows} dataKey="value" nameKey="name" innerRadius="55%" outerRadius="80%" paddingAngle={2}>
                     {rows.map((_, i) => (
-                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                        <Cell key={i} fill={colors[i % colors.length]} />
                     ))}
                 </Pie>
                 <Tooltip formatter={(v) => num(Number(v))} />

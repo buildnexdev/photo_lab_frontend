@@ -1,3 +1,54 @@
 .dashboard-page {
-    // Bootstrap 5 styles for this screen.
+    .grid > button,
+    .grid > div {
+        min-height: 0;
+    }
+}
+
+.dashboard-hero {
+    background:
+        radial-gradient(60% 120% at 100% 0%, rgba(99, 102, 241, 0.35), transparent 60%),
+        radial-gradient(50% 120% at 0% 100%, rgba(236, 72, 153, 0.28), transparent 60%),
+        radial-gradient(40% 80% at 55% 0%, rgba(201, 162, 75, 0.3), transparent 70%),
+        linear-gradient(135deg, #18181b, #0f0f12);
+    box-shadow: 0 10px 30px rgba(20, 20, 22, 0.18);
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+        background-size: 22px 22px;
+        pointer-events: none;
+    }
+}
+
+// RangeFilter is built for light surfaces; give it a glass look on the dark hero.
+.dashboard-hero__filter {
+    position: relative;
+    z-index: 1;
+
+    [role='radiogroup'] {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(6px);
+    }
+
+    [role='radio'] {
+        color: rgba(255, 255, 255, 0.75);
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        &[aria-checked='true'] {
+            background: linear-gradient(135deg, #e6c97a, #c9a24b);
+            color: #141416;
+        }
+    }
+
+    label {
+        color: rgba(255, 255, 255, 0.75);
+    }
 }

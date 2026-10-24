@@ -1,0 +1,1 @@
+import{y as e}from"./react-DPoVlDbV.js";import{n as t}from"./Production-DJbCzeux.js";var n=e();function r(){return(0,n.jsx)(t,{base:`admin`,title:`Printing`,subtitle:`Print, frame, canvas and album production queue.`})}export{r as default};

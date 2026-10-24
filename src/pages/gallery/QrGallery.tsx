@@ -4,6 +4,7 @@
 import { QrCode } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
+import { BrandMark } from '../../components/brand';
 import { Loading } from '../../components/ui/Data';
 import { ButtonLink } from '../../components/ui';
 import { api, errorMessage } from '../../services/api';
@@ -79,7 +80,7 @@ export default function QrGallery() {
             <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-900/90 backdrop-blur">
                 <div className="container-page flex h-14 items-center justify-between">
                     <Link to="/" className="flex items-center gap-2 font-display font-semibold text-white">
-                        <img src="/nammaqr-logo.png" alt="" className="h-10 w-auto object-contain" /> Nammaqr
+                        <BrandMark className="h-10 w-auto" alt="Nammaqr" /> Nammaqr
                     </Link>
                     {user ? (
                         <Link to={homeFor(user)} className="text-sm font-medium text-white/80 hover:text-white">

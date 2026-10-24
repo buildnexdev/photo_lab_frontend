@@ -3,7 +3,8 @@
 // Last Edited : 06-10-2026
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { CheckCircle2, Heart, Images, Loader2, Lock, Printer, RefreshCw, ScanFace, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, Heart, Images, Lock, Printer, RefreshCw, ScanFace, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { NqLoader } from '../../components/brand';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { EmptyState, ErrorState, Loading, StatusBadge } from '../../components/ui/Data';
@@ -362,7 +363,7 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
                 <div ref={sentinel} className="h-10" />
                 {isFetchingNextPage && (
                     <div className="flex justify-center py-6">
-                        <Loader2 className="size-6 animate-spin opacity-60" />
+                        <NqLoader size="md" variant="emblem" className="opacity-80" label="Loading" />
                     </div>
                 )}
                 {!!list.length && !hasNextPage && !face && <p className={clsx('py-6 text-center text-xs', dark ? 'text-white/40' : 'text-stone-400')}>{total} photos</p>}

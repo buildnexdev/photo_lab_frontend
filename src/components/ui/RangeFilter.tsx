@@ -1,6 +1,7 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
+import clsx from 'clsx';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { todayYmd } from '../../utils/format';
@@ -35,7 +36,11 @@ export function RangeFilter({ value, onChange }: { value: RangeValue; onChange: 
     };
     return (
         <div className="flex flex-wrap items-end gap-2">
-            <div className="inline-flex flex-wrap rounded-lg border border-stone-300 bg-white p-0.5 shadow-sm" role="radiogroup" aria-label="Date range">
+            <div
+                className="inline-flex max-w-full flex-wrap gap-1 rounded-xl border border-slate-200/80 bg-slate-50/80 p-1"
+                role="radiogroup"
+                aria-label="Date range"
+            >
                 {OPTIONS.map((o) => (
                     <button
                         key={o.value}
@@ -43,7 +48,12 @@ export function RangeFilter({ value, onChange }: { value: RangeValue; onChange: 
                         role="radio"
                         aria-checked={value.range === o.value}
                         onClick={() => (o.value === 'custom' ? onChange({ range: 'custom', from: value.from, to: value.to }) : onChange({ range: o.value }))}
-                        className={`rounded-md px-2.5 py-1.5 text-xs font-medium sm:text-sm ${value.range === o.value ? 'bg-ink-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+                        className={clsx(
+                            'rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:text-sm',
+                            value.range === o.value
+                                ? 'bg-ink-900 text-accent-300 shadow-sm'
+                                : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900',
+                        )}
                     >
                         {o.label}
                     </button>

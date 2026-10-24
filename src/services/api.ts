@@ -71,6 +71,8 @@ export interface SessionUser {
     phone: string | null;
     companyId: number | null;
     roles: string[];
+    /** tblUser.is_admin = 1 or Super Admin; can manage page access. */
+    isAdmin?: boolean;
     roleLevel: number | null;
     permissions: string[];
     customerId: number | null;
