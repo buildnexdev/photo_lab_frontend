@@ -48,7 +48,7 @@
     }
     body {
         min-height: 100dvh;
-        background: #f7f5f0;
+        background: #ffffff;
         color: #1c1b19;
         font-family: var(--font-sans);
     }

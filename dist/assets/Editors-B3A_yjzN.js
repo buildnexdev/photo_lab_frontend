@@ -1,1 +1,0 @@
-import{y as e}from"./react-DPoVlDbV.js";import{t}from"./StaffDirectory-BFroTFAC.js";var n=e();function r(){return(0,n.jsx)(t,{role:`EDITOR_DESIGNER`,title:`Editors & designers`,subtitle:`Editors retouch selected photos and design album proofs.`})}export{r as default};

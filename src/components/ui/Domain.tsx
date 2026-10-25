@@ -2,7 +2,7 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { useQuery } from '@tanstack/react-query';
-import { Printer } from 'lucide-react';
+import { FileText, Printer } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { api } from '../../services/api';
 import { date, dateTime, money, parseJson, titleCase } from '../../utils/format';
@@ -23,48 +23,49 @@ export function TotalsRow({ label, value, strong, className }: { label: ReactNod
 export function QuotationView({ q }: { q: Quotation }) {
     return (
         <div className="space-y-3 text-sm">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-stone-900">
-                    Quotation {q.quotation_no} <StatusBadge status={q.status} className="ml-1" />
-                </p>
-                <p className="text-xs text-stone-500">
-                    {q.sent_at ? `Sent ${date(q.sent_at)}` : `Created ${date(q.created_at)}`}
-                    {q.valid_until && ` · valid until ${date(q.valid_until)}`}
-                </p>
+            <div className="flex flex-wrap items-center gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                    <FileText className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                    <p className="flex flex-wrap items-center gap-2 font-semibold text-stone-900">
+                        {q.quotation_no}
+                        <StatusBadge status={q.status} />
+                    </p>
+                    <p className="text-xs text-stone-500">
+                        {q.sent_at ? `Sent ${date(q.sent_at)}` : `Created ${date(q.created_at)}`}
+                        {q.valid_until && ` · valid until ${date(q.valid_until)}`}
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Total</p>
+                    <p className="text-lg font-bold text-stone-900">{money(q.total)}</p>
+                </div>
             </div>
-            <div className="overflow-x-auto rounded-lg border border-stone-200">
-                <table className="min-w-full text-sm">
-                    <thead className="bg-stone-50 text-xs uppercase text-stone-500">
-                        <tr>
-                            <th className="px-3 py-2 text-left">Item</th>
-                            <th className="px-3 py-2 text-right">Qty</th>
-                            <th className="px-3 py-2 text-right">Rate</th>
-                            <th className="px-3 py-2 text-right">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-100">
-                        {q.items.map((i) => (
-                            <tr key={i.id}>
-                                <td className="px-3 py-2">{i.description}</td>
-                                <td className="px-3 py-2 text-right tabular-nums">{i.quantity}</td>
-                                <td className="px-3 py-2 text-right tabular-nums">{money(i.unit_price)}</td>
-                                <td className="px-3 py-2 text-right tabular-nums">{money(i.total)}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <div className="ml-auto max-w-xs space-y-1">
+            <ul className="space-y-2">
+                {q.items.map((i) => (
+                    <li key={i.id} className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-stone-50/60 px-3 py-2.5">
+                        <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium text-stone-900">{i.description}</span>
+                            <span className="text-xs text-stone-500">
+                                {i.quantity} × {money(i.unit_price)}
+                            </span>
+                        </span>
+                        <span className="shrink-0 font-semibold tabular-nums text-stone-800">{money(i.total)}</span>
+                    </li>
+                ))}
+            </ul>
+            <div className="space-y-1 rounded-2xl bg-amber-50/70 p-3">
                 <TotalsRow label="Subtotal" value={money(q.subtotal)} />
                 {q.discount > 0 && <TotalsRow label="Discount" value={`− ${money(q.discount)}`} />}
                 <TotalsRow label={`GST (${Number(q.tax_percent)}%)`} value={money(q.tax)} />
-                <TotalsRow label="Total" value={money(q.total)} strong className="border-t border-stone-200 pt-1" />
-                <TotalsRow label="Advance to confirm" value={money(q.advance_amount)} />
+                <TotalsRow label="Total" value={money(q.total)} strong className="border-t border-amber-200/80 pt-2" />
+                <TotalsRow label="Advance to confirm" value={money(q.advance_amount)} className="font-medium text-amber-800" />
             </div>
-            {q.notes && <p className="whitespace-pre-wrap rounded-lg bg-stone-50 p-3 text-stone-700">{q.notes}</p>}
+            {q.notes && <p className="whitespace-pre-wrap rounded-xl bg-stone-50 p-3 text-stone-700">{q.notes}</p>}
             {q.terms && (
-                <details className="text-xs text-stone-500">
-                    <summary className="cursor-pointer font-medium">Terms & conditions</summary>
+                <details className="rounded-xl border border-stone-200 px-3 py-2 text-xs text-stone-500">
+                    <summary className="cursor-pointer font-medium text-stone-700">Terms & conditions</summary>
                     <p className="mt-2 whitespace-pre-wrap">{q.terms}</p>
                 </details>
             )}

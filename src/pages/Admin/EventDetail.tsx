@@ -2,15 +2,17 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Images, MessageSquare, Pencil, QrCode, Trash2, UserPlus, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import clsx from 'clsx';
+import { ArrowLeft, CalendarDays, Camera, Clock3, Eye, Images, IndianRupee, MapPin, MessageSquare, Package, Pencil, Phone, QrCode, Trash2, UserPlus, UserRound, X } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { EmptyState, QueryState, StatCard, StatusBadge } from '../../components/ui/Data';
+import { Avatar } from '../../components/staff/staffCommon';
 import { EventForm, type EventFormValue } from '../../components/event/EventForm';
 import { Input, Select } from '../../components/ui/Form';
 import { Modal, useConfirm } from '../../components/ui/Overlay';
 import { useToast } from '../../components/ui/Toast';
-import { Button, ButtonLink, Card, KeyValue, PageHeader, Tabs } from '../../components/ui';
+import { Button, ButtonLink, Card } from '../../components/ui';
 import { api } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { EVENT_ACTIONS, STAFF_ROLE_SOURCE, STAFF_ROLES, type EventAction, type StaffRole } from '../../helpers/event/events';
@@ -122,20 +124,33 @@ export default function AdminEventDetail() {
                     const actions = can('events.manage') ? EVENT_ACTIONS.filter((a) => a.from.includes(e.status)) : [];
                     return (
                         <>
-                            <PageHeader
-                                back={
-                                    <Link to="/admin/events" className="mb-2 inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-800">
-                                        <ArrowLeft className="size-4" /> Events
-                                    </Link>
-                                }
-                                title={
-                                    <span className="flex items-center gap-3">
-                                        {e.title} <StatusBadge status={e.status} />
-                                    </span>
-                                }
-                                subtitle={`${e.event_code} · ${e.event_type} · ${date(e.event_date)}${e.start_time ? ` ${time(e.start_time)}` : ''}${e.venue ? ` · ${e.venue}` : ''}`}
-                                actions={
-                                    <>
+                            <section className="mb-4 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[var(--soft-shadow)]">
+                                <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+                                    <div className="min-w-0">
+                                        <Link to="/admin/events" className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-800">
+                                            <ArrowLeft className="size-4" /> Events
+                                        </Link>
+                                        <h1 className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-semibold text-stone-900">
+                                            {e.title}
+                                            <StatusBadge status={e.status} />
+                                        </h1>
+                                        <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-stone-500">
+                                            <span className="font-medium text-stone-700">{e.event_code}</span>
+                                            <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700">{e.event_type}</span>
+                                            <span className="inline-flex items-center gap-1">
+                                                <CalendarDays className="size-3.5 text-sky-500" />
+                                                {date(e.event_date)}
+                                                {e.start_time ? ` · ${time(e.start_time)}` : ''}
+                                            </span>
+                                            {e.venue && (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <MapPin className="size-3.5 text-rose-500" />
+                                                    {e.venue}
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2 border-t border-stone-100 pt-3">
                                         {actions.map((a) => (
                                             <Button key={a.action} variant={a.tone} loading={transition.isPending && transition.variables === a.action} onClick={() => runAction(a)}>
                                                 {a.label}
@@ -146,42 +161,44 @@ export default function AdminEventDetail() {
                                                 Edit
                                             </Button>
                                         )}
-                                    </>
-                                }
-                            />
-                            <Tabs
-                                className="mb-6"
-                                value={tab}
-                                onChange={(t) => setParams({ tab: t }, { replace: true })}
-                                tabs={[
-                                    { value: 'overview', label: 'Overview' },
-                                    { value: 'selection', label: 'Customer selection' },
-                                    { value: 'culling', label: 'AI culling' },
-                                ]}
-                            />
+                                    </div>
+                                </div>
+                                <div className="flex gap-1.5 overflow-x-auto border-t border-stone-100 px-4 py-2.5 sm:px-5" role="tablist">
+                                    {(
+                                        [
+                                            { value: 'overview', label: 'Overview' },
+                                            { value: 'selection', label: 'Customer selection' },
+                                            { value: 'culling', label: 'AI culling' },
+                                        ] as const
+                                    ).map((t) => (
+                                        <button key={t.value} type="button" role="tab" aria-selected={tab === t.value} onClick={() => setParams({ tab: t.value }, { replace: true })} className={clsx('rounded-full px-3 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors', tab === t.value ? 'bg-ink-900 text-accent-300' : 'bg-stone-100 text-stone-600 hover:bg-stone-200')}>
+                                            {t.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </section>
                             {tab === 'overview' && (
-                                <div className="grid gap-6 xl:grid-cols-3">
-                                    <div className="space-y-6 xl:col-span-2">
-                                        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                                            <StatCard label="Photos" value={num(e.photo_total)} hint={Object.entries(e.photos).map(([s, n]) => `${titleCase(s)} ${n}`).join(' · ') || undefined} />
-                                            <StatCard label="Gallery opens" value={num(e.access?.gallery_opens)} />
-                                            <StatCard label="Photo views" value={num(e.access?.photo_views)} />
-                                            <StatCard label="Revenue" value={money(e.revenue?.total ?? 0, true)} hint={`Orders ${money(e.revenue?.orders ?? 0, true)}`} />
-                                        </div>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                                        <Kpi tone="from-sky-500 to-cyan-600" icon={<Camera className="size-4" />} label="Photos" value={num(e.photo_total)} hint={Object.entries(e.photos).map(([s, n]) => `${titleCase(s)} ${n}`).join(' · ') || 'None uploaded'} />
+                                        <Kpi tone="from-violet-500 to-fuchsia-600" icon={<QrCode className="size-4" />} label="Gallery opens" value={num(e.access?.gallery_opens)} />
+                                        <Kpi tone="from-amber-400 to-orange-500" icon={<Eye className="size-4" />} label="Photo views" value={num(e.access?.photo_views)} />
+                                        <Kpi tone="from-emerald-500 to-teal-600" icon={<IndianRupee className="size-4" />} label="Revenue" value={money(e.revenue?.total ?? 0, true)} hint={`Orders ${money(e.revenue?.orders ?? 0, true)}`} />
+                                    </div>
+                                    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.85fr)]">
+                                    <div className="space-y-4">
                                         <Card title="Details">
-                                            <KeyValue
-                                                items={[
-                                                    ['Customer', <Link key="c" to={`/admin/customers?open=${e.customer_id}`} className="link">{e.customer_name}</Link>],
-                                                    ['Contact', [e.customer_phone, e.customer_email].filter(Boolean).join(' · ')],
-                                                    ['Booking', e.booking_id ? <Link key="b" to={`/admin/bookings?open=${e.booking_id}`} className="link">{e.booking_no}</Link> : 'Not linked'],
-                                                    ['Package', e.package_name],
-                                                    ['Payment', e.payment_status === 'N/A' ? '—' : `${titleCase(e.payment_status)} · ${money(e.paid_amount ?? 0)} of ${money(e.total_amount ?? 0)}`],
-                                                    ['Time', e.start_time ? `${time(e.start_time)}${e.end_time ? ` – ${time(e.end_time)}` : ''}` : null],
-                                                    ['Started', e.started_at ? dateTime(e.started_at) : null],
-                                                    ['Completed', e.completed_at ? dateTime(e.completed_at) : null],
-                                                ]}
-                                            />
-                                            {e.notes && <p className="mt-4 whitespace-pre-wrap rounded-lg bg-stone-50 p-3 text-sm">{e.notes}</p>}
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <Fact icon={<UserRound className="size-4" />} tone="bg-sky-50 text-sky-600" label="Customer" value={<Link to={`/admin/customers?open=${e.customer_id}`} className="font-semibold text-sky-700 hover:underline">{e.customer_name}</Link>} />
+                                                <Fact icon={<Phone className="size-4" />} tone="bg-emerald-50 text-emerald-600" label="Contact" value={[e.customer_phone, e.customer_email].filter(Boolean).join(' · ') || '—'} />
+                                                <Fact icon={<CalendarDays className="size-4" />} tone="bg-violet-50 text-violet-600" label="Booking" value={e.booking_id ? <Link to={`/admin/bookings?open=${e.booking_id}`} className="font-semibold text-violet-700 hover:underline">{e.booking_no}</Link> : 'Not linked'} />
+                                                <Fact icon={<Package className="size-4" />} tone="bg-amber-50 text-amber-600" label="Package" value={e.package_name || '—'} />
+                                                <Fact icon={<IndianRupee className="size-4" />} tone="bg-rose-50 text-rose-600" label="Payment" value={e.payment_status === 'N/A' ? '—' : <><StatusBadge status={e.payment_status} /> <span className="mt-0.5 block">{money(e.paid_amount ?? 0)} of {money(e.total_amount ?? 0)}</span></>} />
+                                                <Fact icon={<Clock3 className="size-4" />} tone="bg-stone-100 text-stone-600" label="Time" value={e.start_time ? `${time(e.start_time)}${e.end_time ? ` – ${time(e.end_time)}` : ''}` : '—'} />
+                                                <Fact icon={<Clock3 className="size-4" />} tone="bg-sky-50 text-sky-600" label="Started" value={e.started_at ? dateTime(e.started_at) : '—'} />
+                                                <Fact icon={<Clock3 className="size-4" />} tone="bg-emerald-50 text-emerald-600" label="Completed" value={e.completed_at ? dateTime(e.completed_at) : '—'} />
+                                            </div>
+                                            {e.notes && <p className="mt-4 whitespace-pre-wrap rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{e.notes}</p>}
                                         </Card>
                                         <Card
                                             title="Team"
@@ -192,32 +209,25 @@ export default function AdminEventDetail() {
                                                     </Button>
                                                 )
                                             }
-                                            padded={false}
                                         >
                                             {e.staff.length ? (
-                                                <ul className="divide-y divide-stone-100">
+                                                <ul className="grid gap-2 sm:grid-cols-2">
                                                     {e.staff.map((s) => (
-                                                        <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
-                                                            <div className="min-w-0">
-                                                                <p className="font-medium">{s.name}</p>
-                                                                <p className="text-xs text-stone-500">
+                                                        <li key={s.id} className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-stone-50/50 p-3">
+                                                            <Avatar name={s.name} className="size-10 text-xs" />
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="truncate font-semibold text-stone-900">{s.name}</p>
+                                                                <p className="truncate text-xs text-stone-500">
                                                                     {titleCase(s.role)}
-                                                                    {s.camera_label && ` · ${s.camera_label}`} · {s.phone ?? s.email}
+                                                                    {s.camera_label && ` · ${s.camera_label}`}
                                                                 </p>
                                                             </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <StatusBadge status={s.task_status} />
-                                                                {can('staff.assign') && (
-                                                                    <button
-                                                                        type="button"
-                                                                        className="rounded p-1 text-stone-400 hover:bg-red-50 hover:text-red-600"
-                                                                        aria-label={`Remove ${s.name}`}
-                                                                        onClick={async () => (await ask({ title: 'Remove from event?', message: `${s.name} will no longer see this event.`, confirmLabel: 'Remove' })) && removeStaff.mutate(s.id)}
-                                                                    >
-                                                                        <X className="size-4" />
-                                                                    </button>
-                                                                )}
-                                                            </div>
+                                                            <StatusBadge status={s.task_status} />
+                                                            {can('staff.assign') && (
+                                                                <button type="button" className="rounded-lg p-1 text-stone-400 hover:bg-rose-50 hover:text-rose-600" aria-label={`Remove ${s.name}`} onClick={async () => (await ask({ title: 'Remove from event?', message: `${s.name} will no longer see this event.`, confirmLabel: 'Remove' })) && removeStaff.mutate(s.id)}>
+                                                                    <X className="size-4" />
+                                                                </button>
+                                                            )}
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -226,18 +236,19 @@ export default function AdminEventDetail() {
                                             )}
                                         </Card>
                                     </div>
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         <Card title="Gallery">
                                             {e.gallery ? (
                                                 <div className="space-y-3 text-sm">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="font-medium">{e.gallery.title}</span>
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <span className="font-semibold text-stone-900">{e.gallery.title}</span>
                                                         <StatusBadge status={e.gallery.status} />
                                                     </div>
-                                                    <p className="text-stone-600">
-                                                        Watermark {e.gallery.watermark_enabled ? 'on' : 'off'} · downloads {e.gallery.allow_download ? 'allowed' : 'blocked'}
-                                                        {e.gallery.expires_at && ` · expires ${date(e.gallery.expires_at)}`}
-                                                    </p>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        <span className={clsx('rounded-full px-2 py-0.5 text-xs font-semibold', e.gallery.watermark_enabled ? 'bg-sky-50 text-sky-700' : 'bg-stone-100 text-stone-500')}>Watermark {e.gallery.watermark_enabled ? 'on' : 'off'}</span>
+                                                        <span className={clsx('rounded-full px-2 py-0.5 text-xs font-semibold', e.gallery.allow_download ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700')}>Downloads {e.gallery.allow_download ? 'allowed' : 'blocked'}</span>
+                                                        {e.gallery.expires_at && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">Expires {date(e.gallery.expires_at)}</span>}
+                                                    </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         <ButtonLink to={`/admin/galleries/${e.gallery.id}`} size="sm" variant="secondary">
                                                             <QrCode className="size-4" /> Gallery & QR
@@ -248,16 +259,18 @@ export default function AdminEventDetail() {
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <p className="text-sm text-stone-500">No gallery.</p>
+                                                <p className="rounded-xl border-2 border-dashed border-stone-200 px-4 py-8 text-center text-sm text-stone-500">No gallery yet.</p>
                                             )}
                                         </Card>
                                         {can('events.manage') && ['UPCOMING', 'CANCELLED'].includes(e.status) && (
                                             <Card title="Danger zone">
+                                                <p className="mb-3 text-sm text-stone-500">Events with uploaded photos cannot be deleted.</p>
                                                 <Button variant="danger" icon={<Trash2 className="size-4" />} loading={del.isPending} onClick={async () => (await ask({ title: 'Delete event?', message: 'Events with uploaded photos cannot be deleted.', confirmLabel: 'Delete event' })) && del.mutate()}>
                                                     Delete event
                                                 </Button>
                                             </Card>
                                         )}
+                                    </div>
                                     </div>
                                 </div>
                             )}
@@ -270,6 +283,32 @@ export default function AdminEventDetail() {
                 }}
             </QueryState>
             {dialog}
+        </div>
+    );
+}
+
+function Kpi({ tone, icon, label, value, hint }: { tone: string; icon: ReactNode; label: string; value: ReactNode; hint?: string }) {
+    return (
+        <div className={clsx('relative overflow-hidden rounded-2xl bg-gradient-to-br p-3.5 text-white shadow-lg', tone)}>
+            <span className="pointer-events-none absolute -right-5 -top-5 size-16 rounded-full bg-white/15" />
+            <div className="relative flex items-start justify-between gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/80">{label}</p>
+                <span className="flex size-8 items-center justify-center rounded-lg bg-white/20">{icon}</span>
+            </div>
+            <p className="relative mt-1 truncate text-2xl font-bold">{value}</p>
+            {hint && <p className="relative mt-0.5 line-clamp-1 text-xs text-white/75">{hint}</p>}
+        </div>
+    );
+}
+
+function Fact({ icon, tone, label, value }: { icon: ReactNode; tone: string; label: string; value: ReactNode }) {
+    return (
+        <div className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-white p-3">
+            <span className={clsx('flex size-9 shrink-0 items-center justify-center rounded-lg', tone)}>{icon}</span>
+            <span className="min-w-0">
+                <span className="block text-[11px] font-semibold uppercase tracking-wide text-stone-400">{label}</span>
+                <span className="block text-sm text-stone-800">{value}</span>
+            </span>
         </div>
     );
 }

@@ -356,7 +356,7 @@ export function Pagination({ page, totalPages, total, onPage }: { page: number; 
 }
 
 /** Debounced search box. */
-export function SearchInput({ value, onChange, placeholder = 'Search…', className }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
+export function SearchInput({ value, onChange, placeholder = 'Search…', className, inputClassName }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string; inputClassName?: string }) {
     const [local, setLocal] = useState(value);
     useEffect(() => setLocal(value), [value]);
     useEffect(() => {
@@ -372,7 +372,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', classN
                 onChange={(e) => setLocal(e.target.value)}
                 placeholder={placeholder}
                 aria-label={placeholder}
-                className="h-10 w-full rounded-lg border border-stone-300 bg-white pl-9 pr-3 text-sm shadow-sm placeholder:text-stone-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                className={clsx('h-10 w-full appearance-none border border-stone-300 bg-white pl-9 pr-3 text-sm shadow-sm placeholder:text-stone-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20', inputClassName ?? 'rounded-xl')}
             />
         </div>
     );

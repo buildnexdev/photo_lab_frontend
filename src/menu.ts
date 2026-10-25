@@ -57,6 +57,8 @@ export const eventManagementPageMenu: MenuGroup = {
     subMenu: {
         events: item({ id: 'events', text: 'Events', path: '/admin/events', icon: 'Calendar', anyOf: ['events.view', 'events.manage'] }),
         galleries: item({ id: 'galleries', text: 'Galleries and QR', path: '/admin/galleries', icon: 'Images', anyOf: ['galleries.manage'] }),
+        createQr: item({ id: 'createQr', text: 'Create QR', path: '/admin/qr/create', icon: 'QrCode', anyOf: ['galleries.manage'] }),
+        manageQr: item({ id: 'manageQr', text: 'Manage QR', path: '/admin/qr', icon: 'ScanLine', end: true, anyOf: ['galleries.manage'] }),
         photos: item({ id: 'photos', text: 'Photos', path: '/admin/photos', icon: 'Image', anyOf: ['photos.manage'] }),
     },
 };
@@ -75,7 +77,7 @@ export const packageManagementPageMenu: MenuGroup = {
 
 export const productManagementPageMenu: MenuGroup = {
     id: 'productManagement',
-    text: 'Product management',
+    text: 'Master management',
     path: '/admin/products',
     icon: 'Layers',
     subMenu: {
@@ -86,7 +88,7 @@ export const productManagementPageMenu: MenuGroup = {
 
 export const orderManagementPageMenu: MenuGroup = {
     id: 'orderManagement',
-    text: 'Order management',
+    text: 'Operations management',
     path: '/admin/orders',
     icon: 'ShoppingBag',
     subMenu: {
@@ -118,7 +120,7 @@ export const financePageMenu: MenuGroup = {
 
 export const reportsPageMenu: MenuGroup = {
     id: 'reports',
-    text: 'Reports & analytics',
+    text: 'Reports management',
     path: '/admin/reports',
     icon: 'BarChart3',
     subMenu: {

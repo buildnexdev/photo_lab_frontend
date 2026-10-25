@@ -19,7 +19,7 @@ import { FormGrid, Input, Textarea } from '../ui/Form';
 import { Drawer, useConfirm } from '../ui/Overlay';
 import { StatusBadge } from '../ui/Data';
 import { useToast } from '../ui/Toast';
-import { Button, Tabs } from '../ui';
+import { Button } from '../ui';
 import { Avatar } from '../staff/staffCommon';
 
 export interface CustomerDetail {
@@ -335,19 +335,7 @@ export function CustomerDrawer({ id, onClose, onCreated }: { id: number | 'new' 
                             (!c ? (
                                 <p className="rounded-2xl border-2 border-dashed border-stone-200 px-4 py-10 text-center text-sm text-stone-500">History appears here once the customer is created.</p>
                             ) : (
-                                <div>
-                                    <Tabs
-                                        value={tab}
-                                        onChange={setTab}
-                                        tabs={[
-                                            { value: 'bookings', label: 'Bookings', count: c.bookings.length },
-                                            { value: 'events', label: 'Events', count: c.events.length },
-                                            { value: 'orders', label: 'Orders', count: c.orders.length },
-                                            { value: 'payments', label: 'Payments', count: c.payments.length },
-                                        ]}
-                                    />
-                                    <HistoryList c={c} tab={tab} />
-                                </div>
+                                <HistoryPanel c={c} tab={tab} onTab={setTab} />
                             ))}
                     </div>
                 </form>
@@ -357,59 +345,61 @@ export function CustomerDrawer({ id, onClose, onCreated }: { id: number | 'new' 
     );
 }
 
-function HistoryList({ c, tab }: { c: CustomerDetail; tab: HistoryTab }) {
-    const row = 'flex items-center justify-between gap-2 px-2 py-2.5';
+const HISTORY_TABS: { value: HistoryTab; label: string; icon: typeof CalendarCheck; on: string; chip: string }[] = [
+    { value: 'bookings', label: 'Bookings', icon: CalendarCheck, on: 'bg-sky-500 text-white', chip: 'bg-sky-50 text-sky-600' },
+    { value: 'events', label: 'Events', icon: Sparkles, on: 'bg-violet-500 text-white', chip: 'bg-violet-50 text-violet-600' },
+    { value: 'orders', label: 'Orders', icon: ShoppingBag, on: 'bg-amber-500 text-white', chip: 'bg-amber-50 text-amber-600' },
+    { value: 'payments', label: 'Payments', icon: IndianRupee, on: 'bg-emerald-500 text-white', chip: 'bg-emerald-50 text-emerald-600' },
+];
+
+function HistoryPanel({ c, tab, onTab }: { c: CustomerDetail; tab: HistoryTab; onTab: (t: HistoryTab) => void }) {
+    const active = HISTORY_TABS.find((t) => t.value === tab) ?? HISTORY_TABS[0];
     return (
-        <ul className="divide-y divide-stone-100 text-sm">
-            {tab === 'bookings' &&
-                c.bookings.map((b) => (
-                    <li key={b.id}>
-                        <Link to={`/admin/bookings?open=${b.id}`} className={clsx(row, 'hover:bg-stone-50')}>
-                            <span>
-                                <span className="font-medium">{b.booking_no}</span> · {b.event_type} · {date(b.event_date)}
-                            </span>
-                            <span className="flex items-center gap-2">
-                                {money(b.paid_amount)} / {money(b.total_amount)} <StatusBadge status={b.status} />
-                            </span>
-                        </Link>
-                    </li>
-                ))}
-            {tab === 'events' &&
-                c.events.map((e) => (
-                    <li key={e.id}>
-                        <Link to={`/admin/events/${e.id}`} className={clsx(row, 'hover:bg-stone-50')}>
-                            <span>
-                                <span className="font-medium">{e.title}</span> · {date(e.event_date)}
-                            </span>
-                            <StatusBadge status={e.status} />
-                        </Link>
-                    </li>
-                ))}
-            {tab === 'orders' &&
-                c.orders.map((o) => (
-                    <li key={o.id}>
-                        <Link to={`/admin/orders?open=${o.id}`} className={clsx(row, 'hover:bg-stone-50')}>
-                            <span>
-                                <span className="font-medium">{o.order_no}</span> · {ORDER_TYPE_LABELS[o.type]}
-                            </span>
-                            <span className="flex items-center gap-2">
-                                {money(o.total)} <StatusBadge status={o.status} />
-                            </span>
-                        </Link>
-                    </li>
-                ))}
-            {tab === 'payments' &&
-                c.payments.map((p) => (
-                    <li key={p.id} className={row}>
-                        <span>
-                            <span className="font-medium">{p.payment_no}</span> · {titleCase(p.purpose)} · {date(p.paid_at ?? p.created_at)}
-                        </span>
-                        <span className="flex items-center gap-2">
-                            {money(p.amount)} <StatusBadge status={p.status} />
-                        </span>
-                    </li>
-                ))}
-            {!c[tab].length && <li className="py-6 text-center text-stone-500">Nothing yet</li>}
-        </ul>
+        <div className="space-y-3">
+            <div className="flex flex-wrap gap-2" role="tablist">
+                {HISTORY_TABS.map((t) => {
+                    const count = c[t.value].length;
+                    const selected = tab === t.value;
+                    return (
+                        <button key={t.value} type="button" role="tab" aria-selected={selected} onClick={() => onTab(t.value)} className={clsx('inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors', selected ? t.on : 'bg-stone-100 text-stone-600 hover:bg-stone-200')}>
+                            <t.icon className="size-3.5" />
+                            {t.label}
+                            <span className={clsx('rounded-full px-1.5 text-xs', selected ? 'bg-white/25 text-white' : t.chip)}>{count}</span>
+                        </button>
+                    );
+                })}
+            </div>
+            {!c[tab].length ? (
+                <p className="rounded-2xl border-2 border-dashed border-stone-200 px-4 py-10 text-center text-sm text-stone-500">No {active.label.toLowerCase()} yet</p>
+            ) : (
+                <ul className="space-y-2">
+                    {tab === 'bookings' &&
+                        c.bookings.map((b) => (
+                            <HistoryCard key={b.id} href={`/admin/bookings?open=${b.id}`} tone={active.chip} icon={<CalendarCheck className="size-4" />} title={b.booking_no} meta={`${b.event_type} · ${date(b.event_date)}`} amount={`Paid ${money(b.paid_amount)} of ${money(b.total_amount)}`} status={b.status} />
+                        ))}
+                    {tab === 'events' && c.events.map((e) => <HistoryCard key={e.id} href={`/admin/events/${e.id}`} tone={active.chip} icon={<Sparkles className="size-4" />} title={e.title} meta={date(e.event_date)} status={e.status} />)}
+                    {tab === 'orders' && c.orders.map((o) => <HistoryCard key={o.id} href={`/admin/orders?open=${o.id}`} tone={active.chip} icon={<ShoppingBag className="size-4" />} title={o.order_no} meta={ORDER_TYPE_LABELS[o.type]} amount={money(o.total)} status={o.status} />)}
+                    {tab === 'payments' && c.payments.map((p) => <HistoryCard key={p.id} tone={active.chip} icon={<IndianRupee className="size-4" />} title={p.payment_no} meta={`${titleCase(p.purpose)} · ${date(p.paid_at ?? p.created_at)}`} amount={money(p.amount)} status={p.status} />)}
+                </ul>
+            )}
+        </div>
     );
+}
+
+function HistoryCard({ href, tone, icon, title, meta, amount, status }: { href?: string; tone: string; icon: ReactNode; title: string; meta: string; amount?: string; status: string }) {
+    const body = (
+        <>
+            <span className={clsx('flex size-10 shrink-0 items-center justify-center rounded-xl', tone)}>{icon}</span>
+            <span className="min-w-0 flex-1">
+                <span className="block truncate font-semibold text-stone-900">{title}</span>
+                <span className="block truncate text-xs text-stone-500">{meta}</span>
+            </span>
+            <span className="flex shrink-0 flex-col items-end gap-1">
+                {amount && <span className="text-sm font-semibold text-stone-800">{amount}</span>}
+                <StatusBadge status={status} />
+            </span>
+        </>
+    );
+    const className = 'flex items-center gap-3 rounded-2xl border border-stone-200/80 bg-white p-3 shadow-[var(--soft-shadow)] transition-shadow hover:shadow-[var(--soft-shadow-lg)]';
+    return <li>{href ? <Link to={href} className={className}>{body}</Link> : <div className={className}>{body}</div>}</li>;
 }
