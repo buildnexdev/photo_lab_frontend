@@ -73,7 +73,7 @@ export default function CustomerEvents() {
                                 <div className="mt-3 space-y-1 text-sm text-stone-600">
                                     <p className="flex items-center gap-2">
                                         <Calendar className="size-4 text-stone-400" /> {date(e.event_date)}
-                                        {e.start_time && ` · ${time(e.start_time)}`}
+                                        {e.start_time && ` · ${time(e.start_time)}${e.end_time ? ` – ${time(e.end_time)}` : ''}`}
                                     </p>
                                     {e.venue && (
                                         <p className="flex items-center gap-2">

@@ -239,9 +239,11 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
         if (idx >= 0) setStep(idx);
     };
     const submit = handleSubmit(async (v) => {
-        const { confirmPassword: _confirm, personal: _p, address: _a, permanentAddress: _pa, education: _e, experience: _x, ...core } = v;
+        const { confirmPassword: _, personal: _1, address: _2, permanentAddress: _3, education: _4, experience: _5, ...core } = v;
+        void _; void _1; void _2; void _3; void _4; void _5;
         const body = {
             ...core,
+            roles: v.roles,
             phone: v.phone || null,
             password: v.password || undefined,
             designation: v.designation || null,

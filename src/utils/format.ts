@@ -36,10 +36,42 @@ export function dateTime(value: string | Date | null | undefined) {
 
 export function time(value: string | null | undefined) {
     if (!value) return '';
-    const [h, m] = value.split(':').map(Number);
-    const d = new Date(Date.UTC(2000, 0, 1, h, m));
-    return d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
+    const parts = value.split(':');
+    if (parts.length < 2) return value;
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (isNaN(h) || isNaN(m)) return value;
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 === 0 ? 12 : h % 12;
+    const minStr = m.toString().padStart(2, '0');
+    return `${hour12}:${minStr} ${period}`;
 }
+
+export function to24Hour(hour12: number | string, minute: number | string, period: 'AM' | 'PM'): string {
+    let h = typeof hour12 === 'string' ? parseInt(hour12, 10) : hour12;
+    if (isNaN(h)) return '';
+    if (period === 'AM') {
+        if (h === 12) h = 0;
+    } else {
+        if (h < 12) h += 12;
+    }
+    const m = typeof minute === 'string' ? parseInt(minute, 10) : minute;
+    const mm = (isNaN(m) ? 0 : m).toString().padStart(2, '0');
+    return `${h.toString().padStart(2, '0')}:${mm}`;
+}
+
+export function from24Hour(val24: string | null | undefined): { hour12: number; minute: string; period: 'AM' | 'PM' } | null {
+    if (!val24 || !val24.includes(':')) return null;
+    const [hStr, mStr] = val24.split(':');
+    const h = parseInt(hStr, 10);
+    const m = parseInt(mStr, 10);
+    if (isNaN(h) || isNaN(m)) return null;
+    const period: 'AM' | 'PM' = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 === 0 ? 12 : h % 12;
+    const minute = m.toString().padStart(2, '0');
+    return { hour12, minute, period };
+}
+
 
 export function relative(value: string | Date | null | undefined) {
     if (!value) return '';

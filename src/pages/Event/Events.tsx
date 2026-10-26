@@ -71,7 +71,7 @@ export default function AdminEvents() {
                                             </div>
                                         ),
                                     },
-                                    { key: 'date', header: 'Date', cell: (r) => `${date(r.event_date)}${r.start_time ? ` · ${time(r.start_time)}` : ''}` },
+                                    { key: 'date', header: 'Date', cell: (r) => `${date(r.event_date)}${r.start_time ? ` · ${time(r.start_time)}${r.end_time ? ` – ${time(r.end_time)}` : ''}` : ''}` },
                                     { key: 'customer', header: 'Customer', cell: (r) => r.customer_name, hideOnMobile: true },
                                     { key: 'team', header: 'Photographers', cell: (r) => r.photographers ?? <span className="text-red-600">Unassigned</span>, hideOnMobile: true },
                                     { key: 'photos', header: 'Photos', cell: (r) => r.photo_count, hideOnMobile: true },

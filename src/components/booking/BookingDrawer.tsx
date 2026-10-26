@@ -23,7 +23,7 @@ import { Drawer, Modal, useConfirm } from '../ui/Overlay';
 import { EmptyState, StatusBadge } from '../ui/Data';
 import { OfflinePaymentModal } from '../payment/OfflinePaymentModal';
 import { useToast } from '../ui/Toast';
-import { Button } from '../ui';
+import { Button, TimeInput12 } from '../ui';
 import { Avatar } from '../staff/staffCommon';
 import { QuotationBuilder } from './QuotationBuilder';
 
@@ -116,10 +116,13 @@ export function BookingDrawer({ id, onClose, onCreated, detailsOnly = false }: {
         register,
         handleSubmit,
         watch,
+        setValue,
         reset,
         setError,
         formState: { errors, isSubmitting, isDirty },
     } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: blank });
+    const startTime = watch('startTime');
+    const endTime = watch('endTime');
 
     useEffect(() => {
         setStep(isNew ? 0 : 1);
@@ -351,8 +354,18 @@ export function BookingDrawer({ id, onClose, onCreated, detailsOnly = false }: {
                                             </datalist>
                                         </div>
                                         <Input label="Event date" type="date" required min={isNew ? todayYmd() : undefined} {...register('eventDate')} error={errors.eventDate?.message} />
-                                        <Input label="Start time" type="time" {...register('startTime')} error={errors.startTime?.message} />
-                                        <Input label="End time" type="time" {...register('endTime')} error={errors.endTime?.message} />
+                                        <TimeInput12
+                                            label="Start time"
+                                            value={startTime}
+                                            onChange={(val24) => setValue('startTime', val24, { shouldValidate: true, shouldDirty: true })}
+                                            error={errors.startTime?.message}
+                                        />
+                                        <TimeInput12
+                                            label="End time"
+                                            value={endTime}
+                                            onChange={(val24) => setValue('endTime', val24, { shouldValidate: true, shouldDirty: true })}
+                                            error={errors.endTime?.message}
+                                        />
                                         <Input label="Venue" wrapperClassName="sm:col-span-2" {...register('venue')} error={errors.venue?.message} placeholder="Venue name and city" />
                                         <Input label="Expected guests" inputMode="numeric" {...register('guests')} error={errors.guests?.message} />
                                     </FormGrid>
