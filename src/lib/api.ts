@@ -43,14 +43,19 @@ export class ApiError extends Error {
 export const errorMessage = (err: unknown, fallback = 'Something went wrong. Please try again.') =>
     err instanceof ApiError || err instanceof Error ? err.message || fallback : fallback;
 
-/* ---------------- Access token (memory only; the refresh token is an httpOnly cookie) ---------------- */
+/* ---------------- Access token (cached in sessionStorage across refresh; refresh token is httpOnly cookie) ---------------- */
 
-let accessToken: string | null = null;
+const ACCESS_TOKEN_KEY = 'pl_access_token';
+let accessToken: string | null = typeof window !== 'undefined' ? sessionStorage.getItem(ACCESS_TOKEN_KEY) : null;
 let refreshing: Promise<boolean> | null = null;
 let onSessionLost: (() => void) | null = null;
 
 export const setAccessToken = (t: string | null) => {
     accessToken = t;
+    if (typeof window !== 'undefined') {
+        if (t) sessionStorage.setItem(ACCESS_TOKEN_KEY, t);
+        else sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    }
 };
 export const getAccessToken = () => accessToken;
 export const setSessionLostHandler = (fn: (() => void) | null) => {

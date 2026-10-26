@@ -48,21 +48,44 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+const SESSION_USER_KEY = 'pl_session_user';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<SessionUser | null>(null);
-    const [status, setStatus] = useState<AuthState['status']>('loading');
+    const [user, setUser] = useState<SessionUser | null>(() => {
+        if (typeof window === 'undefined') return null;
+        try {
+            const raw = localStorage.getItem(SESSION_USER_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    });
+    const [status, setStatus] = useState<AuthState['status']>(() => {
+        if (typeof window === 'undefined') return 'loading';
+        const hasToken = !!sessionStorage.getItem('pl_access_token');
+        const hasUser = !!localStorage.getItem(SESSION_USER_KEY);
+        return hasToken && hasUser ? 'authenticated' : 'loading';
+    });
     const qc = useQueryClient();
 
     const acceptSession = useCallback((s: SessionPayload) => {
         setAccessToken(s.accessToken);
         setUser(s.user);
         setStatus('authenticated');
+        if (typeof window !== 'undefined') {
+            try {
+                localStorage.setItem(SESSION_USER_KEY, JSON.stringify(s.user));
+            } catch {}
+        }
     }, []);
 
     const clear = useCallback(() => {
         setAccessToken(null);
         setUser(null);
         setStatus('anonymous');
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(SESSION_USER_KEY);
+        }
         qc.clear();
     }, [qc]);
 
@@ -80,10 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void refreshSession()
             .then((ok) => {
                 if (cancelled) return;
-                if (!ok) setStatus('anonymous');
+                if (!ok && !sessionStorage.getItem('pl_access_token')) setStatus('anonymous');
             })
             .catch(() => {
-                if (!cancelled) setStatus('anonymous');
+                if (!cancelled && !sessionStorage.getItem('pl_access_token')) setStatus('anonymous');
             });
         const safety = window.setTimeout(() => {
             if (!cancelled) setStatus((s) => (s === 'loading' ? 'anonymous' : s));
