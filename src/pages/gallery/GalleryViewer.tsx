@@ -3,7 +3,8 @@
 // Last Edited : 06-10-2026
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { CheckCircle2, Heart, Images, Loader2, Lock, Printer, RefreshCw, ScanFace, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, Heart, Images, Lock, Printer, RefreshCw, ScanFace, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { NqLoader } from '../../components/brand';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { EmptyState, ErrorState, Loading, StatusBadge } from '../../components/ui/Data';
@@ -50,6 +51,11 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
     const [face, setFace] = useState<{ items: GalleryPhoto[]; message: string } | null>(null);
     const [faceBusy, setFaceBusy] = useState(false);
     const selfieRef = useRef<HTMLInputElement>(null);
+    const [faceConsent, setFaceConsent] = useState(false);
+    const [phone, setPhone] = useState('');
+    const [otp, setOtp] = useState('');
+    const [phoneProof, setPhoneProof] = useState('');
+    const [devCode, setDevCode] = useState('');
     const sentinel = useRef<HTMLDivElement>(null);
 
     const infoKey = ['gallery', galleryId, 'info'];
@@ -177,6 +183,8 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
         try {
             const form = new FormData();
             form.append('selfie', file);
+            form.append('consent', 'true');
+            if (phoneProof) form.append('proof', phoneProof);
             const r = await api.send<Paged<GalleryPhoto>>('POST', `/api/gallery/${galleryId}/face-search`, form, headers);
             setFace({ items: r.data.items, message: r.message });
         } catch (e) {
@@ -228,7 +236,47 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
                     {g.faceSearch && (
                         <>
                             <input ref={selfieRef} type="file" accept="image/jpeg,image/png,image/webp" capture="user" className="hidden" onChange={(e) => e.target.files?.[0] && runFaceSearch(e.target.files[0])} />
-                            <Button variant="secondary" icon={<ScanFace className="size-4" />} loading={faceBusy} onClick={() => selfieRef.current?.click()}>
+                            {!g.isOwner && !g.isStaff && !phoneProof && (
+                                <form
+                                    className="flex flex-wrap items-center gap-2"
+                                    onSubmit={async (event) => {
+                                        event.preventDefault();
+                                        try {
+                                            if (!otp) {
+                                                const sent = await api.send<{ devCode?: string }>('POST', `/api/gallery/${galleryId}/phone/request`, { phone }, headers);
+                                                setDevCode(sent.data.devCode ?? '');
+                                                toast.success(sent.message);
+                                                return;
+                                            }
+                                            const verified = await api.send<{ proof: string }>('POST', `/api/gallery/${galleryId}/phone/verify`, { phone, code: otp, consent: true }, headers);
+                                            setPhoneProof(verified.data.proof);
+                                            setFaceConsent(true);
+                                            toast.success('Phone verified for this event');
+                                        } catch (err) {
+                                            toast.error(err);
+                                        }
+                                    }}
+                                >
+                                    <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="w-28 rounded-lg border border-stone-300 px-2 py-1 text-sm text-stone-900" />
+                                    <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Code" className="w-20 rounded-lg border border-stone-300 px-2 py-1 text-sm text-stone-900" />
+                                    <Button type="submit" variant="secondary" size="sm">{otp ? 'Verify' : 'Send code'}</Button>
+                                    {devCode && <span className="text-xs">Dev code {devCode}</span>}
+                                </form>
+                            )}
+                            <label className="inline-flex items-center gap-2 text-xs">
+                                <input type="checkbox" checked={faceConsent} onChange={(e) => setFaceConsent(e.target.checked)} />
+                                I consent to face matching in this event only
+                            </label>
+                            <Button
+                                variant="secondary"
+                                icon={<ScanFace className="size-4" />}
+                                loading={faceBusy}
+                                onClick={() => {
+                                    if (!faceConsent) return toast.error('Confirm consent before searching.');
+                                    if (!g.isOwner && !g.isStaff && !phoneProof) return toast.error('Verify your phone for this event first.');
+                                    selfieRef.current?.click();
+                                }}
+                            >
                                 Find my photos
                             </Button>
                         </>
@@ -362,7 +410,7 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
                 <div ref={sentinel} className="h-10" />
                 {isFetchingNextPage && (
                     <div className="flex justify-center py-6">
-                        <Loader2 className="size-6 animate-spin opacity-60" />
+                        <NqLoader size="md" variant="emblem" className="opacity-80" label="Loading" />
                     </div>
                 )}
                 {!!list.length && !hasNextPage && !face && <p className={clsx('py-6 text-center text-xs', dark ? 'text-white/40' : 'text-stone-400')}>{total} photos</p>}

@@ -15,7 +15,7 @@ import { Drawer, Modal, useConfirm } from '../../components/ui/Overlay';
 import { useToast } from '../../components/ui/Toast';
 import { usePayment } from '../../hooks/usePayment';
 import { Alert, Button, Card, KeyValue, PageHeader } from '../../components/ui';
-import { api, applyFieldErrors, type Paged } from '../../services/api';
+import { api, applyFieldErrors, downloadAuthed, type Paged } from '../../services/api';
 import { date, money, time, titleCase } from '../../utils/format';
 import { useInvalidate, useListParams, useOpenParam } from '../../hooks';
 import { useSite } from '../../utils/site';
@@ -228,6 +228,12 @@ function BookingDrawer({ id, onClose }: { id: number | null; onClose: () => void
                             {b.quotations.map((qt) => (
                                 <div key={qt.id} className="rounded-xl border border-stone-200 p-4">
                                     <QuotationView q={qt} />
+                                    <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-stone-500">
+                                        <span>Revision {qt.revision ?? 1}</span>
+                                        <button type="button" className="text-brand-700" onClick={() => downloadAuthed(`/api/bookings/quotations/${qt.id}/pdf`, `${qt.quotation_no}.pdf`)}>
+                                            Download PDF
+                                        </button>
+                                    </div>
                                     {qt.status === 'SENT' && (
                                         <div className="mt-4 flex flex-wrap justify-end gap-2">
                                             <Button

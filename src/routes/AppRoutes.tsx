@@ -54,10 +54,7 @@ const adminNav: NavSection[] = [
     {
         title: 'Master',
         items: [
-            { to: '/admin/staff', label: 'Staff', icon: UserCog, anyOf: ['users.manage', 'staff.manage'] },
-            { to: '/admin/access', label: 'User access', icon: ShieldCheck, end: true, anyOf: ['roles.manage', 'users.manage'] },
-            { to: '/admin/access/assign', label: 'Assign access', icon: UserCog, anyOf: ['users.manage'] },
-            { to: '/admin/customers', label: 'Customers', icon: Users, anyOf: ['customers.view', 'customers.manage'] },
+            { to: '/admin/staff', label: 'Staff', icon: UserCog, anyOf: ['users.manage', 'staff.manage'] },            { to: '/admin/customers', label: 'Customers', icon: Users, anyOf: ['customers.view', 'customers.manage'] },
             { to: '/admin/services', label: 'Services', icon: Briefcase, anyOf: ['pricing.manage'] },
             { to: '/admin/packages', label: 'Packages', icon: PackageIcon, anyOf: ['pricing.manage'] },
             { to: '/admin/coupons', label: 'Coupons', icon: Tag, anyOf: ['pricing.manage'] },
@@ -243,8 +240,7 @@ export const router = createBrowserRouter([
                     { path: 'companies', ...page(() => import('../pages/Company/Companies')) },
                     { path: 'website', ...page(() => import('../pages/Admin/Website')) },
                     { path: 'staff', ...page(() => import('../pages/Admin/Staff')) },
-                    { path: 'access', ...page(() => import('../pages/Access/UserAccess')) },
-                    { path: 'access/assign', ...page(() => import('../pages/Access/AssignAccess')) },
+                    { path: 'access/*', element: <Navigate to="/admin/staff" replace /> },
                     { path: 'photographers', ...page(() => import('../pages/Admin/Photographers')) },
                     { path: 'editors', ...page(() => import('../pages/Admin/Editors')) },
                     { path: 'printing', ...page(() => import('../pages/Admin/Printing')) },

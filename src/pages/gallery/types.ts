@@ -37,6 +37,8 @@ export interface GalleryInfo {
     albums: GalleryAlbum[];
     categories: GalleryCategory[];
     faceSearch: boolean;
+    phoneVerification?: boolean;
+    phoneVerified?: boolean;
     selection: {
         canSelect: boolean;
         count: number;

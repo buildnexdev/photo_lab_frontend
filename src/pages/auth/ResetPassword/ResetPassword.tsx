@@ -2,7 +2,8 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, KeyRound, Loader2, Lock, Mail } from 'lucide-react';
+import { ArrowRight, KeyRound, Lock, Mail } from 'lucide-react';
+import { NqLoader } from '../../../components/brand';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useSearchParams } from 'react-router';
@@ -34,7 +35,7 @@ export default function ResetPassword() {
                 <div className="alert alert-danger">
                     This password reset link is incomplete or has expired.
                 </div>
-                <Link to="/forgot-password" className="btn btn-primary w-100">
+                <Link to="/forgot-password" className="btn btn-primary w-full">
                     Request a new link
                 </Link>
             </div>
@@ -66,7 +67,7 @@ export default function ResetPassword() {
             {done ? (
                 <div className="reset-password__done">
                     <Alert tone="success">{done}</Alert>
-                    <Link to="/login" className="btn btn-primary w-100">
+                    <Link to="/login" className="btn btn-primary w-full">
                         Sign in with new password <ArrowRight size={16} />
                     </Link>
                 </div>
@@ -108,10 +109,10 @@ export default function ResetPassword() {
                         {errors.confirm && <p className="reset-password__error">{errors.confirm.message}</p>}
                     </div>
 
-                    <button type="submit" disabled={isSubmitting} className="btn btn-primary w-100">
+                    <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full">
                         {isSubmitting ? (
                             <>
-                                <Loader2 className="auth-spin" size={16} />
+                                <NqLoader size="xs" label="" aria-hidden />
                                 Updating...
                             </>
                         ) : (

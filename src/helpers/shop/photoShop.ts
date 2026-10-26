@@ -120,7 +120,51 @@ function write<T>(key: string, value: T): void {
 
 export const getProductTypes = () => read(STORAGE.types, seededProductTypes);
 export const saveProductTypes = (types: ProductType[]) => write(STORAGE.types, types);
-export const getProducts = () => read(STORAGE.products, seededProducts);
+const DEFAULT_PLACEMENT: PhotoPlacement = { x: 15, y: 12, width: 70, height: 76, aspectRatio: '4:5', padding: 4 };
+
+const stringList = (value: unknown): string[] => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []);
+
+// Must match productPrice() on the public website: values of 10000+ are stored in paise.
+const rupees = (value: unknown) => {
+    const n = Number(value) || 0;
+    return n >= 10000 ? Math.round(n / 100) : Math.round(n);
+};
+
+const toCategory = (value: unknown): ProductCategory => {
+    const text = String(value ?? '');
+    const exact = SHOP_CATEGORIES.find((c) => c.toLowerCase() === text.toLowerCase());
+    if (exact) return exact;
+    if (/album/i.test(text)) return 'Photo Albums';
+    if (/frame/i.test(text)) return 'Photo Frames';
+    if (/cup|mug/i.test(text)) return 'Photo Cups';
+    if (/gift|keepsake|box/i.test(text)) return 'Customized Gifts';
+    return 'Photo Prints';
+};
+
+// Website settings store a slimmer product shape, so fill anything the shop needs.
+export function normalizeProduct(raw: Partial<ShopProduct> & Record<string, unknown>): ShopProduct {
+    return {
+        id: String(raw.id ?? crypto.randomUUID()),
+        name: String(raw.name ?? ''),
+        category: toCategory(raw.category ?? raw.name),
+        description: String(raw.description ?? ''),
+        price: rupees(raw.price),
+        discount: Number(raw.discount) || 0,
+        variants: stringList(raw.variants),
+        sizes: stringList(raw.sizes),
+        stock: Number.isFinite(Number(raw.stock)) ? Number(raw.stock) : 0,
+        active: raw.active ?? true,
+        customizable: raw.customizable ?? false,
+        customizationPrice: rupees(raw.customizationPrice),
+        image: typeof raw.image === 'string' && raw.image ? raw.image : '/images/hero-couple-petals.jpg',
+        frameOverlay: typeof raw.frameOverlay === 'string' ? raw.frameOverlay : '',
+        placement: { ...DEFAULT_PLACEMENT, ...(raw.placement ?? {}) },
+    };
+}
+
+export const normalizeProducts = (list: unknown): ShopProduct[] => (Array.isArray(list) ? list.filter((item) => item && typeof item === 'object').map(normalizeProduct) : []);
+
+export const getProducts = () => normalizeProducts(read<unknown>(STORAGE.products, seededProducts));
 export const saveProducts = (products: ShopProduct[]) => write(STORAGE.products, products);
 export const getCart = () => read<ShopCartItem[]>(STORAGE.cart, []);
 export const saveCart = (cart: ShopCartItem[]) => write(STORAGE.cart, cart);

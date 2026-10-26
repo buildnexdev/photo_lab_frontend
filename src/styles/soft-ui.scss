@@ -1,0 +1,53 @@
+/* Nammaqr dashboard — black & gold palette from the NQ emblem */
+
+:root {
+    --portal-bg: #ffffff;
+    --portal-sidebar: #141416;
+    --portal-sidebar-edge: #1d1d21;
+    --portal-sidebar-hover: rgba(255, 255, 255, 0.06);
+    --portal-sidebar-active: rgba(201, 162, 75, 0.16);
+    --portal-accent: #c9a24b;
+    --portal-accent-hover: #b8913c;
+    --portal-accent-soft: #f5edd5;
+    --portal-accent-ink: #7d6127;
+    --portal-gold-gradient: linear-gradient(135deg, #e6c97a 0%, #c9a24b 45%, #9c7a30 100%);
+    --portal-brand-gold: #c9a24b;
+    --portal-brand-gold-muted: #c9a24b;
+    --portal-text: #1c1b19;
+    --portal-text-muted: #6b665c;
+    --soft-shadow: 0 4px 24px rgba(40, 32, 16, 0.06);
+    --soft-shadow-lg: 0 10px 40px rgba(40, 32, 16, 0.1);
+    --soft-radius: 1rem;
+    --soft-radius-lg: 1.25rem;
+}
+
+.soft-card {
+    background: #fff;
+    border-radius: var(--soft-radius-lg);
+    box-shadow: var(--soft-shadow);
+    border: 1px solid rgba(231, 224, 210, 0.6);
+}
+
+.soft-card--flat {
+    box-shadow: none;
+    border: 1px solid rgba(231, 224, 210, 0.9);
+}
+
+.public-shell {
+    min-height: 100dvh;
+    background: var(--portal-bg);
+}
+
+.public-topbar {
+    margin: 0.75rem 1rem 0;
+    border-radius: var(--soft-radius-lg);
+    background: #fff;
+    box-shadow: var(--soft-shadow);
+    border: 1px solid rgba(231, 224, 210, 0.6);
+}
+
+@media (min-width: 1024px) {
+    .public-topbar {
+        margin-inline: 1.5rem;
+    }
+}

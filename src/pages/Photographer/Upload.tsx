@@ -2,7 +2,8 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import clsx from 'clsx';
-import { CheckCircle2, CircleAlert, CloudOff, Copy, FolderOpen, ImagePlus, Loader2, Pause, Play, Radio, RotateCw, StopCircle, Trash2, X } from 'lucide-react';
+import { CheckCircle2, CircleAlert, CloudOff, Copy, FolderOpen, ImagePlus, Pause, Play, Radio, RotateCw, StopCircle, Trash2, X } from 'lucide-react';
+import { NqLoader } from '../../components/brand';
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { EmptyState, QueryState } from '../../components/ui/Data';
@@ -311,7 +312,7 @@ function QueueRow({ item, onRetry, onRemove }: { item: UploadItem; onRetry: () =
     const icon =
         item.status === 'done' ? <CheckCircle2 className="size-4 text-emerald-600" /> :
         item.status === 'duplicate' ? <Copy className="size-4 text-stone-400" /> :
-        item.status === 'uploading' ? <Loader2 className="size-4 animate-spin text-brand-600" /> :
+        item.status === 'uploading' ? <NqLoader size="xs" label="" aria-hidden /> :
         item.status === 'failed' || item.status === 'invalid' ? <CircleAlert className="size-4 text-rose-600" /> :
         <span className="block size-4 rounded-full border-2 border-stone-300" />;
     return (

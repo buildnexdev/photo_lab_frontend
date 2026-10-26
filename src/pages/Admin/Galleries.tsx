@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { DataTable, EmptyState, Pagination, QueryState, SearchInput, StatusBadge } from '../../components/ui/Data';
 import { Select } from '../../components/ui/Form';
-import { Card, PageHeader } from '../../components/ui';
+import { ButtonLink, Card, PageHeader } from '../../components/ui';
 import { api, type Paged } from '../../services/api';
 import { date, num, titleCase } from '../../utils/format';
 import { useListParams } from '../../hooks';
@@ -40,7 +40,20 @@ export default function AdminGalleries() {
     });
     return (
         <div>
-            <PageHeader title="Galleries" subtitle="Visibility, watermarking, albums and QR access for every event gallery." />
+            <PageHeader
+                title="Galleries"
+                subtitle="Visibility, watermarking, albums and QR access for every event gallery."
+                actions={
+                    <>
+                        <ButtonLink to="/admin/qr" variant="secondary" size="sm">
+                            Manage QR
+                        </ButtonLink>
+                        <ButtonLink to="/admin/qr/create" size="sm">
+                            Create QR
+                        </ButtonLink>
+                    </>
+                }
+            />
             <Card padded={false}>
                 <div className="flex flex-wrap items-end gap-3 border-b border-stone-100 p-4">
                     <SearchInput value={search} onChange={setSearch} placeholder="Gallery, event or customer" className="w-full max-w-xs" />

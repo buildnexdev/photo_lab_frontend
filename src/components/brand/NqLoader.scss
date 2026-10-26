@@ -1,0 +1,92 @@
+.nq-loader {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.nq-loader--aperture {
+    color: var(--nq-loader-color, #c9a24b);
+}
+
+.nq-loader__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.nq-loader__blades {
+    transform-origin: 50% 50%;
+    animation: nq-aperture-spin 1.15s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.nq-loader__core {
+    transform-origin: 50% 50%;
+    animation: nq-aperture-pulse 1.15s ease-in-out infinite;
+}
+
+.nq-loader__ring-outer {
+    transform-origin: 50% 50%;
+    animation: nq-aperture-spin 2.4s linear infinite reverse;
+    opacity: 0.85;
+}
+
+@keyframes nq-aperture-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes nq-aperture-pulse {
+    0%,
+    100% {
+        opacity: 0.55;
+        transform: scale(0.92);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.nq-loader--emblem {
+    position: relative;
+}
+
+.nq-loader__emblem-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 2px solid rgba(201, 162, 75, 0.25);
+    border-top-color: #e6c97a;
+    animation: nq-aperture-spin 0.9s linear infinite;
+}
+
+.nq-loader__emblem-glow {
+    position: absolute;
+    inset: 12%;
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(201, 162, 75, 0.35) 0%, transparent 70%);
+    animation: nq-aperture-pulse 1.4s ease-in-out infinite;
+}
+
+.nq-loader__mark {
+    position: relative;
+    z-index: 1;
+    width: 58%;
+    height: 58%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nq-loader__blades,
+    .nq-loader__core,
+    .nq-loader__ring-outer,
+    .nq-loader__emblem-ring,
+    .nq-loader__emblem-glow {
+        animation: none;
+    }
+}

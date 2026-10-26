@@ -25,7 +25,7 @@ export function OrdersTable({ base, title, subtitle }: { base: 'admin' | 'delive
             <PageHeader title={title} subtitle={subtitle} />
             <Card padded={false}>
                 <div className="flex flex-wrap gap-3 border-b border-stone-100 p-4">
-                    <SearchInput value={search} onChange={setSearch} placeholder="Order no., customer or phone" className="w-full max-w-xs" />
+                    <SearchInput value={search} onChange={setSearch} placeholder="Order no., customer or phone" className="w-full max-w-xs" inputClassName="rounded-full" />
                     <Select wrapperClassName="w-44" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={ORDER_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
                     <Select wrapperClassName="w-44" aria-label="Type" value={filters.type} onChange={(e) => setFilter('type', e.target.value)} placeholder="All types" options={ORDER_TYPES.map((t) => ({ value: t, label: ORDER_TYPE_LABELS[t] }))} />
                 </div>

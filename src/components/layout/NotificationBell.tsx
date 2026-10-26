@@ -71,7 +71,7 @@ export function NotificationBell({ allLink }: { allLink?: string }) {
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="relative flex size-9 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-700 shadow-xs hover:bg-stone-50 hover:border-stone-300 transition-colors"
+                className="portal-icon-btn relative"
                 aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
             >
                 <Bell className="size-4" />

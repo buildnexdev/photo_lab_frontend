@@ -2,10 +2,11 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { FileText, Undo2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import clsx from 'clsx';
+import { CircleAlert, Clock3, FileText, Undo2, Wallet } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
-import { DataTable, EmptyState, Pagination, QueryState, SearchInput, StatCard, StatusBadge } from '../../components/ui/Data';
+import { DataTable, EmptyState, Pagination, QueryState, SearchInput, StatusBadge } from '../../components/ui/Data';
 import { InvoiceModal } from '../../components/ui/Domain';
 import { Input, Select, Textarea } from '../../components/ui/Form';
 import { Drawer, Modal } from '../../components/ui/Overlay';
@@ -32,6 +33,19 @@ interface InvoiceRow {
     payment_no: string;
     purpose: string;
 }
+function FinanceStat({ label, value, icon, tone }: { label: string; value: ReactNode; icon: ReactNode; tone: string }) {
+    return (
+        <div className={clsx('relative overflow-hidden rounded-2xl bg-gradient-to-br p-4 text-white shadow-lg', tone)}>
+            <span className="pointer-events-none absolute -right-5 -top-5 size-20 rounded-full bg-white/10" />
+            <div className="relative flex items-start justify-between gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/80">{label}</p>
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/25">{icon}</span>
+            </div>
+            <p className="relative mt-2 truncate text-2xl font-bold tracking-tight">{value}</p>
+        </div>
+    );
+}
+
 interface PaymentDetail extends PaymentRow {
     customer_email: string | null;
     customer_phone: string | null;
@@ -73,16 +87,16 @@ export default function AdminPayments() {
             {tab === 'payments' ? (
                 <>
                     {payments.data && (
-                        <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                            <StatCard label="Collected (net)" value={money(payments.data.summary.collected, true)} tone="emerald" />
-                            <StatCard label="Pending" value={money(payments.data.summary.pending, true)} tone="sky" />
-                            <StatCard label="Refunded" value={money(payments.data.summary.refunded, true)} tone="rose" />
-                            <StatCard label="Failed attempts" value={payments.data.summary.failed ?? 0} />
+                        <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
+                            <FinanceStat label="Collected (net)" value={money(payments.data.summary.collected, true)} icon={<Wallet className="size-5" />} tone="from-emerald-500 to-teal-600" />
+                            <FinanceStat label="Pending" value={money(payments.data.summary.pending, true)} icon={<Clock3 className="size-5" />} tone="from-amber-400 to-orange-500" />
+                            <FinanceStat label="Refunded" value={money(payments.data.summary.refunded, true)} icon={<Undo2 className="size-5" />} tone="from-violet-500 to-fuchsia-600" />
+                            <FinanceStat label="Failed attempts" value={payments.data.summary.failed ?? 0} icon={<CircleAlert className="size-5" />} tone="from-rose-500 to-pink-600" />
                         </div>
                     )}
                     <Card padded={false}>
                         <div className="flex flex-wrap items-end gap-3 border-b border-stone-100 p-4">
-                            <SearchInput value={search} onChange={setSearch} placeholder="Payment no., gateway ID, customer" className="w-full max-w-xs" />
+                            <SearchInput value={search} onChange={setSearch} placeholder="Payment no., gateway ID, customer" className="w-full max-w-xs" inputClassName="rounded-full" />
                             <Select wrapperClassName="w-40" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={PAYMENT_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
                             <Select wrapperClassName="w-40" aria-label="Purpose" value={filters.purpose} onChange={(e) => setFilter('purpose', e.target.value)} placeholder="All purposes" options={PAYMENT_PURPOSES.map((s) => ({ value: s, label: titleCase(s) }))} />
                             <Input wrapperClassName="w-40" label="From" type="date" value={filters.from} onChange={(e) => setFilter('from', e.target.value)} />
@@ -134,7 +148,7 @@ export default function AdminPayments() {
             ) : (
                 <Card padded={false}>
                     <div className="border-b border-stone-100 p-4">
-                        <SearchInput value={search} onChange={setSearch} placeholder="Invoice no. or customer" className="w-full max-w-xs" />
+                        <SearchInput value={search} onChange={setSearch} placeholder="Invoice no. or customer" className="w-full max-w-xs" inputClassName="rounded-full" />
                     </div>
                     <QueryState query={invoices}>
                         {(d) => (

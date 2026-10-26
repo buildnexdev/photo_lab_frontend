@@ -1,53 +1,88 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
-// Last Edited : 22-10-2026
-// AUTHOR: NANDHAKUMAR
+// Last Edited : 24-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle, Eye, EyeOff, Loader2, Lock } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Lock, Phone } from 'lucide-react';
+import { NqLoader } from '../../../components/brand';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { z } from 'zod';
 import { useAuth } from '../../../hooks/useAuth';
+import { BRAND_LOGO_LIGHT_SRC, BRAND_NAME, BRAND_TAGLINE } from '../../../lib/brand';
 import { errorMessage } from '../../../services/api';
 import './Login.scss';
 
-const slides = ['/images/hero-wedding-garlands.jpg', '/images/hero-couple-petals.jpg', '/images/hero-couple-outdoor.jpg'];
-
 const pwSchema = z.object({
-    identifier: z.string().trim().min(1, 'Enter your email or phone number'),
+    phone: z
+        .string()
+        .trim()
+        .transform((v) => v.replace(/\D/g, ''))
+        .pipe(z.string().regex(/^\d{10}$/, 'Enter a valid 10-digit phone number')),
     password: z.string().min(1, 'Please enter your password'),
-    studio: z.string().trim().max(80),
+    studio: z.string().trim().max(80).optional(),
 });
 
-export const safeNext = (next: string | null) => (next && next.startsWith('/') && !next.startsWith('//') ? next : null);
+const BG_SLIDES = [
+    '/images/hero-couple-petals.jpg',
+    '/images/hero-wedding-garlands.jpg',
+    '/images/hero-couple-outdoor.jpg',
+] as const;
+
+const REMEMBER_KEY = 'nammaqr_remember_identifier';
+
+export const safeNext = (next: string | null) =>
+    next && next.startsWith('/') && !next.startsWith('//') ? next : null;
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [showStudio, setShowStudio] = useState(false);
     const [error, setError] = useState('');
-    const [slide, setSlide] = useState(0);
+    const [bgSlide, setBgSlide] = useState(0);
 
     const { login } = useAuth();
     const navigate = useNavigate();
     const [params] = useSearchParams();
     const next = safeNext(params.get('next'));
 
-    useEffect(() => {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const timer = window.setInterval(() => setSlide((current) => (current + 1) % slides.length), 7000);
-        return () => window.clearInterval(timer);
-    }, []);
-
     const pw = useForm<z.infer<typeof pwSchema>>({
         resolver: zodResolver(pwSchema),
-        defaultValues: { identifier: '', password: '', studio: '' },
+        defaultValues: { phone: '', password: '', studio: '' },
     });
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(REMEMBER_KEY);
+            if (saved) pw.setValue('phone', saved.replace(/\D/g, '').slice(0, 10));
+        } catch {
+            /* ignore */
+        }
+    }, [pw]);
+
+    useEffect(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const id = window.setInterval(() => setBgSlide((i) => (i + 1) % BG_SLIDES.length), 8000);
+        return () => window.clearInterval(id);
+    }, []);
+
+    useEffect(() => {
+        document.documentElement.classList.add('login-no-scroll');
+        document.body.classList.add('login-no-scroll');
+        return () => {
+            document.documentElement.classList.remove('login-no-scroll');
+            document.body.classList.remove('login-no-scroll');
+        };
+    }, []);
 
     const submitPassword = pw.handleSubmit(async (v) => {
         setError('');
         try {
-            const s = await login(v.identifier, v.password, v.studio);
+            const s = await login(v.phone, v.password, v.studio || undefined);
+            try {
+                localStorage.setItem(REMEMBER_KEY, v.phone);
+            } catch {
+                /* ignore */
+            }
             navigate(next ?? s.home, { replace: true });
         } catch (e) {
             setError(errorMessage(e));
@@ -55,90 +90,131 @@ export default function Login() {
     });
 
     return (
-        <div className="login-page">
-            <div className="login-page__media" aria-hidden>
-                {slides.map((src, index) => (
-                    <img key={src} src={src} alt="" className={`login-page__photo${index === slide ? ' is-active' : ''}`} />
+        <div className="cinematic-login-root">
+            <div className="cinematic-bg-layer" aria-hidden="true">
+                {BG_SLIDES.map((src, index) => (
+                    <img key={src} src={src} alt="" className={`bg-photo${index === bgSlide ? ' is-active' : ''}`} />
                 ))}
-                <div className="login-page__shade" />
+                <div className="blur-scrim" />
             </div>
 
-            <main className="login-page__content d-flex align-items-center justify-content-center">
-                <div className="login-page__panel">
-                    <img src="/nammaqr-logo.png" alt="Nammaqr Photography" className="login-page__logo" />
-                    <div className="card login-page__card">
-                        <div className="card-body p-4 p-sm-5">
-                            <h1 className="h3 text-center mb-1">Sign in</h1>
-                            <p className="text-center text-secondary mb-4">Use the email or phone number on your account.</p>
+            <div className="login-center-stage">
+                <div className="login-glass-card">
+                    <header className="login-brand">
+                        <img src={BRAND_LOGO_LIGHT_SRC} alt={BRAND_NAME} className="login-brand__logo" />
+                        <h1 className="login-brand__title">{BRAND_NAME}</h1>
+                        <p className="login-brand__subtitle">{BRAND_TAGLINE}</p>
+                    </header>
 
-                            {error && (
-                                <div className="alert alert-danger d-flex align-items-start gap-2" role="alert">
-                                    <AlertCircle className="mt-1 flex-shrink-0" size={16} />
-                                    <span>{error}</span>
-                                </div>
-                            )}
-
-                            <form onSubmit={submitPassword} noValidate>
-                                <div className="mb-3">
-                                    <label htmlFor="identifier" className="form-label">Email or phone</label>
-                                    <input
-                                        id="identifier"
-                                        {...pw.register('identifier')}
-                                        type="text"
-                                        autoComplete="username"
-                                        autoFocus
-                                        placeholder="name@studio.com or 10-digit phone"
-                                        className="form-control"
-                                    />
-                                    {pw.formState.errors.identifier && <div className="invalid-feedback d-block">{pw.formState.errors.identifier.message}</div>}
-                                </div>
-
-                                <div className="mb-3">
-                                    <label htmlFor="password" className="form-label">Password</label>
-                                    <div className="login-page__password">
-                                        <span className="login-page__icon"><Lock size={16} /></span>
-                                        <input
-                                            id="password"
-                                            {...pw.register('password')}
-                                            type={showPassword ? 'text' : 'password'}
-                                            autoComplete="current-password"
-                                            placeholder="Enter your password"
-                                            className="form-control"
-                                        />
-                                        <button type="button" onClick={() => setShowPassword((open) => !open)} className="login-page__toggle" aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
-                                    </div>
-                                    {pw.formState.errors.password && <div className="invalid-feedback d-block">{pw.formState.errors.password.message}</div>}
-                                </div>
-
-                                {showStudio && (
-                                    <div className="mb-3">
-                                        <label htmlFor="studio" className="form-label">Studio code</label>
-                                        <input id="studio" {...pw.register('studio')} type="text" autoComplete="organization" placeholder="sunrise-studio" className="form-control" />
-                                    </div>
-                                )}
-
-                                <button type="submit" disabled={pw.formState.isSubmitting} className="btn btn-primary w-100 mt-2">
-                                    {pw.formState.isSubmitting ? <Loader2 className="me-2" size={16} /> : null}
-                                    {pw.formState.isSubmitting ? 'Signing in...' : 'Sign in'}
-                                </button>
-
-                                <div className="d-flex justify-content-between align-items-center mt-3">
-                                    <Link to="/forgot-password">Forgot password</Link>
-                                    <button type="button" onClick={() => setShowStudio((open) => !open)} className="btn btn-link text-secondary p-0">
-                                        {showStudio ? 'Hide studio code' : 'Another studio?'}
-                                    </button>
-                                </div>
-                            </form>
-
-                            <p className="text-center text-secondary mt-4 mb-0">
-                                New studio? <Link to="/register">Register your company</Link>
-                            </p>
+                    {error && (
+                        <div className="login-error" role="alert">
+                            <AlertCircle className="size-3.5 shrink-0" aria-hidden />
+                            <span>{error}</span>
                         </div>
-                    </div>
+                    )}
+
+                    <form onSubmit={submitPassword} noValidate className="login-form">
+                        <div className="login-field">
+                            <label htmlFor="phone" className="login-label">
+                                Phone number
+                            </label>
+                            <div className="login-input-wrap">
+                                <Phone className="login-input-icon size-4" aria-hidden />
+                                <input
+                                    id="phone"
+                                    {...pw.register('phone')}
+                                    type="tel"
+                                    inputMode="numeric"
+                                    autoComplete="tel"
+                                    autoFocus
+                                    maxLength={10}
+                                    placeholder="e.g. 9000000001"
+                                    className="login-input login-input--gold"
+                                />
+                            </div>
+                            {pw.formState.errors.phone && (
+                                <p className="login-field-error">{pw.formState.errors.phone.message}</p>
+                            )}
+                        </div>
+
+                        <div className="login-field">
+                            <label htmlFor="password" className="login-label">
+                                Password
+                            </label>
+                            <div className="login-input-wrap">
+                                <Lock className="login-input-icon size-4" aria-hidden />
+                                <input
+                                    id="password"
+                                    {...pw.register('password')}
+                                    type={showPassword ? 'text' : 'password'}
+                                    autoComplete="current-password"
+                                    placeholder="Enter your password"
+                                    className="login-input login-input--password"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((p) => !p)}
+                                    className="login-password-toggle"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                                </button>
+                            </div>
+                            {pw.formState.errors.password && (
+                                <p className="login-field-error">{pw.formState.errors.password.message}</p>
+                            )}
+                        </div>
+
+                        {showStudio && (
+                            <div className="login-field login-field--studio">
+                                <label htmlFor="studio" className="login-label">
+                                    Studio code
+                                </label>
+                                <input
+                                    id="studio"
+                                    {...pw.register('studio')}
+                                    type="text"
+                                    autoComplete="organization"
+                                    placeholder="sunrise-studio"
+                                    className="login-input login-input--plain !pl-3"
+                                />
+                            </div>
+                        )}
+
+                        <button type="submit" disabled={pw.formState.isSubmitting} className="login-submit">
+                            {pw.formState.isSubmitting ? (
+                                <>
+                                    <NqLoader size="xs" aria-hidden label="" />
+                                    Please wait…
+                                </>
+                            ) : (
+                                'Login'
+                            )}
+                        </button>
+                    </form>
+
+                    <footer className="login-footer">
+                        <div className="login-footer-links">
+                            <Link to="/forgot-password" className="login-footer-link">
+                                Forgot password?
+                            </Link>
+                            <span className="login-footer-dot" aria-hidden>
+                                ·
+                            </span>
+                            <Link to="/register" className="login-footer-link">
+                                Register your company
+                            </Link>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowStudio((s) => !s)}
+                            className="login-footer-studio"
+                        >
+                            {showStudio ? 'Hide studio code' : 'Signing in to another studio?'}
+                        </button>
+                    </footer>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }

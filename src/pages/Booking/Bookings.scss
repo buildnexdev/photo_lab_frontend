@@ -1,3 +1,52 @@
-.bookings-page {
-    // Bootstrap 5 styles for this screen.
+.bookings-table {
+    border: 1px solid #e7e0d2;
+    border-radius: 0.75rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+
+    th,
+    td {
+        border-bottom: 1px solid #ebe5d8;
+        border-right: 1px solid #ebe5d8;
+        padding: 0.7rem 0.9rem;
+        text-align: left;
+        vertical-align: middle;
+
+        &:last-child {
+            border-right: 0;
+        }
+    }
+
+    th {
+        background: #f8f4ea;
+        color: #5c4a22;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    th.text-right,
+    td.text-right {
+        text-align: right;
+    }
+
+    th.text-center,
+    td.text-center {
+        text-align: center;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    tbody tr:nth-child(even) td {
+        background: #fcfbf8;
+    }
+
+    tbody tr:hover td {
+        background: #faf5e8;
+    }
 }

@@ -3,7 +3,8 @@
 // Last Edited : 06-10-2026
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { CheckCircle2, ChevronLeft, ChevronRight, Download, Heart, Loader2, MessageSquare, ShoppingCart, Trash2, X } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Download, Heart, MessageSquare, ShoppingCart, Trash2, X } from 'lucide-react';
+import { NqLoader } from '../../components/brand';
 import { useEffect, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useToast } from '../../components/ui/Toast';
@@ -122,7 +123,7 @@ export function Lightbox({ info, headers, photos, index, onIndex, onClose, onFav
                         </button>
                     </div>
                 </div>
-                {detail.isLoading && <Loader2 className="size-8 animate-spin text-white/60" />}
+                {detail.isLoading && <NqLoader size="lg" variant="emblem" className="opacity-90" label="Loading photo" />}
                 {detail.isError && <p className="px-6 text-center text-sm text-red-300">{errorMessage(detail.error)}</p>}
                 {d && (
                     <img

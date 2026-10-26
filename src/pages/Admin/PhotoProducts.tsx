@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
 import { ProductCanvas } from '../Shop/PhotoShop';
-import { getOrders, getProducts, imageFileToDataUrl, saveOrders, saveProducts, SHOP_CATEGORIES, SHOP_ORDER_STATUSES, type PhotoAdjustment, type ProductCategory, type ShopOrder, type ShopProduct } from '../../helpers/shop/photoShop';
+import { getOrders, getProducts, imageFileToDataUrl, normalizeProducts, saveOrders, saveProducts, SHOP_CATEGORIES, SHOP_ORDER_STATUSES, type PhotoAdjustment, type ProductCategory, type ShopOrder, type ShopProduct } from '../../helpers/shop/photoShop';
 import './PhotoProducts.scss';
 
 const emptyProduct = (): ShopProduct => ({ id: crypto.randomUUID(), name: '', category: 'Photo Frames', description: '', price: 499, discount: 0, variants: ['Walnut', 'Natural oak', 'Matte black'], sizes: ['8 × 10', '12 × 18', '16 × 24'], stock: 10, active: true, customizable: true, customizationPrice: 100, image: '/images/hero-couple-petals.jpg', frameOverlay: '', placement: { x: 15, y: 12, width: 70, height: 76, aspectRatio: '4:5', padding: 4 } });
@@ -30,9 +30,10 @@ export default function PhotoProducts() {
     });
 
     useEffect(() => {
-        if (settingsData?.website?.products && Array.isArray(settingsData.website.products) && settingsData.website.products.length > 0) {
-            setProducts(settingsData.website.products);
-            saveProducts(settingsData.website.products);
+        const remote = normalizeProducts(settingsData?.website?.products);
+        if (remote.length > 0) {
+            setProducts(remote);
+            saveProducts(remote);
         }
     }, [settingsData]);
 

@@ -1,7 +1,8 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
-import { ArrowRight, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
+import { NqLoader } from '../../../components/brand';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { api, errorMessage, type SessionPayload } from '../../../services/api';
@@ -81,7 +82,7 @@ export default function VerifyOtp() {
                 <div className="alert alert-info">
                     Sign in first, then verify your email or phone from your profile.
                 </div>
-                <Link to="/login" className="btn btn-primary w-100">
+                <Link to="/login" className="btn btn-primary w-full">
                     Sign in
                 </Link>
             </div>
@@ -127,15 +128,15 @@ export default function VerifyOtp() {
                         value={code}
                         onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                         placeholder="••••••"
-                        className="form-control text-center fs-2"
+                        className="form-control text-center text-2xl"
                         aria-label="6-digit code"
                     />
                 </div>
 
-                <button type="submit" disabled={busy || code.length !== 6} className="btn btn-primary w-100">
+                <button type="submit" disabled={busy || code.length !== 6} className="btn btn-primary w-full">
                     {busy ? (
                         <>
-                            <Loader2 className="auth-spin" size={16} />
+                            <NqLoader size="xs" label="" aria-hidden />
                             Verifying...
                         </>
                     ) : (

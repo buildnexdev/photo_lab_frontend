@@ -1,7 +1,8 @@
 // Developer by: Buildnexdev.in
 // Last Edited : 21-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, KeyRound, Loader2, Mail } from 'lucide-react';
+import { ArrowLeft, KeyRound, Mail } from 'lucide-react';
+import { BrandMark, NqLoader } from '../../../components/brand';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
@@ -65,7 +66,7 @@ export default function ForgotPassword() {
 
     return (
         <div className="forgot-password auth-card">
-            <img src="/nammaqr-logo.png" alt="Nammaqr" className="forgot-password__logo" />
+            <BrandMark className="forgot-password__logo" />
             <div className="forgot-password__head">
                 <KeyRound size={20} />
                 <div>
@@ -93,8 +94,8 @@ export default function ForgotPassword() {
                         <input {...emailForm.register('email')} type="email" autoFocus className="form-control" placeholder="name@studio.com" />
                     </div>
                     {emailForm.formState.errors.email && <p className="forgot-password__error">{emailForm.formState.errors.email.message}</p>}
-                    <button disabled={emailForm.formState.isSubmitting} className="btn btn-primary w-100">
-                        {emailForm.formState.isSubmitting && <Loader2 className="auth-spin" size={16} />} Send code
+                    <button disabled={emailForm.formState.isSubmitting} className="btn btn-primary w-full">
+                        {emailForm.formState.isSubmitting && <NqLoader size="xs" label="" aria-hidden />} Send code
                     </button>
                 </form>
             )}
@@ -102,10 +103,10 @@ export default function ForgotPassword() {
             {step === 'otp' && (
                 <form onSubmit={verifyCode} className="forgot-password__form" noValidate>
                     <label className="form-label">6 digit code</label>
-                    <input {...codeForm.register('code')} inputMode="numeric" maxLength={6} autoFocus className="form-control text-center fs-5" placeholder="000000" />
+                    <input {...codeForm.register('code')} inputMode="numeric" maxLength={6} autoFocus className="form-control text-center text-xl" placeholder="000000" />
                     {codeForm.formState.errors.code && <p className="forgot-password__error">{codeForm.formState.errors.code.message}</p>}
-                    <button disabled={codeForm.formState.isSubmitting} className="btn btn-primary w-100">
-                        {codeForm.formState.isSubmitting && <Loader2 className="auth-spin" size={16} />} Verify code
+                    <button disabled={codeForm.formState.isSubmitting} className="btn btn-primary w-full">
+                        {codeForm.formState.isSubmitting && <NqLoader size="xs" label="" aria-hidden />} Verify code
                     </button>
                 </form>
             )}
@@ -118,14 +119,14 @@ export default function ForgotPassword() {
                     <label className="form-label">Confirm password</label>
                     <input {...passwordForm.register('confirm')} type="password" className="form-control" />
                     {passwordForm.formState.errors.confirm && <p className="forgot-password__error">{passwordForm.formState.errors.confirm.message}</p>}
-                    <button disabled={passwordForm.formState.isSubmitting} className="btn btn-primary w-100">
-                        {passwordForm.formState.isSubmitting && <Loader2 className="auth-spin" size={16} />} Update password
+                    <button disabled={passwordForm.formState.isSubmitting} className="btn btn-primary w-full">
+                        {passwordForm.formState.isSubmitting && <NqLoader size="xs" label="" aria-hidden />} Update password
                     </button>
                 </form>
             )}
 
             {step === 'done' && (
-                <button type="button" onClick={() => navigate('/login')} className="btn btn-primary w-100">
+                <button type="button" onClick={() => navigate('/login')} className="btn btn-primary w-full">
                     Back to sign in
                 </button>
             )}

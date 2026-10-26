@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, useRouteError, type RouteObject } from 'react-router';
 import { PortalLayout } from '../layout/PortalLayout';
 import { AuthLayout } from '../layout/PublicLayout';
 import { loginPages } from '../menu';
@@ -55,6 +55,8 @@ export const router = createBrowserRouter([
                     { path: 'events/:id', ...page(() => import('../pages/Admin/EventDetail')) },
                     { path: 'galleries', ...page(() => import('../pages/Admin/Galleries')) },
                     { path: 'galleries/:id', ...page(() => import('../pages/Admin/GalleryDetail')) },
+                    { path: 'qr/create', ...page(() => import('../pages/Admin/QrCreate')) },
+                    { path: 'qr', ...page(() => import('../pages/Admin/QrManage')) },
                     { path: 'photos', ...page(() => import('../pages/Admin/Photos')) },
                     { path: 'assets', ...page(() => import('../pages/Admin/Assets')) },
                     { path: 'upload', ...page(() => import('../pages/Photographer/Upload')) },
@@ -68,8 +70,7 @@ export const router = createBrowserRouter([
                     { path: 'companies', ...page(() => import('../pages/Company/Companies')) },
                     { path: 'website', ...page(() => import('../pages/Admin/Website')) },
                     { path: 'staff', ...page(() => import('../pages/Admin/Staff')) },
-                    { path: 'access', ...page(() => import('../pages/Access/UserAccess')) },
-                    { path: 'access/assign', ...page(() => import('../pages/Access/AssignAccess')) },
+                    { path: 'access/*', element: <Navigate to="/admin/staff" replace /> },
                     { path: 'photographers', ...page(() => import('../pages/Admin/Photographers')) },
                     { path: 'editors', ...page(() => import('../pages/Admin/Editors')) },
                     { path: 'printing', ...page(() => import('../pages/Admin/Printing')) },
@@ -168,6 +169,8 @@ export const router = createBrowserRouter([
 ]);
 
 function NotFoundRoute() {
+    const error = useRouteError();
+    if (import.meta.env.DEV && error) console.error('Route error:', error);
     return <Navigate to={loginPages.page404.path} replace />;
 }
 

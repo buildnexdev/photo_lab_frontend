@@ -2,7 +2,7 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import clsx from 'clsx';
-import { Loader2 } from 'lucide-react';
+import { NqLoader } from '../brand';
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link, type LinkProps } from 'react-router';
 
@@ -10,8 +10,8 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'dark' | 'success'
 type Size = 'sm' | 'md' | 'lg';
 
 const variants: Record<Variant, string> = {
-    primary: 'bg-brand-700 text-white hover:bg-brand-800 disabled:bg-brand-700/50',
-    secondary: 'border border-stone-300 bg-white text-stone-800 hover:bg-stone-50 disabled:text-stone-400',
+    primary: 'bg-accent-500 text-ink-900 font-semibold hover:bg-accent-400 disabled:bg-accent-500/50 shadow-sm shadow-accent-700/20',
+    secondary: 'border border-stone-300 bg-white text-stone-800 hover:border-accent-300 hover:bg-accent-50 disabled:text-stone-400',
     ghost: 'text-stone-700 hover:bg-stone-100 disabled:text-stone-400',
     danger: 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-600/50',
     dark: 'bg-ink-900 text-white hover:bg-ink-800 disabled:bg-ink-900/50',
@@ -36,7 +36,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ variant = 'primary', size = 'md', loading, icon, className, children, disabled, type = 'button', ...rest }, ref) {
     return (
         <button ref={ref} type={type} className={buttonClass(variant, size, className)} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
-            {loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : icon}
+            {loading ? <NqLoader size="xs" aria-hidden /> : icon}
             {children}
         </button>
     );
@@ -84,9 +84,11 @@ export function PageHeader({ title: _title, subtitle: _subtitle, actions, back }
     );
 }
 
-export function Spinner({ className }: { className?: string }) {
-    return <Loader2 className={clsx('animate-spin text-brand-700', className ?? 'size-6')} aria-label="Loading" />;
+export function Spinner({ className, size = 'md', variant = 'aperture' }: { className?: string; size?: import('../brand').NqLoaderSize; variant?: 'aperture' | 'emblem' }) {
+    return <NqLoader size={size} variant={variant} className={className} label="Loading" />;
 }
+
+export { NqLoader, NqLoaderPage, BrandMark } from '../brand';
 
 export function Avatar({ name, className }: { name: string | null | undefined; className?: string }) {
     const initials = (name ?? '?')
@@ -95,12 +97,12 @@ export function Avatar({ name, className }: { name: string | null | undefined; c
         .slice(0, 2)
         .map((w) => w[0]?.toUpperCase())
         .join('');
-    return <span className={clsx('inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-800', className)}>{initials || '?'}</span>;
+    return <span className={clsx('inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-ink-900 text-sm font-semibold text-accent-300', className)}>{initials || '?'}</span>;
 }
 
 export function Tabs<T extends string>({ value, onChange, tabs, className }: { value: T; onChange: (v: T) => void; tabs: { value: T; label: ReactNode; count?: number }[]; className?: string }) {
     return (
-        <div role="tablist" className={clsx('scrollbar-thin -mx-1 flex gap-1 overflow-x-auto border-b border-stone-200 px-1', className)}>
+        <div role="tablist" className={clsx('scrollbar-thin -mx-1 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-stone-200 px-1', className)}>
             {tabs.map((t) => (
                 <button
                     key={t.value}
@@ -110,7 +112,7 @@ export function Tabs<T extends string>({ value, onChange, tabs, className }: { v
                     onClick={() => onChange(t.value)}
                     className={clsx(
                         '-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
-                        value === t.value ? 'border-brand-700 text-brand-800' : 'border-transparent text-stone-500 hover:text-stone-800',
+                        value === t.value ? 'border-accent-500 text-ink-900 font-semibold' : 'border-transparent text-stone-500 hover:text-stone-800',
                     )}
                 >
                     {t.label}

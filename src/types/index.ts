@@ -69,6 +69,10 @@ export interface Quotation {
     valid_until: string | null;
     notes: string | null;
     terms: string | null;
+    revision?: number;
+    revises_id?: number | null;
+    revision_note?: string | null;
+    emailed_at?: string | null;
     sent_at: string | null;
     responded_at: string | null;
     created_at: string;

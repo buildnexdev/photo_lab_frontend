@@ -2,11 +2,12 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { useQuery } from '@tanstack/react-query';
-import { Download } from 'lucide-react';
-import { useState } from 'react';
+import clsx from 'clsx';
+import { BarChart3, Download } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { ChartCard, TrendChart } from '../../components/ui/Charts';
-import { DataTable, EmptyState, QueryState, StatCard } from '../../components/ui/Data';
+import { DataTable, EmptyState, QueryState } from '../../components/ui/Data';
 import { RangeFilter, rangeQuery, useRangeParams } from '../../components/ui/RangeFilter';
 import { useToast } from '../../components/ui/Toast';
 import { Button, Card, PageHeader } from '../../components/ui';
@@ -51,6 +52,22 @@ function cell(value: unknown, kind?: string) {
 }
 
 const ROW_LIMIT = 200;
+const REPORT_TONES = ['from-emerald-500 to-teal-600', 'from-sky-500 to-cyan-600', 'from-amber-400 to-orange-500', 'from-violet-500 to-fuchsia-600', 'from-rose-500 to-pink-600', 'from-zinc-800 to-zinc-950'] as const;
+
+function ReportStat({ label, value, tone }: { label: string; value: ReactNode; tone: string }) {
+    return (
+        <div className={clsx('relative overflow-hidden rounded-2xl bg-gradient-to-br p-4 text-white shadow-lg', tone)}>
+            <span className="pointer-events-none absolute -right-5 -top-5 size-20 rounded-full bg-white/10" />
+            <div className="relative flex items-start justify-between gap-3">
+                <p className="line-clamp-2 text-[11px] font-semibold uppercase leading-snug tracking-wider text-white/80">{label}</p>
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/25">
+                    <BarChart3 className="size-5" />
+                </span>
+            </div>
+            <p className="relative mt-2 truncate text-2xl font-bold tracking-tight">{value}</p>
+        </div>
+    );
+}
 
 export default function AdminReports() {
     const toast = useToast();
@@ -98,7 +115,7 @@ export default function AdminReports() {
             />
             <div className="mb-4 flex flex-wrap gap-2">
                 {REPORTS.map((r) => (
-                    <button key={r.type} type="button" onClick={() => setType(r.type)} className={`rounded-full px-3 py-1.5 text-sm font-medium ${type === r.type ? 'bg-ink-900 text-white' : 'bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50'}`}>
+                    <button key={r.type} type="button" onClick={() => setType(r.type)} className={`rounded-full px-3 py-1.5 text-sm font-medium ${type === r.type ? 'bg-ink-900 text-accent-200' : 'bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50'}`}>
                         {r.label}
                     </button>
                 ))}
@@ -114,9 +131,9 @@ export default function AdminReports() {
                         const metric = r.series?.length ? (Object.keys(r.series[0]).find((k) => k !== 'day' && MONEY_KEYS.has(k)) ?? Object.keys(r.series[0]).find((k) => k !== 'day')) : undefined;
                         return (
                             <div className="space-y-6">
-                                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-                                    {Object.entries(r.summary).map(([k, v]) => (
-                                        <StatCard key={k} label={SUMMARY_LABELS[k] ?? titleCase(k.replace(/([A-Z])/g, '_$1'))} value={MONEY_KEYS.has(k) ? money(v, true) : num(v)} />
+                                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+                                    {Object.entries(r.summary).map(([k, v], i) => (
+                                        <ReportStat key={k} label={SUMMARY_LABELS[k] ?? titleCase(k.replace(/([A-Z])/g, '_$1'))} value={MONEY_KEYS.has(k) ? money(v, true) : num(v)} tone={REPORT_TONES[i % REPORT_TONES.length]} />
                                     ))}
                                 </div>
                                 {metric && r.series && (

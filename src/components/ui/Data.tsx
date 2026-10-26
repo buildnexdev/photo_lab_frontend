@@ -6,14 +6,15 @@ import { AlertCircle, ChevronLeft, ChevronRight, Inbox, LayoutGrid, Plus, Refres
 import { useEffect, useState, type ReactNode } from 'react';
 import { errorMessage } from '../../services/api';
 import { titleCase } from '../../utils/format';
-import { Button, Spinner } from './';
+import { NqLoader } from '../brand';
+import { Button } from './';
 
 /* ---------------- States ---------------- */
 
 export function Loading({ label = 'Loading…', className }: { label?: string; className?: string }) {
     return (
-        <div className={clsx('flex flex-col items-center justify-center gap-3 py-16 text-sm text-stone-500', className)} role="status">
-            <Spinner />
+        <div className={clsx('flex flex-col items-center justify-center gap-4 py-16 text-sm font-medium text-stone-500', className)} role="status">
+            <NqLoader size="xl" variant="emblem" label={label} />
             {label}
         </div>
     );
@@ -90,11 +91,11 @@ const TONE_CLASSES: Record<string, string> = {
 };
 
 export const COLORFUL_THEMES = [
-    { bg: 'bg-gradient-to-br from-brand-500 to-orange-600', text: 'text-white' },
-    { bg: 'bg-gradient-to-br from-emerald-500 to-teal-600', text: 'text-white' },
-    { bg: 'bg-gradient-to-br from-sky-500 to-indigo-600', text: 'text-white' },
-    { bg: 'bg-gradient-to-br from-rose-500 to-pink-600', text: 'text-white' },
-    { bg: 'bg-gradient-to-br from-fuchsia-600 to-purple-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-accent-300 to-accent-600', text: 'text-ink-900' },
+    { bg: 'bg-gradient-to-br from-ink-700 to-ink-900', text: 'text-accent-300' },
+    { bg: 'bg-gradient-to-br from-accent-400 to-accent-700', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-stone-600 to-ink-900', text: 'text-accent-200' },
+    { bg: 'bg-gradient-to-br from-accent-200 to-accent-500', text: 'text-ink-900' },
 ];
 
 export function StatusBadge({ status, label, className }: { status: string | null | undefined; label?: string; className?: string }) {
@@ -355,7 +356,7 @@ export function Pagination({ page, totalPages, total, onPage }: { page: number; 
 }
 
 /** Debounced search box. */
-export function SearchInput({ value, onChange, placeholder = 'Search…', className }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
+export function SearchInput({ value, onChange, placeholder = 'Search…', className, inputClassName }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string; inputClassName?: string }) {
     const [local, setLocal] = useState(value);
     useEffect(() => setLocal(value), [value]);
     useEffect(() => {
@@ -371,7 +372,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', classN
                 onChange={(e) => setLocal(e.target.value)}
                 placeholder={placeholder}
                 aria-label={placeholder}
-                className="h-10 w-full rounded-lg border border-stone-300 bg-white pl-9 pr-3 text-sm shadow-sm placeholder:text-stone-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                className={clsx('h-10 w-full appearance-none border border-stone-300 bg-white pl-9 pr-3 text-sm shadow-sm placeholder:text-stone-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20', inputClassName ?? 'rounded-xl')}
             />
         </div>
     );
@@ -379,12 +380,12 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', classN
 
 export function StatCard({ label, value, hint, icon, tone = 'stone', onClick }: { label: string; value: ReactNode; hint?: ReactNode; icon?: ReactNode; tone?: 'stone' | 'brand' | 'emerald' | 'sky' | 'rose' | 'violet'; onClick?: () => void }) {
     const tones = {
-        stone: 'bg-slate-50 text-slate-700 border border-slate-200/70',
-        brand: 'bg-brand-50 text-brand-700 border border-brand-200/70',
+        stone: 'bg-ink-900 text-accent-400 border border-ink-700',
+        brand: 'bg-accent-50 text-accent-700 border border-accent-200',
         emerald: 'bg-emerald-50 text-emerald-700 border border-emerald-200/70',
-        sky: 'bg-sky-50 text-sky-700 border border-sky-200/70',
+        sky: 'bg-accent-50 text-accent-700 border border-accent-200',
         rose: 'bg-rose-50 text-rose-700 border border-rose-200/70',
-        violet: 'bg-purple-50 text-purple-700 border border-purple-200/70',
+        violet: 'bg-ink-900 text-accent-400 border border-ink-700',
     };
     const Tag = onClick ? 'button' : 'div';
     return (
@@ -392,15 +393,19 @@ export function StatCard({ label, value, hint, icon, tone = 'stone', onClick }: 
             type={onClick ? 'button' : undefined}
             onClick={onClick}
             className={clsx(
-                'group flex items-start gap-3.5 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 text-left shadow-xs transition-all duration-200',
-                onClick ? 'hover:border-brand-200/50 hover:shadow-md hover:-translate-y-0.5 cursor-pointer' : '',
+                'soft-card group flex items-center gap-4 p-4 text-left transition-all duration-200 sm:p-5',
+                onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[var(--soft-shadow-lg)]' : '',
             )}
         >
-            {icon && <span className={clsx('flex size-11 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105', tones[tone])}>{icon}</span>}
+            {icon && (
+                <span className={clsx('flex size-12 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105', tones[tone])}>
+                    {icon}
+                </span>
+            )}
             <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-sans font-semibold uppercase tracking-wider text-slate-500 truncate">{label}</p>
-                <p className="mt-1 truncate text-2xl font-bold tracking-tight text-slate-900 font-sans">{value}</p>
-                {hint && <p className="mt-0.5 truncate text-xs text-slate-500 font-medium">{hint}</p>}
+                <p className="line-clamp-2 text-[11px] font-semibold uppercase leading-snug tracking-wider text-stone-500" title={label}>{label}</p>
+                <p className="mt-1 truncate text-2xl font-bold tracking-tight text-stone-900">{value}</p>
+                {hint && <p className="mt-1 line-clamp-2 text-xs font-medium leading-snug text-stone-500">{hint}</p>}
             </div>
         </Tag>
     );

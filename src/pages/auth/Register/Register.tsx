@@ -1,7 +1,7 @@
 // Developer by: Buildnexdev.in
 // Last Edited : 21-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { BrandMark, NqLoader } from '../../../components/brand';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
@@ -129,7 +129,7 @@ export default function Register() {
     return (
         <div className="register-page auth-card auth-card--wide">
             <div className="register-page__brand">
-                <img src="/nammaqr-logo.png" alt="Nammaqr" />
+                <BrandMark />
                 <h1>Register your company</h1>
                 <p>Nammaqr Photography</p>
             </div>
@@ -158,8 +158,8 @@ export default function Register() {
                         />
                     </Field>
                     <p className="register-page__hint">Enter 10 digits. We check this number before opening registration.</p>
-                    <button disabled={checkingPhone || phone.length !== 10} className="btn btn-primary w-100">
-                        {checkingPhone && <Loader2 className="auth-spin" size={16} />} Continue
+                    <button disabled={checkingPhone || phone.length !== 10} className="btn btn-primary w-full">
+                        {checkingPhone && <NqLoader size="xs" label="" aria-hidden />} Continue
                     </button>
                 </form>
             )}
@@ -190,8 +190,8 @@ export default function Register() {
                     </div>
                     <div className="register-page__actions register-page__wide">
                         <button type="button" onClick={() => setStep('phone')} className="register-page__back">Back</button>
-                        <button disabled={form.formState.isSubmitting} className="btn btn-primary flex-grow-1">
-                            {form.formState.isSubmitting && <Loader2 className="auth-spin" size={16} />} Continue
+                        <button disabled={form.formState.isSubmitting} className="btn btn-primary grow">
+                            {form.formState.isSubmitting && <NqLoader size="xs" label="" aria-hidden />} Continue
                         </button>
                     </div>
                 </form>
@@ -217,8 +217,8 @@ export default function Register() {
                     </div>
                     <div className="register-page__actions">
                         <button type="button" onClick={() => setStep('details')} className="register-page__back">Back</button>
-                        <button type="button" disabled={paying} onClick={registerCompany} className="btn btn-primary flex-grow-1">
-                            {paying && <Loader2 className="auth-spin" size={16} />} Register
+                        <button type="button" disabled={paying} onClick={registerCompany} className="btn btn-primary grow">
+                            {paying && <NqLoader size="xs" label="" aria-hidden />} Register
                         </button>
                     </div>
                 </div>
@@ -246,7 +246,7 @@ export default function Register() {
 
 function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
     return (
-        <label className="d-block">
+        <label className="block">
             <span className="form-label">{label}</span>
             {children}
             {error && <span className="register-page__error">{error}</span>}

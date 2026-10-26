@@ -1,7 +1,10 @@
-// Developer by: Buildnexdev.in
-// Devevloper : Nandhakumar@gmail.com
-// Last Edited : 06-10-2026
+/*
+ * Developer by: Buildnexdev.in
+ * Devevloper : Nandhakumar@gmail.com
+ * Last Edited : 06-10-2026
+*/
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -14,6 +17,9 @@ import { Modal } from '../ui/Overlay';
 import { useToast } from '../ui/Toast';
 import { Button } from '../ui';
 
+/*
+ * EVENT FORM VALUE
+ */
 export interface EventFormValue {
     id: number;
     customer_id: number;
@@ -30,6 +36,9 @@ export interface EventFormValue {
     notes?: string | null;
 }
 
+/*
+ * EVENT FORM SCHEMA
+ */
 const schema = z
     .object({
         title: z.string().trim().min(2, 'Enter a title').max(160),
@@ -41,8 +50,16 @@ const schema = z
         notes: z.string().trim().max(3000),
     })
     .refine((v) => !v.startTime || !v.endTime || v.endTime > v.startTime, { path: ['endTime'], message: 'End must be after start' });
+
+/*
+ * EVENT FORM TYPE
+ */
 type Form = z.infer<typeof schema>;
 
+
+/*
+ * EVENT FORM COMPONENT
+ */
 export function EventForm({ value, onClose, onSaved }: { value: EventFormValue | 'new' | null; onClose: () => void; onSaved: (id: number) => void }) {
     const toast = useToast();
     const invalidate = useInvalidate();
@@ -54,8 +71,13 @@ export function EventForm({ value, onClose, onSaved }: { value: EventFormValue |
         handleSubmit,
         reset,
         setError,
+        watch,
         formState: { errors, isSubmitting },
     } = useForm<Form>({ resolver: zodResolver(schema) });
+    const eventDate = watch('eventDate');
+    const startTime = watch('startTime');
+    const endTime = watch('endTime');
+    const [slot, setSlot] = useState('');
 
     useEffect(() => {
         if (!value) return;
@@ -69,6 +91,23 @@ export function EventForm({ value, onClose, onSaved }: { value: EventFormValue |
         }
     }, [value, reset]);
 
+    useEffect(() => {
+        if (!eventDate || !startTime || !endTime || endTime <= startTime) {
+            setSlot('');
+            return;
+        }
+        const timer = window.setTimeout(() => {
+            const excludeEventId = value && typeof value === 'object' ? value.id : undefined;
+            api.get<{ available: boolean; conflicts: { label: string }[] }>('/api/events/availability', { date: eventDate, start: startTime, end: endTime, excludeEventId })
+                .then((r) => setSlot(r.available ? 'This time is free.' : `Already booked: ${r.conflicts.map((c) => c.label).join(', ')}`))
+                .catch(() => setSlot(''));
+        }, 300);
+        return () => window.clearTimeout(timer);
+    }, [eventDate, startTime, endTime, value]);
+
+    /*
+     * SUBMIT THE EVENT FORM
+     */
     const submit = handleSubmit(async (v) => {
         if (!customer) return setCustomerError('Choose a customer');
         const body = {
@@ -92,6 +131,9 @@ export function EventForm({ value, onClose, onSaved }: { value: EventFormValue |
         }
     });
 
+    /*
+     * RENDER THE EVENT FORM
+     */
     return (
         <Modal
             open={!!value}
@@ -125,6 +167,11 @@ export function EventForm({ value, onClose, onSaved }: { value: EventFormValue |
                     <Input label="Date" type="date" required {...register('eventDate')} error={errors.eventDate?.message} />
                     <Input label="Start time" type="time" {...register('startTime')} error={errors.startTime?.message} />
                     <Input label="End time" type="time" {...register('endTime')} error={errors.endTime?.message} />
+                    {slot && (
+                        <p className={`sm:col-span-2 flex items-center gap-2 text-sm ${slot.startsWith('This time') ? 'text-emerald-700' : 'text-amber-700'}`}>
+                            <AlertCircle className="size-4" /> {slot}
+                        </p>
+                    )}
                     <Input label="Venue" wrapperClassName="sm:col-span-2" {...register('venue')} error={errors.venue?.message} />
                     <Textarea label="Notes for the team" wrapperClassName="sm:col-span-2" rows={3} {...register('notes')} error={errors.notes?.message} />
                 </FormGrid>
