@@ -178,17 +178,17 @@ export const router = createBrowserRouter([
                     </GuestOnly>
                 ),
                 children: [
-                    { path: 'login', ...page(() => import('../pages/Auth/Login/Login')) },
-                    { path: 'register', ...page(() => import('../pages/Auth/Register/Register')) },
-                    { path: 'forgot-password', ...page(() => import('../pages/Auth/ForgetPassword/ForgotPassword')) },
-                    { path: 'reset-password', ...page(() => import('../pages/Auth/ResetPassword/ResetPassword')) },
+                    { path: 'login', ...page(() => import('../pages/auth/Login/Login')) },
+                    { path: 'register', ...page(() => import('../pages/auth/Register/Register')) },
+                    { path: 'forgot-password', ...page(() => import('../pages/auth/ForgetPassword/ForgotPassword')) },
+                    { path: 'reset-password', ...page(() => import('../pages/auth/ResetPassword/ResetPassword')) },
                 ],
             },
             {
                 element: <AuthLayout />,
-                children: [{ path: 'verify-otp', ...page(() => import('../pages/Auth/VerifyOtp/VerifyOtp')) }],
+                children: [{ path: 'verify-otp', ...page(() => import('../pages/auth/VerifyOtp/VerifyOtp')) }],
             },
-            { path: 'g/:token', ...page(() => import('../pages/Gallery/QrGallery')) },
+            { path: 'g/:token', ...page(() => import('../pages/gallery/QrGallery')) },
             {
                 path: 'customer',
                 element: (
@@ -204,7 +204,7 @@ export const router = createBrowserRouter([
                     { path: 'services', ...page(() => import('../pages/Customer/Services')) },
                     { path: 'events', ...page(() => import('../pages/Customer/Events')) },
                     { path: 'galleries', ...page(() => import('../pages/Customer/Galleries')) },
-                    { path: 'galleries/:id', ...page(() => import('../pages/Gallery/OwnerGallery')) },
+                    { path: 'galleries/:id', ...page(() => import('../pages/gallery/OwnerGallery')) },
                     { path: 'orders', ...page(() => import('../pages/Customer/Orders')) },
                     { path: 'payments', ...page(() => import('../pages/Customer/Payments')) },
                     { path: 'downloads', ...page(() => import('../pages/Customer/Downloads')) },

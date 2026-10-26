@@ -32,13 +32,13 @@ export const router = createBrowserRouter([
                     </GuestOnly>
                 ),
                 children: [
-                    { path: loginPages.login.path.slice(1), ...page(() => import('../pages/Auth/Login/Login')) },
-                    { path: loginPages.register.path.slice(1), ...page(() => import('../pages/Auth/Register/Register')) },
-                    { path: loginPages.forgotPassword.path.slice(1), ...page(() => import('../pages/Auth/ForgetPassword/ForgotPassword')) },
+                    { path: loginPages.login.path.slice(1), ...page(() => import('../pages/auth/Login/Login')) },
+                    { path: loginPages.register.path.slice(1), ...page(() => import('../pages/auth/Register/Register')) },
+                    { path: loginPages.forgotPassword.path.slice(1), ...page(() => import('../pages/auth/ForgetPassword/ForgotPassword')) },
                 ],
             },
-            { path: 'reset-password', ...page(() => import('../pages/Auth/ResetPassword/ResetPassword')) },
-            { path: 'verify-otp', ...page(() => import('../pages/Auth/VerifyOtp/VerifyOtp')) },
+            { path: 'reset-password', ...page(() => import('../pages/auth/ResetPassword/ResetPassword')) },
+            { path: 'verify-otp', ...page(() => import('../pages/auth/VerifyOtp/VerifyOtp')) },
             {
                 path: 'admin',
                 element: (
@@ -96,7 +96,7 @@ export const router = createBrowserRouter([
                     { path: 'services', ...page(() => import('../pages/Customer/Services')) },
                     { path: 'events', ...page(() => import('../pages/Customer/Events')) },
                     { path: 'galleries', ...page(() => import('../pages/Customer/Galleries')) },
-                    { path: 'galleries/:id', ...page(() => import('../pages/Gallery/OwnerGallery')) },
+                    { path: 'galleries/:id', ...page(() => import('../pages/gallery/OwnerGallery')) },
                     { path: 'orders', ...page(() => import('../pages/Customer/Orders')) },
                     { path: 'payments', ...page(() => import('../pages/Customer/Payments')) },
                     { path: 'downloads', ...page(() => import('../pages/Customer/Downloads')) },
@@ -159,8 +159,8 @@ export const router = createBrowserRouter([
                 ],
             },
             { path: 'shop', ...page(() => import('../pages/Shop/PhotoShop')) },
-            { path: 'gallery', ...page(() => import('../pages/Gallery/QrGallery')) },
-            { path: 'g/:token', ...page(() => import('../pages/Gallery/QrGallery')) },
+            { path: 'gallery', ...page(() => import('../pages/gallery/QrGallery')) },
+            { path: 'g/:token', ...page(() => import('../pages/gallery/QrGallery')) },
             { path: loginPages.page404.path.slice(1), ...page(() => import('../pages/Error/NotFoundPage')) },
             { index: true, element: <Navigate to={loginPages.login.path} replace /> },
             { path: '*', ...page(() => import('../pages/Error/NotFoundPage')) },
