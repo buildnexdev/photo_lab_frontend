@@ -85,8 +85,16 @@ export default function QrGallery() {
         setCheckingPhone(true);
         setPhoneError('');
         try {
-            const claimed = await api.post<{ proof: string }>(`/api/gallery/${access.galleryId}/phone/claim`, { phone: digits }, { 'X-Gallery-Session': access.session });
-            const next = { ...access, phoneProof: claimed.proof };
+            const claimed = await api.post<{ proof: string; session: string }>(
+                `/api/gallery/${access.galleryId}/phone/claim`,
+                { phone: digits },
+                { 'X-Gallery-Session': access.session },
+            );
+            if (!claimed?.proof || !claimed?.session) {
+                setPhoneError('Phone was accepted but gallery access could not be opened. Please try again.');
+                return;
+            }
+            const next = { ...access, session: claimed.session, phoneProof: claimed.proof };
             if (token) sessionStorage.setItem(storageKey(token), JSON.stringify(next));
             setAccess(next);
         } catch (e) {
