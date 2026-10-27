@@ -7,7 +7,7 @@ import { Link, useLocation, useParams } from 'react-router';
 import { BrandMark } from '../../components/brand';
 import { Loading } from '../../components/ui/Data';
 import { Button, ButtonLink } from '../../components/ui';
-import { api, errorMessage } from '../../services/api';
+import { api, ApiError, errorMessage } from '../../services/api';
 import { homeFor, useAuth } from '../../hooks/useAuth';
 import { GalleryViewer } from './GalleryViewer';
 import './QrGallery.scss';
@@ -94,12 +94,30 @@ export default function QrGallery() {
         }
     };
 
-    const onAccessLost = useCallback(() => {
-        if (!token) return;
-        sessionStorage.removeItem(storageKey(token));
-        setAccess(null);
-        if (attempts.current > 2) setError('Your access to this gallery has ended.');
-    }, [token]);
+    const onAccessLost = useCallback(
+        (reason?: unknown) => {
+            if (!token) return;
+            const needPhone =
+                reason instanceof ApiError &&
+                reason.status === 403 &&
+                (reason.code === 'PHONE_REQUIRED' || /phone/i.test(reason.message));
+            if (needPhone) {
+                setAccess((prev) => {
+                    if (!prev) return prev;
+                    const next = { session: prev.session, galleryId: prev.galleryId, expiresAt: prev.expiresAt };
+                    sessionStorage.setItem(storageKey(token), JSON.stringify(next));
+                    return next;
+                });
+                setPhoneError(errorMessage(reason, 'Enter the customer phone number for this event.'));
+                setError('');
+                return;
+            }
+            sessionStorage.removeItem(storageKey(token));
+            setAccess(null);
+            if (attempts.current > 2) setError('Your access to this gallery has ended.');
+        },
+        [token],
+    );
 
     return (
         <div className="min-h-dvh bg-ink-900">
