@@ -82,7 +82,7 @@ const STATUS_TONES: Record<string, string> = {
 };
 const TONE_CLASSES: Record<string, string> = {
     emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-    amber: 'bg-brand-50 text-brand-700 ring-brand-500/20',
+    amber: 'bg-amber-50 text-amber-800 ring-amber-500/25',
     sky: 'bg-sky-50 text-sky-700 ring-sky-600/20',
     violet: 'bg-violet-50 text-violet-700 ring-violet-600/20',
     rose: 'bg-rose-50 text-rose-700 ring-rose-600/30',
@@ -91,9 +91,12 @@ const TONE_CLASSES: Record<string, string> = {
 };
 
 export const COLORFUL_THEMES = [
-    { bg: 'bg-gradient-to-br from-accent-300 to-accent-600', text: 'text-ink-900' },
-    { bg: 'bg-gradient-to-br from-ink-700 to-ink-900', text: 'text-accent-300' },
-    { bg: 'bg-gradient-to-br from-accent-400 to-accent-700', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-sky-400 to-cyan-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-violet-400 to-fuchsia-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-amber-400 to-orange-500', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-emerald-400 to-teal-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-rose-400 to-pink-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-accent-400 to-accent-700', text: 'text-ink-900' },
     { bg: 'bg-gradient-to-br from-stone-600 to-ink-900', text: 'text-accent-200' },
     { bg: 'bg-gradient-to-br from-accent-200 to-accent-500', text: 'text-ink-900' },
 ];
@@ -154,46 +157,44 @@ export function TableHeaderToolbar({
     className,
 }: TableHeaderToolbarProps) {
     return (
-        <div className={clsx('flex flex-col gap-3 border-b border-slate-200/80 bg-slate-50/70 p-3 sm:p-4 sm:flex-row sm:items-center sm:justify-between rounded-t-2xl', className)}>
-            {/* LEFT SIDE CORNER: TOTAL COUNT + SEARCH OPTION */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
+        <div className={clsx('flex flex-col gap-2.5 border-b border-stone-200/80 bg-gradient-to-b from-[#fffefb] to-white p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:p-4', className)}>
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-2.5">
                 {total !== undefined && (
-                    <div className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-2xs select-none shrink-0">
-                        <span className="size-2 rounded-full bg-brand-500 animate-pulse" />
-                        <span>{total}</span>
-                        <span className="text-slate-500 font-normal">{totalLabel}</span>
+                    <div className="inline-flex shrink-0 select-none items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-500/15 to-amber-400/10 px-3 py-1.5 text-xs font-semibold text-stone-800 ring-1 ring-brand-500/25">
+                        <span className="size-2 animate-pulse rounded-full bg-gradient-to-br from-brand-400 to-orange-500" />
+                        <span className="tabular-nums">{total}</span>
+                        <span className="font-normal text-stone-500">{totalLabel}</span>
                     </div>
                 )}
                 {onSearch && (
-                    <div className="relative min-w-[200px] max-w-sm flex-1">
+                    <div className="relative min-w-0 max-w-md flex-1 basis-[12rem]">
                         <SearchInput
                             value={search ?? ''}
                             onChange={onSearch}
                             placeholder={searchPlaceholder}
                             className="w-full"
+                            inputClassName="rounded-full"
                         />
                     </div>
                 )}
                 {extraFilters}
             </div>
 
-            {/* RIGHT SIDE CORNER: GRID VIEW OR TABLE VIEW OPTION + ADD ICON BUTTON */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0 justify-end">
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                 {children}
 
-                {/* Table View or Grid View options */}
                 {onViewModeChange && (
-                    <div className="flex items-center rounded-xl border border-slate-200 bg-slate-100/80 p-0.5 shadow-2xs">
+                    <div className="flex items-center rounded-xl border border-stone-200 bg-stone-50 p-0.5 shadow-2xs">
                         <button
                             type="button"
                             onClick={() => onViewModeChange('table')}
                             title="Table View"
                             className={clsx(
-                                'flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer select-none',
-                                viewMode === 'table' ? 'bg-white text-slate-900 shadow-xs font-semibold' : 'text-slate-500 hover:text-slate-900',
+                                'flex cursor-pointer select-none items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all',
+                                viewMode === 'table' ? 'bg-white font-semibold text-stone-900 shadow-xs' : 'text-stone-500 hover:text-stone-900',
                             )}
                         >
-                            <Table2 className="size-3.5" />
+                            <Table2 className="size-3.5 text-sky-600" />
                             <span className="hidden sm:inline">Table</span>
                         </button>
                         <button
@@ -201,22 +202,21 @@ export function TableHeaderToolbar({
                             onClick={() => onViewModeChange('grid')}
                             title="Grid View"
                             className={clsx(
-                                'flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer select-none',
-                                viewMode === 'grid' ? 'bg-white text-slate-900 shadow-xs font-semibold' : 'text-slate-500 hover:text-slate-900',
+                                'flex cursor-pointer select-none items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all',
+                                viewMode === 'grid' ? 'bg-white font-semibold text-stone-900 shadow-xs' : 'text-stone-500 hover:text-stone-900',
                             )}
                         >
-                            <LayoutGrid className="size-3.5" />
+                            <LayoutGrid className="size-3.5 text-violet-600" />
                             <span className="hidden sm:inline">Grid</span>
                         </button>
                     </div>
                 )}
 
-                {/* Add button / icon */}
                 {onAdd && (
                     <button
                         type="button"
                         onClick={onAdd}
-                        className="flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 px-3.5 text-xs font-bold text-stone-950 shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer select-none"
+                        className="flex h-9 cursor-pointer select-none items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 px-3.5 text-xs font-bold text-stone-950 shadow-sm shadow-brand-500/25 transition-all hover:from-brand-400 hover:to-amber-400 hover:scale-[1.02] active:scale-[0.98]"
                     >
                         <Plus className="size-3.5 stroke-[2.5]" />
                         <span>{addLabel}</span>

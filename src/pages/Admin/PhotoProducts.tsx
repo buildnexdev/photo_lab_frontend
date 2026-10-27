@@ -13,7 +13,7 @@ const emptyProduct = (): ShopProduct => ({ id: crypto.randomUUID(), name: '', ca
 const adjustment: PhotoAdjustment = { x: 0, y: 0, zoom: 1, rotation: 0, fit: 'fill' };
 const money = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 
-export default function PhotoProducts() {
+export default function PhotoProducts({ embedded = false }: { embedded?: boolean }) {
     const [products, setProducts] = useState(getProducts);
     const [orders, setOrders] = useState(getOrders);
     const [tab, setTab] = useState<'products' | 'orders'>('products');
@@ -83,8 +83,8 @@ export default function PhotoProducts() {
     };
     const changeOrderStatus = (id: string, status: ShopOrder['status']) => setOrders((current) => current.map((order) => order.id === id ? { ...order, status } : order));
 
-    return <div className="space-y-5 p-4 sm:p-6">
-        <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-wider text-brand-700">CUSTOM PRINTS & KEEPSAKES</p><h1 className="mt-1 text-2xl font-semibold text-stone-900">Photo products</h1><p className="mt-1 text-sm text-stone-500">Manage the storefront collection, frame templates and made-to-order products.</p></div>{tab === 'products' && <button className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-xs hover:bg-brand-700 transition-colors" type="button" onClick={() => { setEditing(emptyProduct()); setError(''); }}><PackagePlus size={16} /> Add product</button>}</div>
+    return <div className={embedded ? 'space-y-5' : 'space-y-5 p-4 sm:p-6'}>
+        <div className="flex flex-wrap items-end justify-between gap-4"><div>{!embedded && <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">CUSTOM PRINTS & KEEPSAKES</p>}{!embedded && <h1 className="mt-1 font-display text-2xl font-semibold text-stone-900">Photo products</h1>}{embedded ? <p className="text-sm text-stone-500">Storefront collection, frame templates and made-to-order products.</p> : <p className="mt-1 text-sm text-stone-500">Manage the storefront collection, frame templates and made-to-order products.</p>}</div>{tab === 'products' && <button className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-600 px-4 text-sm font-semibold text-white shadow-sm hover:from-sky-400 hover:to-cyan-500 transition-colors" type="button" onClick={() => { setEditing(emptyProduct()); setError(''); }}><PackagePlus size={16} /> Add product</button>}</div>
         <div className="flex items-center justify-between border-b border-stone-200">
             <div className="flex gap-5" role="tablist">
                 <button type="button" role="tab" aria-selected={tab === 'products'} onClick={() => setTab('products')} className={`inline-flex items-center gap-2 border-b-2 px-1 pb-3 text-sm ${tab === 'products' ? 'border-brand-200 font-medium text-stone-900' : 'border-transparent text-stone-500'}`}><ImagePlus size={16} /> Products <span className="text-xs text-stone-400">{products.length}</span></button>

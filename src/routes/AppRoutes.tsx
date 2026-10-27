@@ -36,7 +36,6 @@ import {
     Bell,
     Wand2,
     BookImage,
-    Building2,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
@@ -54,57 +53,43 @@ const adminNav: NavSection[] = [
     {
         title: 'Master',
         items: [
-            { to: '/admin/staff', label: 'Staff', icon: UserCog, anyOf: ['users.manage', 'staff.manage'] },            { to: '/admin/customers', label: 'Customers', icon: Users, anyOf: ['customers.view', 'customers.manage'] },
+            { to: '/admin/staff', label: 'Staff', icon: UserCog, anyOf: ['users.manage', 'staff.manage'] },
+            { to: '/admin/customers', label: 'Customers', icon: Users, anyOf: ['customers.view', 'customers.manage'] },
             { to: '/admin/services', label: 'Services', icon: Briefcase, anyOf: ['pricing.manage'] },
             { to: '/admin/packages', label: 'Packages', icon: PackageIcon, anyOf: ['pricing.manage'] },
             { to: '/admin/coupons', label: 'Coupons', icon: Tag, anyOf: ['pricing.manage'] },
             { to: '/admin/product-types', label: 'Product types', icon: Layers, anyOf: ['pricing.manage', 'orders.view'] },
-            { to: '/admin/products', label: 'Photo products', icon: PackageIcon, anyOf: ['pricing.manage', 'orders.view'] },
-          
+            { to: '/admin/website', label: 'Website content', icon: Globe, anyOf: ['pricing.manage'] },
+            { to: '/admin/settings', label: 'Settings', icon: Settings, anyOf: ['settings.manage', 'pricing.manage', 'roles.manage'] },
+            { to: '/admin/audit-logs', label: 'Audit logs', icon: ShieldCheck, anyOf: ['audit.view'] },
         ],
     },
     {
-        title: 'Operations',
+        title: 'Operation',
         items: [
             { to: '/admin/bookings', label: 'Bookings', icon: CalendarCheck, anyOf: ['bookings.view', 'bookings.manage'] },
+            { to: '/admin/events', label: 'Events', icon: Calendar, anyOf: ['events.view', 'events.manage'] },
+            { to: '/admin/galleries', label: 'Galleries and QR', icon: Images, anyOf: ['galleries.manage'] },
             { to: '/admin/photos', label: 'Photos', icon: Image, anyOf: ['photos.manage'] },
             { to: '/admin/orders', label: 'Orders', icon: ShoppingBag, anyOf: ['orders.view', 'orders.manage'] },
             { to: '/admin/printing', label: 'Printing', icon: Printer, anyOf: ['printing.manage'] },
             { to: '/admin/delivery', label: 'Delivery', icon: Truck, anyOf: ['delivery.manage'] },
-        ],
-    },
-    {
-        title: 'Event management',
-        items: [
-            { to: '/admin/events', label: 'Events', icon: Calendar, anyOf: ['events.view', 'events.manage'] },
-            { to: '/admin/galleries', label: 'Galleries and QR', icon: Images, anyOf: ['galleries.manage'] },
-        ],
-    },
-    {
-        title: 'Asset management',
-        items: [
-            { to: '/admin/assets', label: 'Studio equipment', icon: Camera, anyOf: ['events.view', 'events.manage'] },
+            { to: '/admin/assets', label: 'Asset management', icon: Camera, anyOf: ['events.view', 'events.manage'] },
         ],
     },
     {
         title: 'Finance',
         items: [
-            { to: '/admin/payments', label: 'Payments', icon: Banknote, anyOf: ['payments.view'] },
+            { to: '/admin/payments', label: 'Payments management', icon: Banknote, anyOf: ['payments.view'] },
+            { to: '/admin/payroll', label: 'Payroll', icon: Briefcase, anyOf: ['payments.view', 'staff.manage'] },
+            { to: '/admin/closing/day', label: 'End of day', icon: CalendarCheck, anyOf: ['payments.view', 'reports.view'] },
+            { to: '/admin/closing/month', label: 'End of month', icon: BarChart3, anyOf: ['payments.view', 'reports.view'] },
         ],
     },
     {
-        title: 'Reports',
+        title: 'Report',
         items: [
-            { to: '/admin/reports', label: 'Reports', icon: BarChart3, anyOf: ['reports.view'] },
-        ],
-    },
-    {
-        title: 'Settings',
-        items: [
-            { to: '/admin/companies', label: 'Studios', icon: Building2, roles: ['SUPER_ADMIN'] },
-            { to: '/admin/website', label: 'Website content', icon: Globe, anyOf: ['pricing.manage'] },
-            { to: '/admin/settings', label: 'Settings', icon: Settings, anyOf: ['settings.manage', 'pricing.manage', 'roles.manage'] },
-            { to: '/admin/audit-logs', label: 'Audit logs', icon: ShieldCheck, anyOf: ['audit.view'] },
+            { to: '/admin/reports', label: 'All reports', icon: BarChart3, anyOf: ['reports.view'] },
         ],
     },
 ];
@@ -225,6 +210,7 @@ export const router = createBrowserRouter([
                     { path: 'bookings', ...page(() => import('../pages/Booking/Bookings')) },
                     { path: 'assets', ...page(() => import('../pages/Admin/Assets')) },
                     { path: 'events', ...page(() => import('../pages/Event/Events')) },
+                    { path: 'events/:id/upload', ...page(() => import('../pages/Admin/EventUpload')) },
                     { path: 'events/:id', ...page(() => import('../pages/Admin/EventDetail')) },
                     { path: 'galleries', ...page(() => import('../pages/Admin/Galleries')) },
                     { path: 'galleries/:id', ...page(() => import('../pages/Admin/GalleryDetail')) },
@@ -232,12 +218,15 @@ export const router = createBrowserRouter([
                     { path: 'upload', ...page(() => import('../pages/Photographer/Upload')) },
                     { path: 'orders', ...page(() => import('../pages/Admin/Orders')) },
                     { path: 'product-types', ...page(() => import('../pages/Admin/ProductTypes')) },
-                    { path: 'products', ...page(() => import('../pages/Admin/PhotoProducts')) },
+                    { path: 'products', element: <Navigate to="/admin/settings?tab=products" replace /> },
                     { path: 'payments', ...page(() => import('../pages/Admin/Payments')) },
+                    { path: 'payroll', ...page(() => import('../pages/Admin/Payroll')) },
+                    { path: 'closing/day', ...page(() => import('../pages/Admin/EndOfDay')) },
+                    { path: 'closing/month', ...page(() => import('../pages/Admin/EndOfMonth')) },
                     { path: 'services', ...page(() => import('../pages/Admin/Services')) },
                     { path: 'packages', ...page(() => import('../pages/Admin/Packages')) },
                     { path: 'coupons', ...page(() => import('../pages/Coupon/Coupons')) },
-                    { path: 'companies', ...page(() => import('../pages/Company/Companies')) },
+                    { path: 'companies', element: <Navigate to="/admin/settings?tab=studios" replace /> },
                     { path: 'website', ...page(() => import('../pages/Admin/Website')) },
                     { path: 'staff', ...page(() => import('../pages/Admin/Staff')) },
                     { path: 'access/*', element: <Navigate to="/admin/staff" replace /> },

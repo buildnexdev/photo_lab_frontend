@@ -62,10 +62,10 @@ export function ButtonLink({ variant = 'primary', size = 'md', className, ...res
 
 export function Card({ className, children, title, actions, padded = true }: { className?: string; children: ReactNode; title?: ReactNode; actions?: ReactNode; padded?: boolean }) {
     return (
-        <section className={clsx('card', className)}>
+        <section className={clsx('card overflow-hidden', className)}>
             {(title || actions) && (
-                <header className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 px-4 py-3 sm:px-5">
-                    {typeof title === 'string' ? <h2 className="font-semibold text-stone-900">{title}</h2> : title}
+                <header className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 bg-gradient-to-b from-[#fffefb] to-white px-4 py-3 sm:px-5">
+                    {typeof title === 'string' ? <h2 className="font-display text-base font-semibold tracking-tight text-stone-900">{title}</h2> : title}
                     {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
                 </header>
             )}
@@ -89,6 +89,7 @@ export function Spinner({ className, size = 'md', variant = 'aperture' }: { clas
 }
 
 export { NqLoader, NqLoaderPage, BrandMark } from '../brand';
+export { ColorListShell } from './ColorListShell';
 
 export function Avatar({ name, className }: { name: string | null | undefined; className?: string }) {
     const initials = (name ?? '?')

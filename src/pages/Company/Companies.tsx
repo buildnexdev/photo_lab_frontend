@@ -54,7 +54,7 @@ const schema = z.object({
 });
 type Form = z.infer<typeof schema>;
 
-export default function AdminCompanies() {
+export default function AdminCompanies({ embedded = false }: { embedded?: boolean }) {
     const { hasRole } = useAuth();
     const toast = useToast();
     const invalidate = useInvalidate();
@@ -102,15 +102,24 @@ export default function AdminCompanies() {
 
     return (
         <div className="space-y-6">
-            <PageHeader
-                title="Studios"
-                actions={
-                    <Button icon={<Plus className="size-4" />} onClick={() => setOpen(true)}>
+            {!embedded ? (
+                <PageHeader
+                    title="Studios"
+                    actions={
+                        <Button icon={<Plus className="size-4" />} onClick={() => setOpen(true)}>
+                            New studio
+                        </Button>
+                    }
+                />
+            ) : (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm text-stone-500">Each studio has its own database. Website, packages and portfolio come from that database.</p>
+                    <Button size="sm" icon={<Plus className="size-4" />} onClick={() => setOpen(true)}>
                         New studio
                     </Button>
-                }
-            />
-            <p className="text-sm text-stone-500">Each new studio gets its own database, named from the studio plus <span className="font-mono">_photo_lab</span>. Website text, packages, and portfolio for that studio come from that database.</p>
+                </div>
+            )}
+            {!embedded && <p className="text-sm text-stone-500">Each new studio gets its own database, named from the studio plus <span className="font-mono">_photo_lab</span>. Website text, packages, and portfolio for that studio come from that database.</p>}
             <Card padded={false}>
                 <QueryState query={q} isEmpty={(rows) => !rows.length} empty={<EmptyState title="No studios yet" description="Create the first studio to provision its database." icon={<Building2 className="size-10" />} />}>
                     {(rows) => (

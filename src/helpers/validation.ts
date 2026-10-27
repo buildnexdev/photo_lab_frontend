@@ -4,17 +4,27 @@
 import { z } from 'zod';
 import { todayYmd } from '../utils/format';
 
+/** Exactly 10 digits (Indian mobile). Strips spaces before check when using with controlled input. */
 export const phoneRule = z
     .string()
     .trim()
-    .regex(/^\+?[0-9\s-]{8,16}$/, 'Enter a valid phone number');
+    .regex(/^\d{10}$/, 'Enter a 10-digit phone number');
 
 export const optionalPhone = z
     .string()
     .trim()
-    .refine((v) => !v || /^\+?[0-9\s-]{8,16}$/.test(v), 'Enter a valid phone number');
+    .refine((v) => !v || /^\d{10}$/.test(v), 'Enter a 10-digit phone number');
 
-export const emailRule = z.string().trim().min(1, 'Email is required').email('Enter a valid email').max(190);
+export const emailRule = z
+    .string()
+    .trim()
+    .min(1, 'Email is required')
+    .max(190)
+    .email('Enter a valid email')
+    .refine((v) => v.includes('@'), 'Email must include @');
+
+/** Digits only, capped at 10 — use in onChange for phone fields. */
+export const digitsOnly10 = (value: string) => value.replace(/\D/g, '').slice(0, 10);
 
 export const passwordRule = z
     .string()

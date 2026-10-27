@@ -1,9 +1,10 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
-// Last Edited : 06-10-2026
+// Last Edited : 27-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Plus, Trash2 } from 'lucide-react';
+import clsx from 'clsx';
+import { Building2, Bell, Brain, Images, Package, Plus, Settings2, Store, Trash2, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSearchParams } from 'react-router';
@@ -11,53 +12,106 @@ import { z } from 'zod';
 import { QueryState } from '../../components/ui/Data';
 import { Checkbox, FormGrid, Input, Textarea } from '../../components/ui/Form';
 import { useToast } from '../../components/ui/Toast';
-import { Alert, Button, Card, IconButton, PageHeader, Tabs } from '../../components/ui';
+import { Alert, Button, Card, ColorListShell, IconButton } from '../../components/ui';
 import { api, applyFieldErrors } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { toPaise, toRupees } from '../../utils/format';
 import { useInvalidate } from '../../hooks';
 import { optionalPhone } from '../../helpers/validation';
+import PhotoProducts from './PhotoProducts';
+import AdminCompanies from '../Company/Companies';
 import './Settings.scss';
 
 interface Settings {
     studio: Record<'name' | 'tagline' | 'email' | 'phone' | 'whatsapp' | 'address' | 'city' | 'mapUrl' | 'hours' | 'about' | 'gstin' | 'instagram' | 'facebook' | 'youtube', string>;
     pricing: { photoDownload: number; taxPercent: number; prints: Record<string, number>; frames: Record<string, number>; canvas: Record<string, number>; album: number; courierFee: number };
-    gallery: { watermarkText: string; defaultExpiryDays: number; previewSize: number; thumbSize: number };
+    gallery: {
+        watermarkText: string;
+        watermarkUseLogo?: boolean;
+        watermarkLogoKey?: string | null;
+        watermarkLogoUrl?: string | null;
+        defaultExpiryDays: number;
+        previewSize: number;
+        thumbSize: number;
+    };
     notifications: { email: boolean; whatsapp: boolean; sms: boolean };
     ai: { faceSearch: boolean; culling: boolean; blurThreshold: number };
 }
-type Tab = 'studio' | 'pricing' | 'gallery' | 'notifications' | 'ai';
+type Tab = 'studio' | 'pricing' | 'gallery' | 'notifications' | 'ai' | 'products' | 'studios';
+
+const TAB_META: Record<Tab, { label: string; hint: string; icon: LucideIcon; tile: string }> = {
+    studio: { label: 'Studio', hint: 'Profile & contact', icon: Store, tile: 'nq-icon-tile--gold' },
+    pricing: { label: 'Pricing', hint: 'Prints & GST', icon: Settings2, tile: 'nq-icon-tile--amber' },
+    gallery: { label: 'Gallery', hint: 'Watermark & sizes', icon: Images, tile: 'nq-icon-tile--violet' },
+    notifications: { label: 'Notifications', hint: 'Email & WhatsApp', icon: Bell, tile: 'nq-icon-tile--sky' },
+    ai: { label: 'AI', hint: 'Culling & faces', icon: Brain, tile: 'nq-icon-tile--fuchsia' },
+    products: { label: 'Photo products', hint: 'Storefront catalog', icon: Package, tile: 'nq-icon-tile--cyan' },
+    studios: { label: 'Studios', hint: 'Multi-studio setup', icon: Building2, tile: 'nq-icon-tile--rose' },
+};
 
 export default function AdminSettings() {
-    const { can } = useAuth();
+    const { can, hasRole } = useAuth();
     const [params, setParams] = useSearchParams();
     const full = can('settings.manage');
-    const tabs: { value: Tab; label: string }[] = full
-        ? [
-              { value: 'studio', label: 'Studio' },
-              { value: 'pricing', label: 'Pricing' },
-              { value: 'gallery', label: 'Gallery' },
-              { value: 'notifications', label: 'Notifications' },
-              { value: 'ai', label: 'AI' },
-          ]
-        : [{ value: 'pricing', label: 'Pricing' }];
-    const tab = (tabs.find((t) => t.value === params.get('tab'))?.value ?? tabs[0].value) as Tab;
-    const q = useQuery({ queryKey: ['settings'], queryFn: () => api.get<Settings>('/api/settings') });
+    const tabs: Tab[] = [
+        ...(full ? (['studio', 'pricing', 'gallery', 'notifications', 'ai'] as Tab[]) : (['pricing'] as Tab[])),
+        ...(can('pricing.manage') || can('orders.view') ? (['products'] as Tab[]) : []),
+        ...(hasRole('SUPER_ADMIN') ? (['studios'] as Tab[]) : []),
+    ];
+    const tab = (tabs.find((t) => t === params.get('tab')) ?? tabs[0]) as Tab;
+    const q = useQuery({ queryKey: ['settings'], queryFn: () => api.get<Settings>('/api/settings'), enabled: tab !== 'products' && tab !== 'studios' });
     return (
-        <div>
-            <PageHeader title="Settings" subtitle="Studio profile, pricing and platform behaviour. Secrets such as payment and storage keys are set in the server environment, never here." />
-            <Tabs className="mb-6" value={tab} onChange={(t) => setParams({ tab: t }, { replace: true })} tabs={tabs} />
-            <QueryState query={q}>
-                {(s) => (
-                    <>
-                        {tab === 'studio' && <StudioForm value={s.studio} />}
-                        {tab === 'pricing' && <PricingForm value={s.pricing} />}
-                        {tab === 'gallery' && <GalleryForm value={s.gallery} />}
-                        {tab === 'notifications' && <NotificationsForm value={s.notifications} />}
-                        {tab === 'ai' && <AiForm value={s.ai} />}
-                    </>
-                )}
-            </QueryState>
+        <div className="space-y-4">
+            <ColorListShell icon={Settings2} tone="ink" title="Settings" subtitle="Studio profile, catalog, pricing and platform behaviour">
+                <div className="flex gap-2 overflow-x-auto border-b border-stone-100 p-3 sm:flex-wrap sm:p-4">
+                    {tabs.map((t) => {
+                        const m = TAB_META[t];
+                        const Icon = m.icon;
+                        const active = t === tab;
+                        return (
+                            <button
+                                key={t}
+                                type="button"
+                                onClick={() => setParams({ tab: t }, { replace: true })}
+                                className={clsx(
+                                    'inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-left transition-all',
+                                    active ? 'bg-ink-900 text-white shadow-sm' : 'bg-stone-50 text-stone-700 ring-1 ring-stone-200 hover:bg-white',
+                                )}
+                            >
+                                <span className={clsx('nq-icon-tile nq-icon-tile--sm', m.tile)} aria-hidden>
+                                    <Icon className="size-3.5" strokeWidth={2.4} />
+                                </span>
+                                <span className="min-w-0">
+                                    <span className="block text-sm font-semibold leading-tight">{m.label}</span>
+                                    <span className={clsx('hidden text-[10px] sm:block', active ? 'text-white/70' : 'text-stone-500')}>{m.hint}</span>
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </ColorListShell>
+
+            {tab === 'products' ? (
+                <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[var(--soft-shadow)]">
+                    <PhotoProducts embedded />
+                </div>
+            ) : tab === 'studios' ? (
+                <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white p-4 shadow-[var(--soft-shadow)] sm:p-5">
+                    <AdminCompanies embedded />
+                </div>
+            ) : (
+                <QueryState query={q}>
+                    {(s) => (
+                        <>
+                            {tab === 'studio' && <StudioForm value={s.studio} />}
+                            {tab === 'pricing' && <PricingForm value={s.pricing} />}
+                            {tab === 'gallery' && <GalleryForm value={s.gallery} />}
+                            {tab === 'notifications' && <NotificationsForm value={s.notifications} />}
+                            {tab === 'ai' && <AiForm value={s.ai} />}
+                        </>
+                    )}
+                </QueryState>
+            )}
         </div>
     );
 }
@@ -234,22 +288,47 @@ function PricingForm({ value }: { value: Settings['pricing'] }) {
 
 const gallerySchema = z.object({
     watermarkText: z.string().trim().min(1, 'Enter watermark text').max(60),
+    watermarkUseLogo: z.boolean().default(false),
     defaultExpiryDays: z.coerce.number().int('Whole days').min(1, 'At least 1 day').max(3650, 'At most 3650 days'),
     previewSize: z.coerce.number().int().min(600, '600–3000 px').max(3000, '600–3000 px'),
     thumbSize: z.coerce.number().int().min(200, '200–1000 px').max(1000, '200–1000 px'),
 });
 
-function GalleryForm({ value }: { value: Settings['gallery'] }) {
+function GalleryForm({ value }: { value: Settings['gallery'] & { watermarkLogoUrl?: string | null } }) {
     const save = useSave('gallery');
+    const toast = useToast();
+    const invalidate = useInvalidate();
+    const [uploading, setUploading] = useState(false);
     const {
         register,
         handleSubmit,
         setError,
         reset,
+        watch,
         formState: { errors, isSubmitting, isDirty },
-    } = useForm<z.input<typeof gallerySchema>, unknown, Settings['gallery']>({ resolver: zodResolver(gallerySchema), defaultValues: value });
-    useEffect(() => reset(value), [value, reset]);
-    const submit = handleSubmit((v) => save(v, setError as never));
+    } = useForm<z.input<typeof gallerySchema>, unknown, z.output<typeof gallerySchema>>({
+        resolver: zodResolver(gallerySchema),
+        defaultValues: {
+            watermarkText: value.watermarkText,
+            watermarkUseLogo: !!value.watermarkUseLogo,
+            defaultExpiryDays: value.defaultExpiryDays,
+            previewSize: value.previewSize,
+            thumbSize: value.thumbSize,
+        },
+    });
+    useEffect(
+        () =>
+            reset({
+                watermarkText: value.watermarkText,
+                watermarkUseLogo: !!value.watermarkUseLogo,
+                defaultExpiryDays: value.defaultExpiryDays,
+                previewSize: value.previewSize,
+                thumbSize: value.thumbSize,
+            }),
+        [value, reset],
+    );
+    const submit = handleSubmit((v) => save({ ...value, ...v }, setError as never));
+    const useLogo = watch('watermarkUseLogo');
     return (
         <Card>
             <form onSubmit={submit} noValidate className="space-y-4">
@@ -259,6 +338,39 @@ function GalleryForm({ value }: { value: Settings['gallery'] }) {
                     <Input label="Preview size (longest edge, px)" type="number" {...register('previewSize')} error={errors.previewSize?.message} />
                     <Input label="Thumbnail size (px)" type="number" {...register('thumbSize')} error={errors.thumbSize?.message} />
                 </FormGrid>
+                <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 space-y-3">
+                    <Checkbox label="Use company logo as watermark" description="Logo is stamped on gallery previews together with the watermark text." {...register('watermarkUseLogo')} />
+                    {value.watermarkLogoUrl && (
+                        <img src={value.watermarkLogoUrl} alt="Company watermark logo" className="h-14 w-auto rounded-lg bg-white object-contain p-1 ring-1 ring-stone-200" />
+                    )}
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50">
+                        {uploading ? 'Uploading…' : value.watermarkLogoUrl ? 'Replace company logo' : 'Upload company logo'}
+                        <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            className="hidden"
+                            disabled={uploading}
+                            onChange={async (ev) => {
+                                const file = ev.target.files?.[0];
+                                ev.target.value = '';
+                                if (!file) return;
+                                setUploading(true);
+                                try {
+                                    const body = new FormData();
+                                    body.append('logo', file);
+                                    const r = await api.send('POST', '/api/settings/gallery/watermark-logo', body);
+                                    toast.success(r.message);
+                                    await invalidate(['settings']);
+                                } catch (err) {
+                                    toast.error(err);
+                                } finally {
+                                    setUploading(false);
+                                }
+                            }}
+                        />
+                    </label>
+                    {useLogo && !value.watermarkLogoUrl && <p className="text-xs text-amber-700">Upload a logo to enable the company logo watermark.</p>}
+                </div>
                 <div className="flex justify-end">
                     <Button type="submit" loading={isSubmitting} disabled={!isDirty}>
                         Save gallery settings

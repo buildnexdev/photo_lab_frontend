@@ -2,10 +2,11 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { useQuery } from '@tanstack/react-query';
+import { ShoppingBag } from 'lucide-react';
 import { DataTable, EmptyState, Pagination, QueryState, SearchInput, StatusBadge } from '../../components/ui/Data';
 import { Select } from '../../components/ui/Form';
 import { OrderManageDrawer } from '../../components/order/OrderManageDrawer';
-import { Card, PageHeader } from '../../components/ui';
+import { ColorListShell } from '../../components/ui';
 import { api, type Paged } from '../../services/api';
 import { date, money, titleCase } from '../../utils/format';
 import { useListParams, useOpenParam } from '../../hooks';
@@ -21,13 +22,12 @@ export function OrdersTable({ base, title, subtitle }: { base: 'admin' | 'delive
         placeholderData: (p) => p,
     });
     return (
-        <div>
-            <PageHeader title={title} subtitle={subtitle} />
-            <Card padded={false}>
-                <div className="flex flex-wrap gap-3 border-b border-stone-100 p-4">
-                    <SearchInput value={search} onChange={setSearch} placeholder="Order no., customer or phone" className="w-full max-w-xs" inputClassName="rounded-full" />
-                    <Select wrapperClassName="w-44" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={ORDER_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
-                    <Select wrapperClassName="w-44" aria-label="Type" value={filters.type} onChange={(e) => setFilter('type', e.target.value)} placeholder="All types" options={ORDER_TYPES.map((t) => ({ value: t, label: ORDER_TYPE_LABELS[t] }))} />
+        <>
+            <ColorListShell icon={ShoppingBag} tone="amber" title={title} subtitle={subtitle}>
+                <div className="flex flex-wrap gap-2 border-b border-stone-100 p-3 sm:gap-3 sm:p-4">
+                    <SearchInput value={search} onChange={setSearch} placeholder="Order no., customer or phone" className="min-w-[10rem] flex-1 sm:max-w-xs" inputClassName="rounded-full" />
+                    <Select wrapperClassName="w-36 sm:w-44" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={ORDER_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
+                    <Select wrapperClassName="w-36 sm:w-44" aria-label="Type" value={filters.type} onChange={(e) => setFilter('type', e.target.value)} placeholder="All types" options={ORDER_TYPES.map((t) => ({ value: t, label: ORDER_TYPE_LABELS[t] }))} />
                 </div>
                 <QueryState query={q}>
                     {(d) => (
@@ -62,9 +62,9 @@ export function OrdersTable({ base, title, subtitle }: { base: 'admin' | 'delive
                         </>
                     )}
                 </QueryState>
-            </Card>
+            </ColorListShell>
             <OrderManageDrawer id={openId} onClose={() => setOpenId(null)} links={base} />
-        </div>
+        </>
     );
 }
 

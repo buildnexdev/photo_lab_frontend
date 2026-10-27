@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router';
 import { DataTable, EmptyState, Pagination, QueryState, StatusBadge, TableHeaderToolbar } from '../../components/ui/Data';
 import { EventForm } from '../../components/event/EventForm';
 import { Input, Select } from '../../components/ui/Form';
-import { Card } from '../../components/ui';
+import { ColorListShell } from '../../components/ui';
 import { useToast } from '../../components/ui/Toast';
 import { api, type Paged } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
@@ -33,7 +33,7 @@ export default function AdminEvents() {
     });
     return (
         <div>
-            <Card padded={false} className="overflow-hidden">
+            <ColorListShell icon={CalendarDays} tone="rose" title="Events" subtitle={`${q.data?.total ?? 0} shoots · calendar & coverage`}>
                 <TableHeaderToolbar
                     total={q.data?.total}
                     totalLabel="Events"
@@ -44,11 +44,12 @@ export default function AdminEvents() {
                     onViewModeChange={setViewMode}
                     onAdd={can('events.manage') ? () => setCreating(true) : undefined}
                     addLabel="New Event"
+                    className="rounded-none border-0"
                     extraFilters={
                         <div className="flex flex-wrap items-center gap-2">
-                            <Select wrapperClassName="w-40" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={EVENT_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
-                            <Input wrapperClassName="w-36" type="date" value={filters.from} onChange={(e) => setFilter('from', e.target.value)} />
-                            <Input wrapperClassName="w-36" type="date" value={filters.to} min={filters.from || undefined} onChange={(e) => setFilter('to', e.target.value)} error={rangeError ? 'Must be after From' : undefined} />
+                            <Select wrapperClassName="w-36 sm:w-40" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={EVENT_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
+                            <Input wrapperClassName="w-32 sm:w-36" type="date" value={filters.from} onChange={(e) => setFilter('from', e.target.value)} />
+                            <Input wrapperClassName="w-32 sm:w-36" type="date" value={filters.to} min={filters.from || undefined} onChange={(e) => setFilter('to', e.target.value)} error={rangeError ? 'Must be after From' : undefined} />
                         </div>
                     }
                 />
@@ -133,7 +134,7 @@ export default function AdminEvents() {
                         </>
                     )}
                 </QueryState>
-            </Card>
+            </ColorListShell>
             <EventForm value={creating ? 'new' : null} onClose={() => setCreating(false)} onSaved={(id) => navigate(`/admin/events/${id}`)} />
         </div>
     );

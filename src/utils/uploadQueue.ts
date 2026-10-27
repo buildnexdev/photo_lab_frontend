@@ -39,7 +39,17 @@ function validate(file: File): string | null {
  * Browser upload queue: batches files, reports progress, retries network/server failures with backoff,
  * pauses while offline and sends a client upload id per file so retries never create duplicates.
  */
-export function useUploadQueue({ eventId, cameraLabel, onUploaded }: { eventId: number | null; cameraLabel: string; onUploaded?: () => void }) {
+export function useUploadQueue({
+    eventId,
+    cameraLabel,
+    albumId,
+    onUploaded,
+}: {
+    eventId: number | null;
+    cameraLabel: string;
+    albumId?: number | null;
+    onUploaded?: () => void;
+}) {
     const [items, setItems] = useState<UploadItem[]>([]);
     const [paused, setPaused] = useState(false);
     const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -47,6 +57,8 @@ export function useUploadQueue({ eventId, cameraLabel, onUploaded }: { eventId: 
     const [tick, setTick] = useState(0);
     const inFlight = useRef(0);
     const itemsRef = useRef(items);
+    const albumRef = useRef(albumId ?? null);
+    albumRef.current = albumId ?? null;
     itemsRef.current = items;
     const cameraRef = useRef(cameraLabel);
     cameraRef.current = cameraLabel;
@@ -98,6 +110,7 @@ export function useUploadQueue({ eventId, cameraLabel, onUploaded }: { eventId: 
             const form = new FormData();
             form.append('eventId', String(eventId));
             if (cameraRef.current.trim()) form.append('cameraLabel', cameraRef.current.trim().slice(0, 40));
+            if (albumRef.current) form.append('albumId', String(albumRef.current));
             form.append('clientUploadIds', JSON.stringify(ids));
             batch.forEach((b) => form.append('files', b.file, b.file.name));
             inFlight.current += 1;

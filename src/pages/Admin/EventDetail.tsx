@@ -3,12 +3,13 @@
 // Last Edited : 06-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { ArrowLeft, CalendarDays, Camera, Clock3, Copy, ExternalLink, Eye, Images, IndianRupee, Link2, MapPin, MessageSquare, Package, Pencil, Phone, QrCode, Trash2, UserPlus, UserRound, X } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Camera, Clock3, Copy, ExternalLink, Eye, Images, IndianRupee, Link2, MapPin, MessageSquare, Package, Pencil, Phone, QrCode, Trash2, Upload, UserPlus, UserRound, Wrench, X } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { EmptyState, QueryState, StatCard, StatusBadge } from '../../components/ui/Data';
 import { Avatar } from '../../components/staff/staffCommon';
 import { EventForm, type EventFormValue } from '../../components/event/EventForm';
+import { OfflinePaymentModal } from '../../components/payment/OfflinePaymentModal';
 import { Input, Select } from '../../components/ui/Form';
 import { Modal, useConfirm } from '../../components/ui/Overlay';
 import { useToast } from '../../components/ui/Toast';
@@ -31,6 +32,24 @@ interface StaffRow {
     role: StaffRole;
     camera_label: string | null;
     task_status: string;
+    pay_basis?: string;
+    share_pct?: number | null;
+    commission_pct?: number | null;
+    day_rate_override?: number | null;
+    flat_amount?: number | null;
+    payout_status?: string;
+}
+interface AssetRow {
+    assignment_id: number;
+    id: number;
+    asset_code: string;
+    name: string;
+    category: string;
+    status: string;
+    asset_condition: string;
+    assigned_at: string;
+    notes: string | null;
+    staff_name: string | null;
 }
 interface EventDetailData extends EventFormValue {
     event_code: string;
@@ -44,6 +63,7 @@ interface EventDetailData extends EventFormValue {
     started_at: string | null;
     completed_at: string | null;
     staff: StaffRow[];
+    assets: AssetRow[];
     gallery: { id: number; title: string; status: string; watermark_enabled: number; allow_download: number; photo_price: number | null; expires_at: string | null } | null;
     cover_url?: string | null;
     public_url?: string | null;
@@ -83,6 +103,8 @@ export default function AdminEventDetail() {
     const tab = (['overview', 'selection', 'culling'].includes(params.get('tab') ?? '') ? params.get('tab') : 'overview') as Tab;
     const [editing, setEditing] = useState(false);
     const [assigning, setAssigning] = useState(false);
+    const [assigningAsset, setAssigningAsset] = useState(false);
+    const [paying, setPaying] = useState(false);
     const q = useQuery({ queryKey: ['events', 'detail', id], queryFn: () => api.get<EventDetailData>(`/api/events/${id}`), enabled: id > 0 });
 
     useRealtime({ eventId: id, enabled: id > 0 }, {
@@ -185,6 +207,11 @@ export default function AdminEventDetail() {
                                                 Edit
                                             </Button>
                                         )}
+                                        {(can('photos.manage') || can('events.manage')) && (
+                                            <ButtonLink to={`/admin/events/${e.id}/upload`} variant="secondary">
+                                                <Upload className="size-4" /> Upload images
+                                            </ButtonLink>
+                                        )}
                                         {customerLink && (
                                             <>
                                                 <Button
@@ -267,6 +294,14 @@ export default function AdminEventDetail() {
                                                                 <p className="truncate text-xs text-stone-500">
                                                                     {titleCase(s.role)}
                                                                     {s.camera_label && ` · ${s.camera_label}`}
+                                                                    {s.pay_basis && s.pay_basis !== 'NONE' && (
+                                                                        <>
+                                                                            {' · '}
+                                                                            {titleCase(s.pay_basis)}
+                                                                            {s.pay_basis === 'SHARE' && s.share_pct != null ? ` ${s.share_pct}%` : ''}
+                                                                            {s.pay_basis === 'COMMISSION' && s.commission_pct != null ? ` ${s.commission_pct}%` : ''}
+                                                                        </>
+                                                                    )}
                                                                 </p>
                                                             </div>
                                                             <StatusBadge status={s.task_status} />
@@ -282,8 +317,96 @@ export default function AdminEventDetail() {
                                                 <EmptyState title="No one assigned yet" description="Assign photographers so they can upload from the app." />
                                             )}
                                         </Card>
+                                        <Card
+                                            title="Assets allocated"
+                                            actions={
+                                                can('events.manage') && (
+                                                    <Button size="sm" variant="secondary" icon={<Wrench className="size-4" />} onClick={() => setAssigningAsset(true)}>
+                                                        Allocate
+                                                    </Button>
+                                                )
+                                            }
+                                        >
+                                            {(e.assets ?? []).length ? (
+                                                <ul className="grid gap-2 sm:grid-cols-2">
+                                                    {(e.assets ?? []).map((a) => (
+                                                        <li key={a.assignment_id} className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-stone-50/50 p-3">
+                                                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+                                                                <Camera className="size-4" />
+                                                            </span>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="truncate font-semibold text-stone-900">{a.name}</p>
+                                                                <p className="truncate text-xs text-stone-500">
+                                                                    {a.asset_code} · {titleCase(a.category)}
+                                                                    {a.staff_name ? ` · ${a.staff_name}` : ''}
+                                                                </p>
+                                                            </div>
+                                                            {can('events.manage') && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="rounded-lg px-2 py-1 text-xs font-semibold text-stone-500 hover:bg-emerald-50 hover:text-emerald-700"
+                                                                    onClick={async () => {
+                                                                        if (!(await ask({ title: 'Return asset?', message: `${a.name} will be marked available again.`, confirmLabel: 'Return' }))) return;
+                                                                        try {
+                                                                            await api.send('POST', `/api/assets/${a.id}/return`, { condition: a.asset_condition || 'GOOD', notes: null });
+                                                                            toast.success('Asset returned');
+                                                                            await invalidate(['events', 'detail', id], ['assets']);
+                                                                        } catch (err) {
+                                                                            toast.error(err);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Return
+                                                                </button>
+                                                            )}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <EmptyState title="No assets allocated" description="Allocate cameras, lenses and kit from studio equipment." />
+                                            )}
+                                        </Card>
                                     </div>
                                     <div className="space-y-4">
+                                        <Card
+                                            title="Payment"
+                                            actions={
+                                                e.booking_id && can('payments.manage') && Number(e.total_amount ?? 0) - Number(e.paid_amount ?? 0) > 0 ? (
+                                                    <Button size="sm" onClick={() => setPaying(true)}>
+                                                        Record payment
+                                                    </Button>
+                                                ) : undefined
+                                            }
+                                        >
+                                            {e.booking_id ? (
+                                                <div className="space-y-3 text-sm">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-stone-500">Status</span>
+                                                        <StatusBadge status={e.payment_status} />
+                                                    </div>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-stone-500">Paid</span>
+                                                        <span className="font-semibold text-stone-900">
+                                                            {money(e.paid_amount ?? 0)} / {money(e.total_amount ?? 0)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-stone-500">Due</span>
+                                                        <span className="font-semibold text-rose-700">{money(Math.max(0, Number(e.total_amount ?? 0) - Number(e.paid_amount ?? 0)))}</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 pt-1">
+                                                        <ButtonLink to={`/admin/bookings?open=${e.booking_id}`} size="sm" variant="secondary">
+                                                            Open booking
+                                                        </ButtonLink>
+                                                        <ButtonLink to="/admin/payments" size="sm" variant="secondary">
+                                                            Payments ledger
+                                                        </ButtonLink>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="rounded-xl border-2 border-dashed border-stone-200 px-4 py-6 text-center text-xs text-stone-500">Link a booking to collect advance or balance payments for this event.</p>
+                                            )}
+                                        </Card>
                                         <Card title="Customer Gallery Link">
                                             {customerLink ? (
                                                 <div className="space-y-3 text-sm">
@@ -350,6 +473,9 @@ export default function AdminEventDetail() {
                                                         <ButtonLink to={`/admin/galleries/${e.gallery.id}`} size="sm" variant="secondary">
                                                             <QrCode className="size-4" /> Gallery & QR
                                                         </ButtonLink>
+                                                        <ButtonLink to={`/admin/events/${e.id}/upload`} size="sm" variant="secondary">
+                                                            <Upload className="size-4" /> Upload images
+                                                        </ButtonLink>
                                                         <ButtonLink to={`/admin/photos?eventId=${e.id}`} size="sm" variant="secondary">
                                                             <Images className="size-4" /> Manage photos
                                                         </ButtonLink>
@@ -399,6 +525,16 @@ export default function AdminEventDetail() {
                             {tab === 'culling' && <CullingTab eventId={id} />}
                             <EventForm value={editing ? e : null} onClose={() => setEditing(false)} onSaved={() => setEditing(false)} />
                             <AssignStaffModal open={assigning} eventId={id} existing={e.staff} onClose={() => setAssigning(false)} />
+                            <AssignAssetModal open={assigningAsset} eventId={id} onClose={() => setAssigningAsset(false)} />
+                            <OfflinePaymentModal
+                                target={paying && e.booking_id ? { bookingId: e.booking_id } : null}
+                                due={Math.max(0, Number(e.total_amount ?? 0) - Number(e.paid_amount ?? 0))}
+                                onClose={() => setPaying(false)}
+                                onSaved={() => {
+                                    setPaying(false);
+                                    invalidate(['events', 'detail', id], ['payments'], ['bookings']);
+                                }}
+                            />
                         </>
                     );
                 }}
@@ -440,6 +576,10 @@ function AssignStaffModal({ open, eventId, existing, onClose }: { open: boolean;
     const [role, setRole] = useState<StaffRole>('PHOTOGRAPHER');
     const [userId, setUserId] = useState('');
     const [camera, setCamera] = useState('');
+    const [payBasis, setPayBasis] = useState('DAY_RATE');
+    const [sharePct, setSharePct] = useState('');
+    const [commissionPct, setCommissionPct] = useState('');
+    const [flatAmount, setFlatAmount] = useState('');
     const [error, setError] = useState('');
     const source = STAFF_ROLE_SOURCE[role];
     const users = useQuery({ queryKey: ['users', 'assignable', source ?? 'all'], queryFn: () => api.get<{ id: number; name: string; role: string }[]>('/api/users/assignable', { role: source }), enabled: open });
@@ -448,12 +588,25 @@ function AssignStaffModal({ open, eventId, existing, onClose }: { open: boolean;
         return (users.data ?? []).filter((u) => !seen.has(u.id) && seen.add(u.id) && !existing.some((s) => s.user_id === u.id && s.role === role));
     }, [users.data, existing, role]);
     const save = useMutation({
-        mutationFn: () => api.send('POST', `/api/events/${eventId}/staff`, { userId: Number(userId), role, cameraLabel: camera.trim() || null }),
+        mutationFn: () =>
+            api.send('POST', `/api/events/${eventId}/staff`, {
+                userId: Number(userId),
+                role,
+                cameraLabel: camera.trim() || null,
+                payBasis,
+                sharePct: sharePct === '' ? null : Number(sharePct),
+                commissionPct: commissionPct === '' ? null : Number(commissionPct),
+                flatAmount: flatAmount === '' ? null : Math.round(Number(flatAmount) * 100),
+            }),
         onSuccess: (r) => {
             toast.success(r.message);
-            invalidate(['events', 'detail', eventId]);
+            invalidate(['events', 'detail', eventId], ['payroll']);
             setUserId('');
             setCamera('');
+            setPayBasis('DAY_RATE');
+            setSharePct('');
+            setCommissionPct('');
+            setFlatAmount('');
             onClose();
         },
         onError: (e) => toast.error(e),
@@ -487,6 +640,77 @@ function AssignStaffModal({ open, eventId, existing, onClose }: { open: boolean;
                     error={error}
                 />
                 {(role === 'PHOTOGRAPHER' || role === 'VIDEOGRAPHER') && <Input label="Camera label" value={camera} onChange={(e) => setCamera(e.target.value)} maxLength={40} placeholder="e.g. Cam A" hint="Shown on uploads so you can tell cameras apart." />}
+                <Select
+                    label="How this member is paid"
+                    value={payBasis}
+                    onChange={(e) => setPayBasis(e.target.value)}
+                    options={[
+                        { value: 'DAY_RATE', label: 'Day rate' },
+                        { value: 'SHARE', label: 'Revenue share %' },
+                        { value: 'COMMISSION', label: 'Commission %' },
+                        { value: 'FLAT', label: 'Flat amount' },
+                        { value: 'NONE', label: 'No payout' },
+                    ]}
+                    hint="Used in Payroll → Event member shares and End of month."
+                />
+                {payBasis === 'SHARE' && <Input label="Share of booking paid (%)" type="number" min={0} max={100} step="0.01" value={sharePct} onChange={(e) => setSharePct(e.target.value)} />}
+                {payBasis === 'COMMISSION' && <Input label="Commission (%)" type="number" min={0} max={100} step="0.01" value={commissionPct} onChange={(e) => setCommissionPct(e.target.value)} />}
+                {payBasis === 'FLAT' && <Input label="Flat amount (₹)" type="number" min={0} step="0.01" value={flatAmount} onChange={(e) => setFlatAmount(e.target.value)} />}
+            </div>
+        </Modal>
+    );
+}
+
+function AssignAssetModal({ open, eventId, onClose }: { open: boolean; eventId: number; onClose: () => void }) {
+    const toast = useToast();
+    const invalidate = useInvalidate();
+    const [assetId, setAssetId] = useState('');
+    const [notes, setNotes] = useState('');
+    const [error, setError] = useState('');
+    const available = useQuery({
+        queryKey: ['assets', 'AVAILABLE'],
+        queryFn: () => api.get<{ id: number; asset_code: string; name: string; category: string }[]>('/api/assets', { status: 'AVAILABLE' }),
+        enabled: open,
+    });
+    const save = useMutation({
+        mutationFn: () => api.send('POST', `/api/assets/${assetId}/assign`, { eventId, notes: notes.trim() || null }),
+        onSuccess: (r) => {
+            toast.success(r.message);
+            invalidate(['events', 'detail', eventId], ['assets']);
+            setAssetId('');
+            setNotes('');
+            onClose();
+        },
+        onError: (e) => toast.error(e),
+    });
+    return (
+        <Modal
+            open={open}
+            onClose={onClose}
+            title="Allocate asset"
+            size="sm"
+            footer={
+                <>
+                    <Button variant="secondary" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button loading={save.isPending} onClick={() => (assetId ? save.mutate() : setError('Choose an asset'))}>
+                        Allocate
+                    </Button>
+                </>
+            }
+        >
+            <div className="space-y-4">
+                <Select
+                    label="Available equipment"
+                    required
+                    value={assetId}
+                    onChange={(e) => (setAssetId(e.target.value), setError(''))}
+                    placeholder={available.isLoading ? 'Loading…' : (available.data?.length ?? 0) ? 'Choose…' : 'No available assets'}
+                    options={(available.data ?? []).map((a) => ({ value: a.id, label: `${a.asset_code} · ${a.name}` }))}
+                    error={error}
+                />
+                <Input label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={200} placeholder="Optional" />
             </div>
         </Modal>
     );
