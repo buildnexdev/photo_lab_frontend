@@ -32,7 +32,9 @@ const storageKey = (token: string) => `pl_gs_${token.slice(0, 24)}`;
 function readStored(token: string): Access | null {
     try {
         const v = JSON.parse(sessionStorage.getItem(storageKey(token)) ?? 'null') as Access | null;
-        return v && v.expiresAt > Date.now() + 60_000 ? v : null;
+        if (!v || v.expiresAt <= Date.now() + 60_000) return null;
+        // Always ask for the customer phone again on a fresh open of the link.
+        return { session: v.session, galleryId: v.galleryId, expiresAt: v.expiresAt };
     } catch {
         return null;
     }
