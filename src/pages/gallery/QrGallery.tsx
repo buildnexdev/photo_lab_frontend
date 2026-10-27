@@ -2,11 +2,11 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { QrCode } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { BrandMark } from '../../components/brand';
 import { Loading } from '../../components/ui/Data';
-import { ButtonLink } from '../../components/ui';
+import { Button, ButtonLink } from '../../components/ui';
 import { api, errorMessage } from '../../services/api';
 import { homeFor, useAuth } from '../../hooks/useAuth';
 import { GalleryViewer } from './GalleryViewer';
@@ -24,6 +24,7 @@ interface Access {
     session: string;
     galleryId: number;
     expiresAt: number;
+    phoneProof?: string;
 }
 
 const storageKey = (token: string) => `pl_gs_${token.slice(0, 24)}`;
@@ -45,6 +46,9 @@ export default function QrGallery() {
     const location = useLocation();
     const [access, setAccess] = useState<Access | null>(() => (token ? readStored(token) : null));
     const [error, setError] = useState(token ? '' : 'This gallery link is not valid.');
+    const [phone, setPhone] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [checkingPhone, setCheckingPhone] = useState(false);
     const attempts = useRef(0);
 
     const exchange = useCallback(async () => {
@@ -67,6 +71,23 @@ export default function QrGallery() {
         if (status === 'loading' || access || !token || error) return;
         void exchange();
     }, [status, access, token, error, exchange]);
+
+    const submitPhone = async (event: FormEvent) => {
+        event.preventDefault();
+        if (!access) return;
+        setCheckingPhone(true);
+        setPhoneError('');
+        try {
+            const claimed = await api.post<{ proof: string }>(`/api/gallery/${access.galleryId}/phone/claim`, { phone }, { 'X-Gallery-Session': access.session });
+            const next = { ...access, phoneProof: claimed.proof };
+            if (token) sessionStorage.setItem(storageKey(token), JSON.stringify(next));
+            setAccess(next);
+        } catch (e) {
+            setPhoneError(errorMessage(e));
+        } finally {
+            setCheckingPhone(false);
+        }
+    };
 
     const onAccessLost = useCallback(() => {
         if (!token) return;
@@ -109,8 +130,29 @@ export default function QrGallery() {
                             <ButtonLink to="/contact">Contact the studio</ButtonLink>
                         </div>
                     </div>
-                ) : access ? (
-                    <GalleryViewer galleryId={access.galleryId} session={access.session} onAccessLost={onAccessLost} dark />
+                ) : access && !access.phoneProof ? (
+                    <form onSubmit={submitPhone} className="mx-auto max-w-md py-16 text-white">
+                        <h1 className="font-display text-2xl font-semibold">Enter the customer phone number</h1>
+                        <p className="mt-2 text-sm text-white/60">Only the phone number saved for this event can open the photos.</p>
+                        <label className="mt-6 block text-sm font-medium text-white/80" htmlFor="event-phone">
+                            Phone number
+                        </label>
+                        <input
+                            id="event-phone"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            inputMode="tel"
+                            autoComplete="tel"
+                            placeholder="10-digit mobile number"
+                            className="mt-2 h-12 w-full rounded-lg border border-white/15 bg-white px-3 text-base text-stone-900"
+                        />
+                        {phoneError && <p className="mt-3 text-sm text-red-300">{phoneError}</p>}
+                        <Button type="submit" className="mt-5 w-full" loading={checkingPhone} disabled={phone.trim().length < 10}>
+                            Continue
+                        </Button>
+                    </form>
+                ) : access?.phoneProof ? (
+                    <GalleryViewer galleryId={access.galleryId} session={access.session} eventPhone={access.phoneProof} onAccessLost={onAccessLost} dark />
                 ) : (
                     <Loading className="min-h-[60vh] text-white/60" label="Unlocking gallery…" />
                 )}

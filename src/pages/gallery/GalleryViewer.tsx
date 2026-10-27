@@ -29,14 +29,19 @@ type PhotoPages = InfiniteData<Paged<GalleryPhoto>, number>;
  * The customer-facing gallery used by both QR access (/g/:token, with a gallery session header)
  * and the signed-in owner view (/customer/galleries/:id).
  */
-export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }: { galleryId: number; session?: string | null; onAccessLost?: () => void; dark?: boolean }) {
+export function GalleryViewer({ galleryId, session, eventPhone, onAccessLost, dark = false }: { galleryId: number; session?: string | null; eventPhone?: string | null; onAccessLost?: () => void; dark?: boolean }) {
     const qc = useQueryClient();
     const toast = useToast();
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
     const { pay, busy: paying, dialog: payDialog } = usePayment();
-    const headers = useMemo(() => (session ? { 'X-Gallery-Session': session } : undefined), [session]);
+    const headers = useMemo(() => {
+        const next: Record<string, string> = {};
+        if (session) next['X-Gallery-Session'] = session;
+        if (eventPhone) next['X-Event-Phone'] = eventPhone;
+        return Object.keys(next).length ? next : undefined;
+    }, [session, eventPhone]);
 
     const [view, setView] = useState<GalleryView>('all');
     const [albumId, setAlbumId] = useState<number | null>(null);
@@ -54,7 +59,7 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
     const [faceConsent, setFaceConsent] = useState(false);
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
-    const [phoneProof, setPhoneProof] = useState('');
+    const [phoneProof, setPhoneProof] = useState(eventPhone ?? '');
     const [devCode, setDevCode] = useState('');
     const sentinel = useRef<HTMLDivElement>(null);
 
