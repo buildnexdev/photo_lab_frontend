@@ -1,14 +1,16 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
-import { Camera, QrCode } from 'lucide-react';
+import { QrCode } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
-import { Loading } from '../../components/data';
+import { BrandMark } from '../../components/brand';
+import { Loading } from '../../components/ui/Data';
 import { ButtonLink } from '../../components/ui';
-import { api, errorMessage } from '../../lib/api';
-import { homeFor, useAuth } from '../../lib/auth';
+import { api, errorMessage } from '../../services/api';
+import { homeFor, useAuth } from '../../hooks/useAuth';
 import { GalleryViewer } from './GalleryViewer';
+import './QrGallery.scss';
 
 /** Accepts a full gallery link (…/g/<token>) or the bare code printed under the QR. */
 export function extractToken(input: string): string | null {
@@ -78,7 +80,7 @@ export default function QrGallery() {
             <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-900/90 backdrop-blur">
                 <div className="container-page flex h-14 items-center justify-between">
                     <Link to="/" className="flex items-center gap-2 font-display font-semibold text-white">
-                        <Camera className="size-5 text-brand-400" /> BuildNexDev
+                        <BrandMark className="h-10 w-auto" alt="Nammaqr" /> Nammaqr
                     </Link>
                     {user ? (
                         <Link to={homeFor(user)} className="text-sm font-medium text-white/80 hover:text-white">

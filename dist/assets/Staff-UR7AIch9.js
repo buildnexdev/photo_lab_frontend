@@ -1,0 +1,1 @@
+import{y as e}from"./react-DPoVlDbV.js";import{n as t}from"./StaffDirectory-DBeA8Hbb.js";var n=e();function r(){return(0,n.jsx)(t,{title:`Staff`,subtitle:`Everyone who works in the studio and their access.`})}export{r as default};

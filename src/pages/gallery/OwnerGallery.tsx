@@ -3,8 +3,9 @@
 // Last Edited : 06-10-2026
 import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router';
-import { EmptyState } from '../../components/data';
+import { EmptyState } from '../../components/ui/Data';
 import { GalleryViewer } from './GalleryViewer';
+import './OwnerGallery.scss';
 
 /** Signed-in customer viewing a gallery from one of their own events (no QR session needed). */
 export default function OwnerGallery() {

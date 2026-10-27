@@ -1,20 +1,45 @@
+@layer theme, base, bootstrap, components, utilities;
 @import 'tailwindcss';
+@import './styles/soft-ui.scss';
 
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --font-display: 'Playfair Display', Georgia, serif;
-    --color-brand-50: #fffbeb;
-    --color-brand-100: #fef3c7;
-    --color-brand-200: #fde68a;
-    --color-brand-300: #fcd34d;
-    --color-brand-400: #fbbf24;
-    --color-brand-500: #f59e0b;
-    --color-brand-600: #d97706;
-    --color-brand-700: #b45309;
-    --color-brand-800: #92400e;
-    --color-brand-900: #78350f;
-    --color-ink-900: #0c1017;
-    --color-ink-800: #141b27;
+    /* Nammaqr black & gold — taken from the NQ emblem. 600+ keep white text readable. */
+    --color-brand-50: #fbf8ef;
+    --color-brand-100: #f5edd5;
+    --color-brand-200: #eadba9;
+    --color-brand-300: #dec27a;
+    --color-brand-400: #d4b161;
+    --color-brand-500: #c9a24b;
+    --color-brand-600: #9c7a30;
+    --color-brand-700: #7d6127;
+    --color-brand-800: #614b20;
+    --color-brand-900: #4a3a19;
+    --color-ink-900: #141416;
+    --color-ink-800: #1f1f23;
+    --color-ink-700: #2a2a30;
+    --color-accent-50: #fbf8ef;
+    --color-accent-100: #f5edd5;
+    --color-accent-200: #eadba9;
+    --color-accent-300: #dec27a;
+    --color-accent-400: #d4b161;
+    --color-accent-500: #c9a24b;
+    --color-accent-600: #9c7a30;
+    --color-accent-700: #7d6127;
+    --color-accent-800: #614b20;
+    --color-accent-900: #4a3a19;
+    /* Warm the neutral greys so slate-* surfaces sit with the ivory/gold palette. */
+    --color-slate-50: #faf8f4;
+    --color-slate-100: #f3f0e9;
+    --color-slate-200: #e7e2d8;
+    --color-slate-300: #d6cfc2;
+    --color-slate-400: #a8a093;
+    --color-slate-500: #7a7366;
+    --color-slate-600: #5c564b;
+    --color-slate-700: #45403a;
+    --color-slate-800: #2c2925;
+    --color-slate-900: #1c1b19;
 }
 
 @layer base {
@@ -23,9 +48,12 @@
     }
     body {
         min-height: 100dvh;
+        background: #ffffff;
+        color: #1c1b19;
+        font-family: var(--font-sans);
     }
     :focus-visible {
-        outline: 2px solid var(--color-brand-500);
+        outline: 2px solid var(--color-accent-500);
         outline-offset: 2px;
     }
     input[type='number']::-webkit-inner-spin-button {
@@ -38,10 +66,13 @@
         @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
     }
     .card {
-        @apply rounded-2xl border border-slate-200/80 bg-white shadow-xs transition-all duration-200 hover:shadow-sm;
+        border-radius: var(--soft-radius-lg);
+        border: 1px solid rgba(231, 224, 210, 0.6);
+        background: #fff;
+        box-shadow: var(--soft-shadow);
     }
     .link {
-        @apply font-medium text-amber-700 underline-offset-2 hover:underline;
+        @apply font-medium text-accent-700 underline-offset-2 hover:underline;
     }
 }
 
@@ -91,18 +122,21 @@
 
 /* Modern refined tables and soft borders */
 main table, .data-table {
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid #ebe5d8 !important;
     border-radius: 0.875rem;
     overflow: hidden;
 }
 main thead th {
-    border-bottom: 1px solid #e2e8f0 !important;
-    background-color: #f8fafc !important;
-    color: #334155 !important;
+    border-bottom: 1px solid #ebe5d8 !important;
+    background-color: #f8f4ea !important;
+    color: #5c4a22 !important;
     font-weight: 600 !important;
 }
+main tbody tr:hover {
+    background-color: #fcfaf5;
+}
 main .card, [data-view="grid"] .card, .grid-card {
-    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    border: 1px solid rgba(231, 224, 210, 0.9) !important;
 }
 
 /* Heartbeat animation for footer & UI */
@@ -132,17 +166,74 @@ main .card, [data-view="grid"] .card, .grid-card {
 /* Profile Avatar pulsing glow animation */
 @keyframes avatar-pulse-ring {
     0% {
-        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.65);
+        box-shadow: 0 0 0 0 rgba(201, 162, 75, 0.55);
     }
     70% {
-        box-shadow: 0 0 0 9px rgba(245, 158, 11, 0);
+        box-shadow: 0 0 0 9px rgba(201, 162, 75, 0);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+        box-shadow: 0 0 0 0 rgba(201, 162, 75, 0);
     }
 }
 .animate-avatar-ring {
     animation: avatar-pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+.page-enter {
+    animation: page-enter 0.28s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+    .page-enter {
+        animation: none;
+    }
+}
+
+@keyframes auth-rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+.animate-auth-rise {
+    animation: auth-rise 0.45s ease-out both;
+}
+
+@keyframes auth-float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+.animate-auth-float {
+    animation: auth-float 5.5s ease-in-out infinite;
+}
+
+.auth-card-shine {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(255, 251, 235, 0.94));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-auth-rise,
+    .animate-auth-float {
+        animation: none;
+    }
 }
 
 @media print {

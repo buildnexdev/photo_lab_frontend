@@ -2,13 +2,14 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { useEffect, useMemo, useState } from 'react';
-import { AddressFields, addressPayload, emptyAddress, validateAddress, type AddressValue } from '../../components/AddressFields';
-import { FormGrid, Input, Select } from '../../components/form';
-import { Modal } from '../../components/overlay';
+import { AddressFields, addressPayload, emptyAddress, validateAddress, type AddressValue } from '../../components/ui/AddressFields';
+import { FormGrid, Input, Select } from '../../components/ui/Form';
+import { Modal } from '../../components/ui/Overlay';
 import { Alert, Button } from '../../components/ui';
-import { api, ApiError, errorMessage } from '../../lib/api';
-import { money } from '../../lib/format';
+import { api, ApiError, errorMessage } from '../../services/api';
+import { money } from '../../utils/format';
 import type { GalleryInfo, GalleryPhoto } from './types';
+import './PrintOrderModal.scss';
 
 type Kind = 'PRINT' | 'FRAME' | 'CANVAS';
 interface Line {

@@ -1,0 +1,69 @@
+.auth-card {
+    width: 100%;
+    max-width: 28rem;
+    margin: 0 auto;
+    padding: 2rem;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 1.25rem;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+
+    &--wide {
+        max-width: 48rem;
+    }
+
+    &__logo {
+        display: block;
+        height: 7rem;
+        margin: 0 auto 1rem;
+        object-fit: contain;
+    }
+
+    .form-control,
+    .form-control:focus {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .form-control:focus {
+        border-color: #2dd4bf;
+        box-shadow: 0 0 0 0.2rem rgba(201, 162, 75, 0.2);
+    }
+
+    .form-label {
+        margin-bottom: 0.35rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #d6d3d1;
+    }
+
+    h1 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 600;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+    }
+
+    p {
+        margin: 0;
+    }
+}
+
+.auth-spin {
+    animation: auth-spin 0.8s linear infinite;
+}
+
+@keyframes auth-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

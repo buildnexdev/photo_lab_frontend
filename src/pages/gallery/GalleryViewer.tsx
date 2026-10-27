@@ -3,22 +3,24 @@
 // Last Edited : 06-10-2026
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { CheckCircle2, Heart, Images, Loader2, Lock, Printer, RefreshCw, ScanFace, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, Heart, Images, Lock, Printer, RefreshCw, ScanFace, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { NqLoader } from '../../components/brand';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { EmptyState, ErrorState, Loading, StatusBadge } from '../../components/data';
-import { Textarea } from '../../components/form';
-import { Modal } from '../../components/overlay';
-import { useToast } from '../../components/toast';
-import { usePayment } from '../../components/usePayment';
+import { EmptyState, ErrorState, Loading, StatusBadge } from '../../components/ui/Data';
+import { Textarea } from '../../components/ui/Form';
+import { Modal } from '../../components/ui/Overlay';
+import { useToast } from '../../components/ui/Toast';
+import { usePayment } from '../../hooks/usePayment';
 import { Alert, Button } from '../../components/ui';
-import { api, ApiError, type Paged } from '../../lib/api';
-import { useAuth } from '../../lib/auth';
-import { date, money, titleCase } from '../../lib/format';
-import { useRealtime } from '../../lib/socket';
+import { api, ApiError, type Paged } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
+import { date, money, titleCase } from '../../utils/format';
+import { useRealtime } from '../../services/socket';
 import { Lightbox } from './Lightbox';
 import { PrintOrderModal } from './PrintOrderModal';
 import type { GalleryInfo, GalleryPhoto, GalleryView } from './types';
+import './GalleryViewer.scss';
 
 const PAGE_SIZE = 60;
 type PhotoPages = InfiniteData<Paged<GalleryPhoto>, number>;
@@ -49,6 +51,11 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
     const [face, setFace] = useState<{ items: GalleryPhoto[]; message: string } | null>(null);
     const [faceBusy, setFaceBusy] = useState(false);
     const selfieRef = useRef<HTMLInputElement>(null);
+    const [faceConsent, setFaceConsent] = useState(false);
+    const [phone, setPhone] = useState('');
+    const [otp, setOtp] = useState('');
+    const [phoneProof, setPhoneProof] = useState('');
+    const [devCode, setDevCode] = useState('');
     const sentinel = useRef<HTMLDivElement>(null);
 
     const infoKey = ['gallery', galleryId, 'info'];
@@ -176,6 +183,8 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
         try {
             const form = new FormData();
             form.append('selfie', file);
+            form.append('consent', 'true');
+            if (phoneProof) form.append('proof', phoneProof);
             const r = await api.send<Paged<GalleryPhoto>>('POST', `/api/gallery/${galleryId}/face-search`, form, headers);
             setFace({ items: r.data.items, message: r.message });
         } catch (e) {
@@ -211,23 +220,96 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
 
     return (
         <div className={clsx(dark ? 'text-white' : 'text-stone-900')}>
-            <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <h1 className="font-display text-2xl font-semibold sm:text-3xl">{g.title}</h1>
-                        {g.isLive && <StatusBadge status="LIVE" label="Live now" />}
+            {g.coverUrl && (
+                <div className="relative mb-6 -mx-4 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-8 overflow-hidden rounded-b-2xl sm:rounded-b-3xl bg-stone-900 shadow-md">
+                    <div className="relative h-56 sm:h-72 md:h-80 w-full">
+                        <img
+                            src={g.coverUrl}
+                            alt={g.title}
+                            className="size-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-white/20 backdrop-blur-md px-2.5 py-0.5 text-xs font-semibold text-white border border-white/20">
+                                    {g.eventTitle || g.title}
+                                </span>
+                                {g.isLive && <StatusBadge status="LIVE" label="Live now" />}
+                            </div>
+                            <h1 className="mt-1 font-display text-2xl font-bold text-white sm:text-3xl drop-shadow-sm">
+                                {g.title}
+                            </h1>
+                            <p className="mt-1 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-white/90">
+                                <span>{date(g.eventDate)}</span>
+                                {g.eventVenue && <span>· {g.eventVenue}</span>}
+                                <span>· {g.photoCount} photos</span>
+                                {g.expiresAt && <span className="text-white/70">· available until {date(g.expiresAt)}</span>}
+                            </p>
+                            {g.description && <p className="mt-1.5 max-w-2xl text-xs sm:text-sm text-white/80 line-clamp-2">{g.description}</p>}
+                        </div>
                     </div>
-                    <p className={clsx('mt-1 text-sm', dark ? 'text-white/60' : 'text-stone-500')}>
-                        {g.eventTitle} · {date(g.eventDate)} · {g.photoCount} photos
-                        {g.expiresAt && ` · available until ${date(g.expiresAt)}`}
-                    </p>
-                    {g.description && <p className={clsx('mt-2 max-w-2xl text-sm', dark ? 'text-white/70' : 'text-stone-600')}>{g.description}</p>}
                 </div>
-                <div className="flex flex-wrap gap-2">
+            )}
+
+            <header className={clsx('flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between', g.coverUrl ? 'pb-2' : '')}>
+                {!g.coverUrl && (
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h1 className="font-display text-2xl font-semibold sm:text-3xl">{g.title}</h1>
+                            {g.isLive && <StatusBadge status="LIVE" label="Live now" />}
+                        </div>
+                        <p className={clsx('mt-1 text-sm', dark ? 'text-white/60' : 'text-stone-500')}>
+                            {g.eventTitle} · {date(g.eventDate)} · {g.photoCount} photos
+                            {g.expiresAt && ` · available until ${date(g.expiresAt)}`}
+                        </p>
+                        {g.description && <p className={clsx('mt-2 max-w-2xl text-sm', dark ? 'text-white/70' : 'text-stone-600')}>{g.description}</p>}
+                    </div>
+                )}
+                <div className={clsx('flex flex-wrap gap-2', g.coverUrl ? 'w-full justify-end' : '')}>
                     {g.faceSearch && (
                         <>
                             <input ref={selfieRef} type="file" accept="image/jpeg,image/png,image/webp" capture="user" className="hidden" onChange={(e) => e.target.files?.[0] && runFaceSearch(e.target.files[0])} />
-                            <Button variant="secondary" icon={<ScanFace className="size-4" />} loading={faceBusy} onClick={() => selfieRef.current?.click()}>
+                            {!g.isOwner && !g.isStaff && !phoneProof && (
+                                <form
+                                    className="flex flex-wrap items-center gap-2"
+                                    onSubmit={async (event) => {
+                                        event.preventDefault();
+                                        try {
+                                            if (!otp) {
+                                                const sent = await api.send<{ devCode?: string }>('POST', `/api/gallery/${galleryId}/phone/request`, { phone }, headers);
+                                                setDevCode(sent.data.devCode ?? '');
+                                                toast.success(sent.message);
+                                                return;
+                                            }
+                                            const verified = await api.send<{ proof: string }>('POST', `/api/gallery/${galleryId}/phone/verify`, { phone, code: otp, consent: true }, headers);
+                                            setPhoneProof(verified.data.proof);
+                                            setFaceConsent(true);
+                                            toast.success('Phone verified for this event');
+                                        } catch (err) {
+                                            toast.error(err);
+                                        }
+                                    }}
+                                >
+                                    <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="w-28 rounded-lg border border-stone-300 px-2 py-1 text-sm text-stone-900" />
+                                    <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Code" className="w-20 rounded-lg border border-stone-300 px-2 py-1 text-sm text-stone-900" />
+                                    <Button type="submit" variant="secondary" size="sm">{otp ? 'Verify' : 'Send code'}</Button>
+                                    {devCode && <span className="text-xs">Dev code {devCode}</span>}
+                                </form>
+                            )}
+                            <label className="inline-flex items-center gap-2 text-xs">
+                                <input type="checkbox" checked={faceConsent} onChange={(e) => setFaceConsent(e.target.checked)} />
+                                I consent to face matching in this event only
+                            </label>
+                            <Button
+                                variant="secondary"
+                                icon={<ScanFace className="size-4" />}
+                                loading={faceBusy}
+                                onClick={() => {
+                                    if (!faceConsent) return toast.error('Confirm consent before searching.');
+                                    if (!g.isOwner && !g.isStaff && !phoneProof) return toast.error('Verify your phone for this event first.');
+                                    selfieRef.current?.click();
+                                }}
+                            >
                                 Find my photos
                             </Button>
                         </>
@@ -361,7 +443,7 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
                 <div ref={sentinel} className="h-10" />
                 {isFetchingNextPage && (
                     <div className="flex justify-center py-6">
-                        <Loader2 className="size-6 animate-spin opacity-60" />
+                        <NqLoader size="md" variant="emblem" className="opacity-80" label="Loading" />
                     </div>
                 )}
                 {!!list.length && !hasNextPage && !face && <p className={clsx('py-6 text-center text-xs', dark ? 'text-white/40' : 'text-stone-400')}>{total} photos</p>}
