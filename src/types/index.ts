@@ -134,6 +134,9 @@ export interface EventRow {
     gallery_status?: string | null;
     payment_status?: string | null;
     expires_at?: string | null;
+    cover_url?: string | null;
+    public_url?: string | null;
+    qr_token?: string | null;
 }
 
 export interface Address {

@@ -23,6 +23,8 @@ export interface GalleryInfo {
     eventId: number;
     eventTitle: string;
     eventDate: string;
+    eventVenue?: string | null;
+    coverUrl?: string | null;
     eventStatus: string;
     isLive: boolean;
     watermark: boolean;

@@ -220,19 +220,52 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
 
     return (
         <div className={clsx(dark ? 'text-white' : 'text-stone-900')}>
-            <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <h1 className="font-display text-2xl font-semibold sm:text-3xl">{g.title}</h1>
-                        {g.isLive && <StatusBadge status="LIVE" label="Live now" />}
+            {g.coverUrl && (
+                <div className="relative mb-6 -mx-4 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-8 overflow-hidden rounded-b-2xl sm:rounded-b-3xl bg-stone-900 shadow-md">
+                    <div className="relative h-56 sm:h-72 md:h-80 w-full">
+                        <img
+                            src={g.coverUrl}
+                            alt={g.title}
+                            className="size-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-white/20 backdrop-blur-md px-2.5 py-0.5 text-xs font-semibold text-white border border-white/20">
+                                    {g.eventTitle || g.title}
+                                </span>
+                                {g.isLive && <StatusBadge status="LIVE" label="Live now" />}
+                            </div>
+                            <h1 className="mt-1 font-display text-2xl font-bold text-white sm:text-3xl drop-shadow-sm">
+                                {g.title}
+                            </h1>
+                            <p className="mt-1 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-white/90">
+                                <span>{date(g.eventDate)}</span>
+                                {g.eventVenue && <span>· {g.eventVenue}</span>}
+                                <span>· {g.photoCount} photos</span>
+                                {g.expiresAt && <span className="text-white/70">· available until {date(g.expiresAt)}</span>}
+                            </p>
+                            {g.description && <p className="mt-1.5 max-w-2xl text-xs sm:text-sm text-white/80 line-clamp-2">{g.description}</p>}
+                        </div>
                     </div>
-                    <p className={clsx('mt-1 text-sm', dark ? 'text-white/60' : 'text-stone-500')}>
-                        {g.eventTitle} · {date(g.eventDate)} · {g.photoCount} photos
-                        {g.expiresAt && ` · available until ${date(g.expiresAt)}`}
-                    </p>
-                    {g.description && <p className={clsx('mt-2 max-w-2xl text-sm', dark ? 'text-white/70' : 'text-stone-600')}>{g.description}</p>}
                 </div>
-                <div className="flex flex-wrap gap-2">
+            )}
+
+            <header className={clsx('flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between', g.coverUrl ? 'pb-2' : '')}>
+                {!g.coverUrl && (
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h1 className="font-display text-2xl font-semibold sm:text-3xl">{g.title}</h1>
+                            {g.isLive && <StatusBadge status="LIVE" label="Live now" />}
+                        </div>
+                        <p className={clsx('mt-1 text-sm', dark ? 'text-white/60' : 'text-stone-500')}>
+                            {g.eventTitle} · {date(g.eventDate)} · {g.photoCount} photos
+                            {g.expiresAt && ` · available until ${date(g.expiresAt)}`}
+                        </p>
+                        {g.description && <p className={clsx('mt-2 max-w-2xl text-sm', dark ? 'text-white/70' : 'text-stone-600')}>{g.description}</p>}
+                    </div>
+                )}
+                <div className={clsx('flex flex-wrap gap-2', g.coverUrl ? 'w-full justify-end' : '')}>
                     {g.faceSearch && (
                         <>
                             <input ref={selfieRef} type="file" accept="image/jpeg,image/png,image/webp" capture="user" className="hidden" onChange={(e) => e.target.files?.[0] && runFaceSearch(e.target.files[0])} />

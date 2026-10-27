@@ -2,12 +2,14 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { useQuery } from '@tanstack/react-query';
+import { CalendarDays, Copy, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { DataTable, EmptyState, Pagination, QueryState, StatusBadge, TableHeaderToolbar } from '../../components/ui/Data';
 import { EventForm } from '../../components/event/EventForm';
 import { Input, Select } from '../../components/ui/Form';
 import { Card } from '../../components/ui';
+import { useToast } from '../../components/ui/Toast';
 import { api, type Paged } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { date, time, titleCase } from '../../utils/format';
@@ -18,6 +20,7 @@ import './Events.scss';
 export default function AdminEvents() {
     const { can } = useAuth();
     const navigate = useNavigate();
+    const toast = useToast();
     const { page, search, filters, setPage, setSearch, setFilter } = useListParams(['status', 'from', 'to'] as const);
     const [viewMode, setViewMode] = useViewMode();
     const [creating, setCreating] = useState(false);
@@ -63,11 +66,24 @@ export default function AdminEvents() {
                                         key: 'title',
                                         header: 'Event',
                                         cell: (r) => (
-                                            <div>
-                                                <p className="font-medium text-stone-900">{r.title}</p>
-                                                <p className="text-xs text-stone-500">
-                                                    {r.event_code} · {r.event_type}
-                                                </p>
+                                            <div className="flex items-center gap-3">
+                                                {r.cover_url ? (
+                                                    <img
+                                                        src={r.cover_url}
+                                                        alt=""
+                                                        className="size-11 shrink-0 rounded-lg object-cover ring-1 ring-stone-200/80 shadow-xs"
+                                                    />
+                                                ) : (
+                                                    <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-400">
+                                                        <CalendarDays className="size-5" />
+                                                    </div>
+                                                )}
+                                                <div className="min-w-0">
+                                                    <p className="font-semibold text-stone-900 truncate">{r.title}</p>
+                                                    <p className="text-xs text-stone-500">
+                                                        {r.event_code} · {r.event_type}
+                                                    </p>
+                                                </div>
                                             </div>
                                         ),
                                     },
@@ -75,6 +91,40 @@ export default function AdminEvents() {
                                     { key: 'customer', header: 'Customer', cell: (r) => r.customer_name, hideOnMobile: true },
                                     { key: 'team', header: 'Photographers', cell: (r) => r.photographers ?? <span className="text-red-600">Unassigned</span>, hideOnMobile: true },
                                     { key: 'photos', header: 'Photos', cell: (r) => r.photo_count, hideOnMobile: true },
+                                    {
+                                        key: 'link',
+                                        header: 'Customer Link',
+                                        cell: (r) => {
+                                            const link = r.qr_token ? `${window.location.origin}/g/${r.qr_token}` : r.public_url;
+                                            if (!link) return <span className="text-xs text-stone-400">—</span>;
+                                            return (
+                                                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                                    <button
+                                                        type="button"
+                                                        title="Copy customer gallery link"
+                                                        className="inline-flex items-center gap-1 rounded-md border border-stone-200 bg-white px-2 py-1 text-xs font-medium text-stone-700 shadow-xs hover:bg-stone-50 hover:text-stone-900 transition-colors cursor-pointer"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(link);
+                                                            toast.success('Customer gallery link copied!');
+                                                        }}
+                                                    >
+                                                        <Copy className="size-3 text-stone-500" />
+                                                        Copy
+                                                    </button>
+                                                    <a
+                                                        href={link}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        title="Open customer gallery"
+                                                        className="inline-flex size-6 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-600 shadow-xs hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                                                    >
+                                                        <ExternalLink className="size-3" />
+                                                    </a>
+                                                </div>
+                                            );
+                                        },
+                                        hideOnMobile: true,
+                                    },
                                     { key: 'pay', header: 'Payment', cell: (r) => (r.payment_status === 'N/A' ? '—' : <StatusBadge status={r.payment_status} />), hideOnMobile: true },
                                     { key: 'status', header: 'Status', cell: (r) => <StatusBadge status={r.status} /> },
                                 ]}

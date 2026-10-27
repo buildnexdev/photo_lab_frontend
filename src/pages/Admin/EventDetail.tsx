@@ -3,7 +3,7 @@
 // Last Edited : 06-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { ArrowLeft, CalendarDays, Camera, Clock3, Eye, Images, IndianRupee, MapPin, MessageSquare, Package, Pencil, Phone, QrCode, Trash2, UserPlus, UserRound, X } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Camera, Clock3, Copy, ExternalLink, Eye, Images, IndianRupee, Link2, MapPin, MessageSquare, Package, Pencil, Phone, QrCode, Trash2, UserPlus, UserRound, X } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { EmptyState, QueryState, StatCard, StatusBadge } from '../../components/ui/Data';
@@ -46,6 +46,9 @@ interface EventDetailData extends EventFormValue {
     staff: StaffRow[];
     gallery: { id: number; title: string; status: string; watermark_enabled: number; allow_download: number; photo_price: number | null; expires_at: string | null } | null;
     cover_url?: string | null;
+    public_url?: string | null;
+    qr_token?: string | null;
+    qr_data_url?: string | null;
     photos: Record<string, number>;
     photo_total: number;
     revenue: { booking: number; orders: number; total: number };
@@ -123,9 +126,29 @@ export default function AdminEventDetail() {
             <QueryState query={q}>
                 {(e) => {
                     const actions = can('events.manage') ? EVENT_ACTIONS.filter((a) => a.from.includes(e.status)) : [];
+                    const customerLink = e.qr_token ? `${window.location.origin}/g/${e.qr_token}` : e.public_url;
                     return (
                         <>
                             <section className="mb-4 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[var(--soft-shadow)]">
+                                {e.cover_url && (
+                                    <div className="relative h-44 w-full overflow-hidden bg-stone-900 sm:h-52">
+                                        <img src={e.cover_url} alt={e.title} className="h-full w-full object-cover" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-stone-900/85 via-stone-900/25 to-transparent" />
+                                        {customerLink && (
+                                            <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                                                <a
+                                                    href={customerLink}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-stone-900 shadow-md backdrop-blur transition-all hover:bg-white hover:scale-105"
+                                                >
+                                                    <ExternalLink className="size-3.5 text-rose-500" />
+                                                    Customer View
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
                                     <div className="min-w-0">
                                         <Link to="/admin/events" className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-800">
@@ -161,6 +184,29 @@ export default function AdminEventDetail() {
                                             <Button variant="secondary" icon={<Pencil className="size-4" />} onClick={() => setEditing(true)}>
                                                 Edit
                                             </Button>
+                                        )}
+                                        {customerLink && (
+                                            <>
+                                                <Button
+                                                    variant="secondary"
+                                                    icon={<Copy className="size-4" />}
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(customerLink);
+                                                        toast.success('Customer gallery link copied!');
+                                                    }}
+                                                >
+                                                    Copy Link
+                                                </Button>
+                                                <a
+                                                    href={customerLink}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-1.5 text-sm font-semibold text-stone-700 shadow-sm transition-colors hover:bg-stone-50"
+                                                >
+                                                    <ExternalLink className="size-4 text-rose-500" />
+                                                    Open Gallery
+                                                </a>
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -238,6 +284,55 @@ export default function AdminEventDetail() {
                                         </Card>
                                     </div>
                                     <div className="space-y-4">
+                                        <Card title="Customer Gallery Link">
+                                            {customerLink ? (
+                                                <div className="space-y-3 text-sm">
+                                                    <p className="text-xs text-stone-500">
+                                                        Direct public link created for customer and guests. Opening this link displays the cover photo and opens event photos for viewing and selection.
+                                                    </p>
+                                                    <div className="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 p-2">
+                                                        <Link2 className="size-4 shrink-0 text-stone-400" />
+                                                        <input
+                                                            type="text"
+                                                            readOnly
+                                                            value={customerLink}
+                                                            className="w-full bg-transparent font-mono text-xs text-stone-800 outline-none select-all"
+                                                        />
+                                                        <Button
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            icon={<Copy className="size-3.5" />}
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(customerLink);
+                                                                toast.success('Gallery link copied to clipboard!');
+                                                            }}
+                                                        >
+                                                            Copy
+                                                        </Button>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                                                        <a
+                                                            href={customerLink}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
+                                                        >
+                                                            <ExternalLink className="size-3.5" />
+                                                            Open Customer Gallery
+                                                        </a>
+                                                        {e.gallery && (
+                                                            <ButtonLink to={`/admin/galleries/${e.gallery.id}`} size="sm" variant="secondary">
+                                                                <QrCode className="size-4" /> QR Code & Passcode
+                                                            </ButtonLink>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="rounded-xl border-2 border-dashed border-stone-200 px-4 py-6 text-center text-xs text-stone-500">
+                                                    Customer link is generated upon event creation.
+                                                </p>
+                                            )}
+                                        </Card>
                                         <Card title="Gallery">
                                             {e.gallery ? (
                                                 <div className="space-y-3 text-sm">
