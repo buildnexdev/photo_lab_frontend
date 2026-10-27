@@ -1,1 +1,0 @@
-import{y as e}from"./react-DPoVlDbV.js";import{n as t}from"./Production-DAvzEQhF.js";var n=e();function r(){return(0,n.jsx)(t,{base:`delivery`,title:`Print queue`,subtitle:`Download print files, update progress and mark jobs ready after quality check.`})}export{r as default};
