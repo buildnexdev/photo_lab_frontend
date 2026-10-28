@@ -333,13 +333,23 @@ function GalleryForm({ value }: { value: Settings['gallery'] & { watermarkLogoUr
         <Card>
             <form onSubmit={submit} noValidate className="space-y-4">
                 <FormGrid>
-                    <Input label="Watermark text" required {...register('watermarkText')} error={errors.watermarkText?.message} hint="Applied to previews. Regenerate a gallery's previews after changing it." />
+                    <Input
+                        label="Company name on watermark"
+                        required
+                        {...register('watermarkText')}
+                        error={errors.watermarkText?.message}
+                        hint="Shown under the logo with your studio phone from Studio settings. Regenerate gallery previews after changes."
+                    />
                     <Input label="Default gallery expiry (days)" type="number" min={1} {...register('defaultExpiryDays')} error={errors.defaultExpiryDays?.message} />
                     <Input label="Preview size (longest edge, px)" type="number" {...register('previewSize')} error={errors.previewSize?.message} />
                     <Input label="Thumbnail size (px)" type="number" {...register('thumbSize')} error={errors.thumbSize?.message} />
                 </FormGrid>
                 <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 space-y-3">
-                    <Checkbox label="Use company logo as watermark" description="Logo is stamped on gallery previews together with the watermark text." {...register('watermarkUseLogo')} />
+                    <Checkbox
+                        label="Include company logo on watermark"
+                        description="Logo sits above the company name and phone on guest gallery previews."
+                        {...register('watermarkUseLogo')}
+                    />
                     {value.watermarkLogoUrl && (
                         <img src={value.watermarkLogoUrl} alt="Company watermark logo" className="h-14 w-auto rounded-lg bg-white object-contain p-1 ring-1 ring-stone-200" />
                     )}
@@ -369,7 +379,8 @@ function GalleryForm({ value }: { value: Settings['gallery'] & { watermarkLogoUr
                             }}
                         />
                     </label>
-                    {useLogo && !value.watermarkLogoUrl && <p className="text-xs text-amber-700">Upload a logo to enable the company logo watermark.</p>}
+                    {useLogo && !value.watermarkLogoUrl && <p className="text-xs text-amber-700">Upload a logo so it appears with the name and phone on each preview.</p>}
+                    <p className="text-xs text-stone-500">Phone on the watermark comes from Settings → Studio (phone / WhatsApp).</p>
                 </div>
                 <div className="flex justify-end">
                     <Button type="submit" loading={isSubmitting} disabled={!isDirty}>
