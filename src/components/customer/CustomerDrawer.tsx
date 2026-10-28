@@ -4,18 +4,18 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { CalendarCheck, Check, ChevronLeft, ClipboardList, History, IndianRupee, KeyRound, MapPin, NotebookPen, Pencil, Plus, ShoppingBag, Sparkles, Trash2, UserCheck, UserCircle2, UserX } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { CalendarCheck, Camera, Check, ChevronLeft, ClipboardList, History, IndianRupee, KeyRound, MapPin, NotebookPen, Pencil, Plus, ShoppingBag, Sparkles, Trash2, UserCheck, UserCircle2, UserX } from 'lucide-react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useForm, type FieldErrors } from 'react-hook-form';
 import { Link } from 'react-router';
 import { z } from 'zod';
 import { api, applyFieldErrors } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useInvalidate } from '../../hooks';
-import { optionalPhone } from '../../helpers/validation';
+import { digitsOnly10, emailRule, phoneRule } from '../../helpers/validation';
 import { date, dateTime, money, titleCase } from '../../utils/format';
 import { ORDER_TYPE_LABELS, type OrderType } from '../../types';
-import { FormGrid, Input, Textarea } from '../ui/Form';
+import { FormGrid, Input, PasswordInput, Textarea } from '../ui/Form';
 import { Drawer, useConfirm } from '../ui/Overlay';
 import { StatusBadge } from '../ui/Data';
 import { useToast } from '../ui/Toast';
@@ -35,17 +35,21 @@ export interface CustomerDetail {
     state: string | null;
     pincode: string | null;
     notes: string | null;
+    photo_url?: string | null;
     bookings: { id: number; booking_no: string; event_type: string; event_date: string; status: string; total_amount: number; paid_amount: number }[];
     events: { id: number; event_code: string; title: string; event_date: string; status: string }[];
     orders: { id: number; order_no: string; type: OrderType; status: string; total: number; created_at: string }[];
     payments: { id: number; payment_no: string; purpose: string; amount: number; status: string; method: string | null; paid_at: string | null; created_at: string }[];
 }
 
+const PHOTO_ACCEPT = /^image\/(jpeg|png|webp)$/i;
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
 const schema = z
     .object({
         name: z.string().trim().min(2, 'Enter the name').max(120),
-        email: z.string().trim().email('Enter a valid email'),
-        phone: optionalPhone,
+        email: emailRule,
+        phone: phoneRule,
         password: z.union([z.literal(''), z.string().min(8, 'At least 8 characters')]),
         confirmPassword: z.string(),
         address: z.string().trim().max(255),
@@ -103,12 +107,15 @@ export function CustomerDrawer({ id, onClose, onCreated }: { id: number | 'new' 
     const editable = can('customers.manage');
     const [step, setStep] = useState(0);
     const [tab, setTab] = useState<HistoryTab>('bookings');
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoCleared, setPhotoCleared] = useState(false);
     const detail = useQuery({ queryKey: ['customers', 'detail', id], queryFn: () => api.get<CustomerDetail>(`/api/customers/${id}`), enabled: typeof id === 'number' });
     const {
         register,
         handleSubmit,
         reset,
         watch,
+        setValue,
         setError,
         formState: { errors, isSubmitting, isDirty },
     } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: blank });
@@ -116,11 +123,36 @@ export function CustomerDrawer({ id, onClose, onCreated }: { id: number | 'new' 
     useEffect(() => {
         setStep(0);
         setTab('bookings');
+        setPhotoFile(null);
+        setPhotoCleared(false);
     }, [id]);
     useEffect(() => {
         if (isNew) reset(blank);
         else if (detail.data) reset(toForm(detail.data));
     }, [isNew, detail.data, reset]);
+
+    const photoPreview = useMemo(() => {
+        if (photoFile) return URL.createObjectURL(photoFile);
+        if (photoCleared) return null;
+        return detail.data?.photo_url ?? null;
+    }, [photoFile, photoCleared, detail.data?.photo_url]);
+    useEffect(() => () => {
+        if (photoFile && photoPreview) URL.revokeObjectURL(photoPreview);
+    }, [photoFile, photoPreview]);
+
+    const pickPhoto = (file: File | undefined) => {
+        if (!file) return;
+        if (!PHOTO_ACCEPT.test(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) {
+            toast.error('Use a JPG, PNG or WebP image.');
+            return;
+        }
+        if (file.size > MAX_PHOTO_BYTES) {
+            toast.error('Photo must be 5 MB or smaller.');
+            return;
+        }
+        setPhotoCleared(false);
+        setPhotoFile(file);
+    };
 
     const del = useMutation({
         mutationFn: () => api.send('DELETE', `/api/customers/${id}`),
@@ -137,13 +169,26 @@ export function CustomerDrawer({ id, onClose, onCreated }: { id: number | 'new' 
         if (idx >= 0) setStep(idx);
     };
     const submit = handleSubmit(async (v) => {
-        const body = { name: v.name, email: v.email || null, phone: v.phone || null, password: v.password || undefined, address: v.address || null, city: v.city || null, state: v.state || null, pincode: v.pincode || null, notes: v.notes || null };
+        const body = { name: v.name, email: v.email, phone: v.phone, password: v.password || undefined, address: v.address || null, city: v.city || null, state: v.state || null, pincode: v.pincode || null, notes: v.notes || null };
         try {
             const r = isNew ? await api.send<{ id: number }>('POST', '/api/customers', body) : await api.send<{ id: number }>('PUT', `/api/customers/${id}`, body);
+            const customerId = r.data.id;
+            if (photoFile) {
+                const form = new FormData();
+                form.append('file', photoFile);
+                await api.send('POST', `/api/customers/${customerId}/photo`, form).catch(() => toast.error('Customer saved, but the photo did not upload.'));
+            } else if (photoCleared && !isNew) {
+                await api.send('DELETE', `/api/customers/${customerId}/photo`).catch(() => undefined);
+            }
             toast.success(r.message);
             await invalidate(['customers']);
-            if (isNew) onCreated(r.data.id);
-            else reset({ ...v, password: '', confirmPassword: '' });
+            if (isNew) onCreated(customerId);
+            else {
+                setPhotoFile(null);
+                setPhotoCleared(false);
+                reset({ ...v, password: '', confirmPassword: '' });
+                await detail.refetch();
+            }
         } catch (e) {
             if (!applyFieldErrors(e, setError as never)) toast.error(e);
         }
@@ -265,7 +310,7 @@ export function CustomerDrawer({ id, onClose, onCreated }: { id: number | 'new' 
                             {step === 0 && (
                                 <>
                                     <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-stone-200/80 bg-stone-50/60 p-4">
-                                        <Avatar name={name || 'New customer'} className="size-20 rounded-full text-2xl" />
+                                        <Avatar name={name || 'New customer'} src={photoPreview} className="size-20 rounded-full text-2xl" />
                                         <div className="min-w-0 flex-1">
                                             <p className="flex items-center gap-2 font-semibold text-stone-900">
                                                 {name || 'New customer'}
@@ -280,7 +325,36 @@ export function CustomerDrawer({ id, onClose, onCreated }: { id: number | 'new' 
                                                         </span>
                                                     ))}
                                             </p>
-                                            <p className="text-sm text-stone-500">{c ? `${titleCase(c.source)} customer since ${dateTime(c.created_at)}` : 'The avatar uses their initials so the team can recognise them.'}</p>
+                                            <p className="text-sm text-stone-500">{c ? `${titleCase(c.source)} customer since ${dateTime(c.created_at)}` : 'Upload a photo, or initials are used until one is added.'}</p>
+                                            {editable && (
+                                                <div className="mt-2 flex flex-wrap gap-2">
+                                                    <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50">
+                                                        <Camera className="size-3.5" />
+                                                        Upload photo
+                                                        <input
+                                                            type="file"
+                                                            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                                                            className="sr-only"
+                                                            onChange={(e) => {
+                                                                pickPhoto(e.target.files?.[0]);
+                                                                e.target.value = '';
+                                                            }}
+                                                        />
+                                                    </label>
+                                                    {(photoFile || (!photoCleared && c?.photo_url)) && (
+                                                        <button
+                                                            type="button"
+                                                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                            onClick={() => {
+                                                                setPhotoFile(null);
+                                                                setPhotoCleared(true);
+                                                            }}
+                                                        >
+                                                            <Trash2 className="size-3.5" /> Remove
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     {c && (
@@ -294,8 +368,19 @@ export function CustomerDrawer({ id, onClose, onCreated }: { id: number | 'new' 
                                     <Panel icon={<Pencil className="size-4 text-amber-500" />} title="Personal information">
                                         <FormGrid>
                                             <Input label="Full name" required {...register('name')} error={errors.name?.message} />
-                                            <Input label="Email" type="email" required {...register('email')} error={errors.email?.message} />
-                                            <Input label="Phone" type="tel" {...register('phone')} error={errors.phone?.message} />
+                                            <Input label="Email" type="email" required {...register('email')} error={errors.email?.message} hint="Must include @" />
+                                            <Input
+                                                label="Phone"
+                                                type="tel"
+                                                inputMode="numeric"
+                                                maxLength={10}
+                                                required
+                                                {...register('phone', {
+                                                    onChange: (e) => setValue('phone', digitsOnly10(e.target.value), { shouldValidate: true }),
+                                                })}
+                                                error={errors.phone?.message}
+                                                hint="Exactly 10 digits"
+                                            />
                                         </FormGrid>
                                     </Panel>
                                 </>
@@ -318,8 +403,8 @@ export function CustomerDrawer({ id, onClose, onCreated }: { id: number | 'new' 
                                         {isNew || !c?.user_id ? 'Set a password if they should sign in to view galleries and bookings online. Leave blank otherwise.' : 'Leave blank to keep the current password. Setting a new one signs them out everywhere.'}
                                     </p>
                                     <FormGrid>
-                                        <Input label="Password" type="password" autoComplete="new-password" {...register('password')} error={errors.password?.message} />
-                                        <Input label="Confirm password" type="password" autoComplete="new-password" {...register('confirmPassword')} error={errors.confirmPassword?.message} />
+                                        <PasswordInput label="Password" autoComplete="new-password" {...register('password')} error={errors.password?.message} />
+                                        <PasswordInput label="Confirm password" autoComplete="new-password" {...register('confirmPassword')} error={errors.confirmPassword?.message} />
                                     </FormGrid>
                                 </Panel>
                             )}

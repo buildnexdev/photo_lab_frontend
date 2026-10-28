@@ -29,14 +29,19 @@ type PhotoPages = InfiniteData<Paged<GalleryPhoto>, number>;
  * The customer-facing gallery used by both QR access (/g/:token, with a gallery session header)
  * and the signed-in owner view (/customer/galleries/:id).
  */
-export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }: { galleryId: number; session?: string | null; onAccessLost?: () => void; dark?: boolean }) {
+export function GalleryViewer({ galleryId, session, eventPhone, onAccessLost, dark = false }: { galleryId: number; session?: string | null; eventPhone?: string | null; onAccessLost?: (reason?: unknown) => void; dark?: boolean }) {
     const qc = useQueryClient();
     const toast = useToast();
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
     const { pay, busy: paying, dialog: payDialog } = usePayment();
-    const headers = useMemo(() => (session ? { 'X-Gallery-Session': session } : undefined), [session]);
+    const headers = useMemo(() => {
+        const next: Record<string, string> = {};
+        if (session) next['X-Gallery-Session'] = session;
+        if (eventPhone) next['X-Event-Phone'] = eventPhone;
+        return Object.keys(next).length ? next : undefined;
+    }, [session, eventPhone]);
 
     const [view, setView] = useState<GalleryView>('all');
     const [albumId, setAlbumId] = useState<number | null>(null);
@@ -54,26 +59,32 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
     const [faceConsent, setFaceConsent] = useState(false);
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
-    const [phoneProof, setPhoneProof] = useState('');
+    const [phoneProof, setPhoneProof] = useState(eventPhone ?? '');
     const [devCode, setDevCode] = useState('');
     const sentinel = useRef<HTMLDivElement>(null);
 
     const infoKey = ['gallery', galleryId, 'info'];
     const photosKey = ['gallery', galleryId, 'photos'];
-    const info = useQuery({ queryKey: [...infoKey, session ?? 'user'], queryFn: () => api.get<GalleryInfo>(`/api/gallery/${galleryId}`, undefined, headers), retry: false });
+    const info = useQuery({
+        queryKey: [...infoKey, session ?? 'user', eventPhone ?? ''],
+        queryFn: () => api.get<GalleryInfo>(`/api/gallery/${galleryId}`, undefined, headers),
+        retry: false,
+        enabled: !session || !!eventPhone,
+    });
 
     const photos = useInfiniteQuery({
-        queryKey: [...photosKey, { view, albumId, category, session: session ?? 'user' }],
+        queryKey: [...photosKey, { view, albumId, category, session: session ?? 'user', eventPhone: eventPhone ?? '' }],
         queryFn: ({ pageParam }) => api.get<Paged<GalleryPhoto>>(`/api/gallery/${galleryId}/photos`, { page: pageParam, pageSize: PAGE_SIZE, view, albumId, category: category || undefined }, headers),
         initialPageParam: 1,
         getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
-        enabled: info.isSuccess,
+        enabled: info.isSuccess && (!session || !!eventPhone),
     });
 
     const lostAccess = (e: unknown) => e instanceof ApiError && (e.status === 401 || e.status === 403) && !!session;
     useEffect(() => {
-        if (lostAccess(info.error) || lostAccess(photos.error)) onAccessLost?.();
-    }, [info.error, photos.error]);
+        const err = lostAccess(info.error) ? info.error : lostAccess(photos.error) ? photos.error : null;
+        if (err) onAccessLost?.(err);
+    }, [info.error, photos.error, onAccessLost]);
 
     const list: GalleryPhoto[] = useMemo(() => face?.items ?? photos.data?.pages.flatMap((p) => p.items) ?? [], [face, photos.data]);
     const total = face ? face.items.length : (photos.data?.pages[0]?.total ?? 0);

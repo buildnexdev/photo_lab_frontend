@@ -34,117 +34,77 @@ export const loginPages = {
     page404: item({ id: 'page404', text: 'Page not found', path: '/404', icon: 'FileQuestion', hide: true }),
 };
 
-export const userManagementPageMenu: MenuGroup = {
-    id: 'userManagement',
-    text: 'User management',
-    path: '/admin/staff',
-    icon: 'UserCog',
-    subMenu: {
-        staff: item({ id: 'staff', text: 'Staff', path: '/admin/staff', icon: 'UserCog', anyOf: ['users.manage', 'staff.manage'] }),    },
-};
-
-export const customerManagementPageMenu: MenuGroup = {
-    id: 'customerManagement',
-    text: 'Customer management',
+/** Master data: people, catalog, studio setup. */
+export const masterPageMenu: MenuGroup = {
+    id: 'master',
+    text: 'Master',
     path: '/admin/customers',
-    icon: 'Users',
+    icon: 'Layers',
     subMenu: {
+        staff: item({ id: 'staff', text: 'Staff', path: '/admin/staff', icon: 'UserCog', anyOf: ['users.manage', 'staff.manage'] }),
         customers: item({ id: 'customers', text: 'Customers', path: '/admin/customers', icon: 'Users', anyOf: ['customers.view', 'customers.manage'] }),
-        bookings: item({ id: 'bookings', text: 'Bookings', path: '/admin/bookings', icon: 'CalendarCheck', anyOf: ['bookings.view', 'bookings.manage'] }),
-    },
-};
-
-export const eventManagementPageMenu: MenuGroup = {
-    id: 'eventManagement',
-    text: 'Event management',
-    path: '/admin/events',
-    icon: 'Calendar',
-    subMenu: {
-        events: item({ id: 'events', text: 'Events', path: '/admin/events', icon: 'Calendar', anyOf: ['events.view', 'events.manage'] }),
-        galleries: item({ id: 'galleries', text: 'Galleries and QR', path: '/admin/galleries', icon: 'Images', anyOf: ['galleries.manage'] }),
-        createQr: item({ id: 'createQr', text: 'Create QR', path: '/admin/qr/create', icon: 'QrCode', anyOf: ['galleries.manage'] }),
-        manageQr: item({ id: 'manageQr', text: 'Manage QR', path: '/admin/qr', icon: 'ScanLine', end: true, anyOf: ['galleries.manage'] }),
-        photos: item({ id: 'photos', text: 'Photos', path: '/admin/photos', icon: 'Image', anyOf: ['photos.manage'] }),
-    },
-};
-
-export const packageManagementPageMenu: MenuGroup = {
-    id: 'packageManagement',
-    text: 'Package management',
-    path: '/admin/services',
-    icon: 'Briefcase',
-    subMenu: {
         services: item({ id: 'services', text: 'Services', path: '/admin/services', icon: 'Briefcase', anyOf: ['pricing.manage'] }),
         packages: item({ id: 'packages', text: 'Packages', path: '/admin/packages', icon: 'Package', anyOf: ['pricing.manage'] }),
         coupons: item({ id: 'coupons', text: 'Coupons', path: '/admin/coupons', icon: 'Tag', anyOf: ['pricing.manage'] }),
-    },
-};
-
-export const productManagementPageMenu: MenuGroup = {
-    id: 'productManagement',
-    text: 'Master management',
-    path: '/admin/products',
-    icon: 'Layers',
-    subMenu: {
         productTypes: item({ id: 'productTypes', text: 'Product types', path: '/admin/product-types', icon: 'Layers', anyOf: ['pricing.manage', 'orders.view'] }),
-        products: item({ id: 'products', text: 'Photo products', path: '/admin/products', icon: 'Package', anyOf: ['pricing.manage', 'orders.view'] }),
-    },
-};
-
-export const orderManagementPageMenu: MenuGroup = {
-    id: 'orderManagement',
-    text: 'Operations management',
-    path: '/admin/orders',
-    icon: 'ShoppingBag',
-    subMenu: {
-        orders: item({ id: 'orders', text: 'Orders', path: '/admin/orders', icon: 'ShoppingBag', anyOf: ['orders.view', 'orders.manage'] }),
-        printing: item({ id: 'printing', text: 'Printing', path: '/admin/printing', icon: 'Printer', anyOf: ['printing.manage'] }),
-        delivery: item({ id: 'delivery', text: 'Delivery', path: '/admin/delivery', icon: 'Truck', anyOf: ['delivery.manage'] }),
-    },
-};
-
-export const assetManagementPageMenu: MenuGroup = {
-    id: 'assetManagement',
-    text: 'Asset management',
-    path: '/admin/assets',
-    icon: 'Camera',
-    subMenu: {
-        equipment: item({ id: 'equipment', text: 'Studio equipment', path: '/admin/assets', icon: 'Camera', anyOf: ['events.view', 'events.manage'] }),
-    },
-};
-
-export const financePageMenu: MenuGroup = {
-    id: 'finance',
-    text: 'Finance management',
-    path: '/admin/payments',
-    icon: 'Banknote',
-    subMenu: {
-        payments: item({ id: 'payments', text: 'Payments', path: '/admin/payments', icon: 'Banknote', anyOf: ['payments.view'] }),
-    },
-};
-
-export const reportsPageMenu: MenuGroup = {
-    id: 'reports',
-    text: 'Reports management',
-    path: '/admin/reports',
-    icon: 'BarChart3',
-    subMenu: {
-        reports: item({ id: 'reports', text: 'Reports', path: '/admin/reports', icon: 'BarChart3', anyOf: ['reports.view'] }),
-    },
-};
-
-export const settingsPageMenu: MenuGroup = {
-    id: 'settings',
-    text: 'System settings',
-    path: '/admin/settings',
-    icon: 'Settings',
-    subMenu: {
-        studios: item({ id: 'studios', text: 'Studios', path: '/admin/companies', icon: 'Building2', roles: ['SUPER_ADMIN'] }),
         website: item({ id: 'website', text: 'Website content', path: '/admin/website', icon: 'Globe', anyOf: ['pricing.manage'] }),
         settings: item({ id: 'settings', text: 'Settings', path: '/admin/settings', icon: 'Settings', anyOf: ['settings.manage', 'pricing.manage', 'roles.manage'] }),
         audit: item({ id: 'audit', text: 'Audit logs', path: '/admin/audit-logs', icon: 'ShieldCheck', anyOf: ['audit.view'] }),
     },
 };
+
+/** Day-to-day studio work. */
+export const operationPageMenu: MenuGroup = {
+    id: 'operation',
+    text: 'Operation',
+    path: '/admin/bookings',
+    icon: 'ShoppingBag',
+    subMenu: {
+        bookings: item({ id: 'bookings', text: 'Bookings', path: '/admin/bookings', icon: 'CalendarCheck', anyOf: ['bookings.view', 'bookings.manage'] }),
+        events: item({ id: 'events', text: 'Events', path: '/admin/events', icon: 'Calendar', anyOf: ['events.view', 'events.manage'] }),
+        galleries: item({ id: 'galleries', text: 'Galleries and QR', path: '/admin/galleries', icon: 'Images', anyOf: ['galleries.manage'] }),
+        createQr: item({ id: 'createQr', text: 'Create QR', path: '/admin/qr/create', icon: 'QrCode', anyOf: ['galleries.manage'] }),
+        manageQr: item({ id: 'manageQr', text: 'Manage QR', path: '/admin/qr', icon: 'ScanLine', end: true, anyOf: ['galleries.manage'] }),
+        photos: item({ id: 'photos', text: 'Photos', path: '/admin/photos', icon: 'Image', anyOf: ['photos.manage'] }),
+        orders: item({ id: 'orders', text: 'Orders', path: '/admin/orders', icon: 'ShoppingBag', anyOf: ['orders.view', 'orders.manage'] }),
+        printing: item({ id: 'printing', text: 'Printing', path: '/admin/printing', icon: 'Printer', anyOf: ['printing.manage'] }),
+        delivery: item({ id: 'delivery', text: 'Delivery', path: '/admin/delivery', icon: 'Truck', anyOf: ['delivery.manage'] }),
+        equipment: item({ id: 'equipment', text: 'Asset management', path: '/admin/assets', icon: 'Package', anyOf: ['events.view', 'events.manage'] }),
+    },
+};
+
+export const financePageMenu: MenuGroup = {
+    id: 'finance',
+    text: 'Finance',
+    path: '/admin/payments',
+    icon: 'Banknote',
+    subMenu: {
+        payments: item({ id: 'payments', text: 'Payments management', path: '/admin/payments', icon: 'Banknote', anyOf: ['payments.view'] }),
+        payroll: item({ id: 'payroll', text: 'Payroll', path: '/admin/payroll', icon: 'Briefcase', anyOf: ['payments.view', 'staff.manage'] }),
+        endOfDay: item({ id: 'endOfDay', text: 'End of day', path: '/admin/closing/day', icon: 'CalendarCheck', anyOf: ['payments.view', 'reports.view'] }),
+        endOfMonth: item({ id: 'endOfMonth', text: 'End of month', path: '/admin/closing/month', icon: 'BarChart3', anyOf: ['payments.view', 'reports.view'] }),
+    },
+};
+
+export const reportsPageMenu: MenuGroup = {
+    id: 'reports',
+    text: 'Report',
+    path: '/admin/reports',
+    icon: 'BarChart3',
+    subMenu: {
+        reports: item({ id: 'reports', text: 'All reports', path: '/admin/reports', icon: 'BarChart3', anyOf: ['reports.view'] }),
+    },
+};
+
+/** @deprecated Prefer masterPageMenu / operationPageMenu — kept for older aside exports. */
+export const userManagementPageMenu = masterPageMenu;
+export const customerManagementPageMenu = masterPageMenu;
+export const packageManagementPageMenu = masterPageMenu;
+export const productManagementPageMenu = masterPageMenu;
+export const settingsPageMenu = masterPageMenu;
+export const eventManagementPageMenu = operationPageMenu;
+export const orderManagementPageMenu = operationPageMenu;
+export const assetManagementPageMenu = operationPageMenu;
 
 export const adminOverviewMenu: MenuGroup = {
     id: 'overview',
@@ -157,17 +117,10 @@ export const adminOverviewMenu: MenuGroup = {
 };
 
 export const adminMenus: MenuGroup[] = [
-    adminOverviewMenu,
-    userManagementPageMenu,
-    customerManagementPageMenu,
-    eventManagementPageMenu,
-    packageManagementPageMenu,
-    productManagementPageMenu,
-    orderManagementPageMenu,
-    assetManagementPageMenu,
+    masterPageMenu,
+    operationPageMenu,
     financePageMenu,
     reportsPageMenu,
-    settingsPageMenu,
 ];
 
 export const customerPageMenu: MenuGroup = {

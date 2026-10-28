@@ -3,7 +3,7 @@
 // Last Edited : 06-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -11,7 +11,7 @@ import { DataTable, EmptyState, QueryState, StatusBadge, TableHeaderToolbar, COL
 import { Checkbox, FormGrid, Input, Textarea } from '../../components/ui/Form';
 import { Modal, useConfirm } from '../../components/ui/Overlay';
 import { useToast } from '../../components/ui/Toast';
-import { Button, Card, IconButton, PageHeader } from '../../components/ui';
+import { Button, ColorListShell, IconButton } from '../../components/ui';
 import { api, applyFieldErrors } from '../../services/api';
 import { money, toPaise, toRupees } from '../../utils/format';
 import { useInvalidate, useViewMode } from '../../hooks';
@@ -55,11 +55,7 @@ export default function AdminServices() {
     });
     return (
         <div>
-            <PageHeader
-                title="Services"
-                subtitle="What the studio offers. Active services appear on the website and booking form."
-            />
-            <Card padded={false}>
+            <ColorListShell icon={Sparkles} tone="cyan" title="Services" subtitle="Active services appear on the website and booking form">
                 <TableHeaderToolbar
                     search={search}
                     onSearch={setSearch}
@@ -70,6 +66,7 @@ export default function AdminServices() {
                     onViewModeChange={setViewMode}
                     onAdd={() => setEditing('new')}
                     addLabel="New service"
+                    className="rounded-none border-0"
                 />
                 <QueryState query={q}>
                     {(rows) => {
@@ -135,7 +132,7 @@ export default function AdminServices() {
                         />
                     )}}
                 </QueryState>
-            </Card>
+            </ColorListShell>
             <ServiceModal value={editing} onClose={() => setEditing(null)} />
             {dialog}
         </div>

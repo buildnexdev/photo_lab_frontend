@@ -19,6 +19,7 @@ import { BrandMark } from '../components/brand';
 import { NotificationBell } from '../components/layout/NotificationBell';
 import { useToast } from '../components/ui/Toast';
 import { ROLE_LABELS, homeFor, useAuth, type Role } from '../hooks/useAuth';
+import { ICON_TONE_TILE, ICON_TONE_TOPBAR, toneForPath } from '../utils/iconThemes';
 import { useSite } from '../utils/site';
 
 export interface NavItem {
@@ -55,7 +56,7 @@ export function NammaqrBrand({ subtitle, dark = false }: { subtitle?: string; da
         <div className={clsx('group flex select-none items-center gap-3', dark && 'portal-brand-dark')}>
             <BrandMark variant={dark ? 'light' : 'default'} className="h-10 w-14 shrink-0" />
             <div className="min-w-0 text-left">
-                <p className={clsx('portal-brand-title truncate', !dark && 'font-semibold tracking-tight text-stone-900')}>Nammaqr</p>
+                <p className={clsx('portal-brand-title truncate font-display', !dark && 'font-semibold tracking-tight text-stone-900')}>Nammaqr</p>
                 <p className={clsx('portal-brand-sub truncate', !dark && 'text-[10px] font-medium uppercase tracking-[0.18em] text-brand-700')}>
                     Photography
                 </p>
@@ -67,38 +68,11 @@ export function NammaqrBrand({ subtitle, dark = false }: { subtitle?: string; da
     );
 }
 
-const COLORFUL_ICON_THEMES: Record<string, { bg: string; shadow: string }> = {
-    dashboard: { bg: 'bg-gradient-to-tr from-brand-500 to-brand-600', shadow: 'shadow-brand-500/25' },
-    customers: { bg: 'bg-gradient-to-tr from-emerald-500 to-teal-600', shadow: 'shadow-emerald-500/25' },
-    bookings: { bg: 'bg-gradient-to-tr from-brand-500 to-orange-600', shadow: 'shadow-brand-500/25' },
-    events: { bg: 'bg-gradient-to-tr from-rose-500 to-brand-600', shadow: 'shadow-orange-500/25' },
-    galleries: { bg: 'bg-gradient-to-tr from-purple-500 to-pink-600', shadow: 'shadow-rose-500/25' },
-    photos: { bg: 'bg-gradient-to-tr from-sky-500 to-indigo-600', shadow: 'shadow-sky-500/25' },
-    orders: { bg: 'bg-gradient-to-tr from-brand-500 to-yellow-600', shadow: 'shadow-brand-500/25' },
-    payments: { bg: 'bg-gradient-to-tr from-emerald-600 to-green-600', shadow: 'shadow-emerald-500/25' },
-    reports: { bg: 'bg-gradient-to-tr from-fuchsia-600 to-purple-600', shadow: 'shadow-fuchsia-500/25' },
-    coupons: { bg: 'bg-gradient-to-tr from-brand-500 to-yellow-500', shadow: 'shadow-brand-500/25' },
-    packages: { bg: 'bg-gradient-to-tr from-indigo-600 to-violet-600', shadow: 'shadow-indigo-500/25' },
-    tasks: { bg: 'bg-gradient-to-tr from-teal-500 to-emerald-600', shadow: 'shadow-teal-500/25' },
-    proofs: { bg: 'bg-gradient-to-tr from-purple-500 to-pink-600', shadow: 'shadow-purple-500/25' },
-    printing: { bg: 'bg-gradient-to-tr from-cyan-600 to-blue-600', shadow: 'shadow-cyan-500/25' },
-    dispatch: { bg: 'bg-gradient-to-tr from-brand-500 to-red-500', shadow: 'shadow-brand-500/25' },
-    staff: { bg: 'bg-gradient-to-tr from-rose-600 to-orange-500', shadow: 'shadow-rose-500/25' },
-    settings: { bg: 'bg-gradient-to-tr from-slate-700 to-ink-900', shadow: 'shadow-slate-500/25' },
-};
-
-function getThemeKey(pathname: string, label: string) {
-    const lower = `${pathname} ${label}`.toLowerCase();
-    for (const key of Object.keys(COLORFUL_ICON_THEMES)) {
-        if (lower.includes(key)) return key;
-    }
-    return 'dashboard';
-}
-
 function Subheader({
     pageTitle,
     activeItem,
     area,
+    pathname,
     onMobileMenuOpen,
     notificationsLink,
     user,
@@ -108,6 +82,7 @@ function Subheader({
     pageTitle: string;
     activeItem?: NavItem;
     area?: string;
+    pathname: string;
     onMobileMenuOpen: () => void;
     notificationsLink?: string;
     user: any;
@@ -115,6 +90,8 @@ function Subheader({
     onLogout: () => Promise<void>;
 }) {
     const IconComponent = activeItem?.icon ?? LayoutGrid;
+    const tone = toneForPath(pathname, `${pageTitle} ${activeItem?.label ?? ''}`);
+    const topbarTheme = ICON_TONE_TOPBAR[tone];
 
     const topbarRole = ROLE_LABELS[(user?.roles[0] as Role) ?? 'CUSTOMER'] ?? area;
 
@@ -124,8 +101,8 @@ function Subheader({
                 <button type="button" onClick={onMobileMenuOpen} className="portal-icon-btn lg:hidden" aria-label="Open menu">
                     <Menu className="size-5" />
                 </button>
-                <div className="portal-page-icon">
-                    <IconComponent className="size-5" />
+                <div className={clsx('portal-page-icon', topbarTheme.bg, 'shadow-lg', topbarTheme.shadow)}>
+                    <IconComponent className="size-5 text-white" strokeWidth={2.25} aria-hidden />
                 </div>
                 <h1 className="portal-page-title">{pageTitle}</h1>
             </div>
@@ -201,18 +178,23 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                     <div key={sectionKey}>
                         {s.title ? <p className="portal-nav-section-label">{s.title}</p> : null}
                         <ul>
-                            {s.items.map((item) => (
-                                <li key={item.to}>
-                                    <NavLink
-                                        to={item.to}
-                                        end={item.end}
-                                        className={({ isActive }) => clsx('portal-nav-link', isActive && 'is-active')}
-                                    >
-                                        <item.icon className="size-[18px]" aria-hidden />
-                                        <span className="truncate">{item.label}</span>
-                                    </NavLink>
-                                </li>
-                            ))}
+                            {s.items.map((item) => {
+                                const tone = toneForPath(item.to, item.label);
+                                return (
+                                    <li key={item.to}>
+                                        <NavLink
+                                            to={item.to}
+                                            end={item.end}
+                                            className={({ isActive }) => clsx('portal-nav-link', isActive && 'is-active')}
+                                        >
+                                            <span className={clsx('nq-icon-tile nq-icon-tile--sm portal-nav-icon', ICON_TONE_TILE[tone])} aria-hidden>
+                                                <item.icon className="size-3.5" strokeWidth={2.4} />
+                                            </span>
+                                            <span className="truncate">{item.label}</span>
+                                        </NavLink>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </div>
                 );
@@ -254,6 +236,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                         pageTitle={pageTitle}
                         activeItem={activeItem}
                         area={area}
+                        pathname={location.pathname}
                         onMobileMenuOpen={() => setMobileOpen(true)}
                         notificationsLink={notificationsLink}
                         user={user}

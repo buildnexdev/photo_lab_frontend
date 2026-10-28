@@ -31,6 +31,7 @@ const schema = z
     .object({
             serviceId: z.string().optional(),
             packageId: z.string().optional(),
+            quotedAmount: z.string().optional(),
             eventType: z.string().trim().min(2, 'Tell us the type of event').max(60),
             eventDate: z.string().min(1, 'Choose the event date'),
             startTime: z.string().optional(),
@@ -43,14 +44,24 @@ const schema = z
             message: z.string().trim().max(3000).optional(),
             internalNotes: z.string().max(3000).optional(),
         })
-        .refine((v) => !v.startTime || !v.endTime || v.endTime > v.startTime, { path: ['endTime'], message: 'End time must be after the start time' });
+        .superRefine((v, ctx) => {
+            if (v.startTime && v.endTime && v.endTime <= v.startTime) {
+                ctx.addIssue({ code: 'custom', path: ['endTime'], message: 'End time must be after the start time' });
+            }
+            if (!v.packageId) {
+                const amt = (v.quotedAmount ?? '').trim();
+                if (!amt) ctx.addIssue({ code: 'custom', path: ['quotedAmount'], message: 'Enter a custom quotation amount' });
+                else if (!/^\d+(\.\d{1,2})?$/.test(amt) || Number(amt) <= 0) ctx.addIssue({ code: 'custom', path: ['quotedAmount'], message: 'Enter a valid amount' });
+            }
+        });
 
 type Form = z.infer<typeof schema>;
 
-const blank: Form = { eventType: '', eventDate: '', serviceId: '', packageId: '', startTime: '', endTime: '', venue: '', guests: '', message: '', internalNotes: '' };
+const blank: Form = { eventType: '', eventDate: '', serviceId: '', packageId: '', quotedAmount: '', startTime: '', endTime: '', venue: '', guests: '', message: '', internalNotes: '' };
 const toForm = (b: BookingDetail): Form => ({
     serviceId: b.service_id ? String(b.service_id) : '',
     packageId: b.package_id ? String(b.package_id) : '',
+    quotedAmount: !b.package_id && b.total_amount ? String(Number(b.total_amount) / 100) : '',
     eventType: b.event_type,
     eventDate: b.event_date,
     startTime: b.start_time?.slice(0, 5) ?? '',
@@ -64,7 +75,7 @@ const toForm = (b: BookingDetail): Form => ({
 const SECTIONS = [
     { title: 'Customer', hint: 'Who this booking is for', icon: UserCircle2, fields: [] as const },
     { title: 'Event', hint: 'Type, date, venue and guests', icon: CalendarDays, fields: ['eventType', 'eventDate', 'startTime', 'endTime', 'venue', 'guests'] as const },
-    { title: 'Package', hint: 'Service and package', icon: Package, fields: ['serviceId', 'packageId'] as const },
+    { title: 'Package', hint: 'Service and package', icon: Package, fields: ['serviceId', 'packageId', 'quotedAmount'] as const },
     { title: 'Notes', hint: 'Customer message and staff notes', icon: NotebookPen, fields: ['message', 'internalNotes'] as const },
     { title: 'Quotations', hint: 'Send and accept quotes', icon: ClipboardList, fields: [] as const },
     { title: 'Finance', hint: 'Payments and balance', icon: IndianRupee, fields: [] as const },
@@ -171,7 +182,11 @@ export function BookingDrawer({ id, onClose, onCreated, detailsOnly = false }: {
             setStep(1);
             return;
         }
-        const body = { ...bookingPayload(v), internalNotes: v.internalNotes?.trim() || null };
+        const body = {
+            ...bookingPayload(v),
+            quotedAmount: !v.packageId && v.quotedAmount?.trim() ? Math.round(Number(v.quotedAmount) * 100) : null,
+            internalNotes: v.internalNotes?.trim() || null,
+        };
         try {
             const r = isNew ? await api.send<{ id: number }>('POST', '/api/bookings', { ...body, customerId: customer!.id }) : await api.send<{ id: number }>('PUT', `/api/bookings/${id}`, body);
             toast.success(r.message);
@@ -187,7 +202,9 @@ export function BookingDrawer({ id, onClose, onCreated, detailsOnly = false }: {
     const services = site.data?.services ?? [];
     const packages = site.data?.packages ?? [];
     const serviceId = watch('serviceId');
+    const packageId = watch('packageId');
     const pkgOptions = packages.filter((p) => !serviceId || !p.service_id || String(p.service_id) === serviceId);
+    const isCustomQuote = !packageId;
     const due = b?.balance_due ?? 0;
     const canQuote = manage && !!b && ['ENQUIRY', 'QUOTED', 'ADVANCE_PENDING'].includes(b.status);
 
@@ -376,10 +393,22 @@ export function BookingDrawer({ id, onClose, onCreated, detailsOnly = false }: {
                         {section.title === 'Package' && (
                             <fieldset disabled={!isNew && !editable}>
                                 <Panel icon={<Package className="size-4 text-amber-500" />} title="Service and package">
-                                    <p className="mb-3 text-sm text-stone-500">{eventType ? `Suggested for ${eventType}. ` : ''}Leave the package blank if you will send a custom quotation.</p>
+                                    <p className="mb-3 text-sm text-stone-500">{eventType ? `Suggested for ${eventType}. ` : ''}Choose a package, or leave it on “Custom / need a quotation” and enter the quote amount.</p>
                                     <FormGrid>
                                         <Select label="Service" {...register('serviceId')} placeholder="Not sure yet" options={services.map((s) => ({ value: s.id, label: s.name }))} error={errors.serviceId?.message} />
                                         <Select label="Package" {...register('packageId')} placeholder="Custom / need a quotation" options={pkgOptions.map((p) => ({ value: p.id, label: `${p.name} · ${money(p.price, true)}` }))} error={errors.packageId?.message} />
+                                        {isCustomQuote && (
+                                            <Input
+                                                label="Custom quotation amount"
+                                                required
+                                                prefix="₹"
+                                                inputMode="decimal"
+                                                placeholder="e.g. 45000"
+                                                {...register('quotedAmount')}
+                                                error={errors.quotedAmount?.message}
+                                                hint="Enter the quoted total for this booking. Advance is calculated at 30%."
+                                            />
+                                        )}
                                     </FormGrid>
                                 </Panel>
                             </fieldset>

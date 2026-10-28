@@ -1,12 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Ban, Download, Eye, Plus, RefreshCw } from 'lucide-react';
+import { Ban, Download, Eye, Plus, QrCode, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { DataTable, EmptyState, Pagination, QueryState, SearchInput, StatusBadge } from '../../components/ui/Data';
 import { Select } from '../../components/ui/Form';
 import { Modal, useConfirm } from '../../components/ui/Overlay';
 import { useToast } from '../../components/ui/Toast';
-import { Button, ButtonLink, Card, IconButton, PageHeader } from '../../components/ui';
+import { Button, ButtonLink, ColorListShell, IconButton } from '../../components/ui';
 import { api, downloadAuthed, type Paged } from '../../services/api';
 import { dateTime, num, relative, titleCase } from '../../utils/format';
 import { useInvalidate, useListParams } from '../../hooks';
@@ -80,26 +80,28 @@ export default function QrManage() {
 
     return (
         <div>
-            <PageHeader
+            <ColorListShell
+                icon={QrCode}
+                tone="fuchsia"
                 title="Manage QR"
+                subtitle={`${q.data?.total ?? 0} codes · guest gallery access`}
                 actions={
-                    <ButtonLink to="/admin/qr/create" size="sm" className="inline-flex items-center gap-1.5">
-                        <Plus className="size-4" /> Create QR
-                    </ButtonLink>
+                    <>
+                        <SearchInput value={search} onChange={setSearch} placeholder="Gallery, event, customer or code" className="min-w-[10rem] flex-1 sm:max-w-xs" inputClassName="rounded-full" />
+                        <Select
+                            wrapperClassName="w-36 sm:w-44"
+                            aria-label="State"
+                            value={filters.state}
+                            onChange={(e) => setFilter('state', e.target.value)}
+                            placeholder="All states"
+                            options={STATES.map((s) => ({ value: s, label: titleCase(s) }))}
+                        />
+                        <ButtonLink to="/admin/qr/create" size="sm" className="inline-flex items-center gap-1.5">
+                            <Plus className="size-4" /> Create QR
+                        </ButtonLink>
+                    </>
                 }
-            />
-            <Card padded={false}>
-                <div className="flex flex-wrap items-end gap-3 border-b border-stone-100 p-4">
-                    <SearchInput value={search} onChange={setSearch} placeholder="Gallery, event, customer or code" className="w-full max-w-xs" inputClassName="rounded-full" />
-                    <Select
-                        wrapperClassName="w-44"
-                        aria-label="State"
-                        value={filters.state}
-                        onChange={(e) => setFilter('state', e.target.value)}
-                        placeholder="All states"
-                        options={STATES.map((s) => ({ value: s, label: titleCase(s) }))}
-                    />
-                </div>
+            >
                 <QueryState query={q}>
                     {(d) => (
                         <>
@@ -178,7 +180,7 @@ export default function QrManage() {
                         </>
                     )}
                 </QueryState>
-            </Card>
+            </ColorListShell>
             <Modal
                 open={!!shown}
                 onClose={() => setShown(null)}

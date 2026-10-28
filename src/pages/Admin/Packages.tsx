@@ -3,7 +3,7 @@
 // Last Edited : 06-10-2026
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Pencil, Plus, Star, Trash2 } from 'lucide-react';
+import { Gift, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -11,7 +11,7 @@ import { DataTable, EmptyState, QueryState, StatusBadge, TableHeaderToolbar, COL
 import { Checkbox, FormGrid, Input, Select, Textarea } from '../../components/ui/Form';
 import { Modal, useConfirm } from '../../components/ui/Overlay';
 import { useToast } from '../../components/ui/Toast';
-import { Button, Card, IconButton, PageHeader } from '../../components/ui';
+import { Button, ColorListShell, IconButton } from '../../components/ui';
 import { api, applyFieldErrors } from '../../services/api';
 import { money, parseJson, toPaise, toRupees } from '../../utils/format';
 import { useInvalidate, useViewMode } from '../../hooks';
@@ -71,11 +71,7 @@ export default function AdminPackages() {
     });
     return (
         <div>
-            <PageHeader
-                title="Packages"
-                subtitle="Priced bundles customers can book or buy. Prices include GST."
-            />
-            <Card padded={false}>
+            <ColorListShell icon={Gift} tone="violet" title="Packages" subtitle="Priced bundles · prices include GST">
                 <TableHeaderToolbar
                     search={search}
                     onSearch={setSearch}
@@ -86,6 +82,7 @@ export default function AdminPackages() {
                     onViewModeChange={setViewMode}
                     onAdd={() => setEditing('new')}
                     addLabel="New package"
+                    className="rounded-none border-0"
                 />
                 <QueryState query={q}>
                     {(rows) => {
@@ -157,7 +154,7 @@ export default function AdminPackages() {
                         />
                     )}}
                 </QueryState>
-            </Card>
+            </ColorListShell>
             <PackageModal value={editing} onClose={() => setEditing(null)} />
             {dialog}
         </div>

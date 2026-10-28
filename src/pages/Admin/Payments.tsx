@@ -11,7 +11,7 @@ import { InvoiceModal } from '../../components/ui/Domain';
 import { Input, Select, Textarea } from '../../components/ui/Form';
 import { Drawer, Modal } from '../../components/ui/Overlay';
 import { useToast } from '../../components/ui/Toast';
-import { Button, Card, KeyValue, PageHeader, Tabs } from '../../components/ui';
+import { Button, Card, ColorListShell, KeyValue, Tabs } from '../../components/ui';
 import { api, type Paged } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { date, dateTime, money, titleCase, toPaise, toRupees } from '../../utils/format';
@@ -73,34 +73,34 @@ export default function AdminPayments() {
         enabled: tab === 'invoices',
     });
     return (
-        <div>
-            <PageHeader title="Payments" subtitle="Online and offline collections, refunds and GST invoices." />
-            <Tabs
-                className="mb-4"
-                value={tab}
-                onChange={(t) => set({ tab: t === 'payments' ? null : t, status: null, purpose: null, from: null, to: null, search: null })}
-                tabs={[
-                    { value: 'payments', label: 'Payments' },
-                    { value: 'invoices', label: 'Invoices' },
-                ]}
-            />
-            {tab === 'payments' ? (
-                <>
-                    {payments.data && (
-                        <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
-                            <FinanceStat label="Collected (net)" value={money(payments.data.summary.collected, true)} icon={<Wallet className="size-5" />} tone="from-emerald-500 to-teal-600" />
-                            <FinanceStat label="Pending" value={money(payments.data.summary.pending, true)} icon={<Clock3 className="size-5" />} tone="from-amber-400 to-orange-500" />
-                            <FinanceStat label="Refunded" value={money(payments.data.summary.refunded, true)} icon={<Undo2 className="size-5" />} tone="from-violet-500 to-fuchsia-600" />
-                            <FinanceStat label="Failed attempts" value={payments.data.summary.failed ?? 0} icon={<CircleAlert className="size-5" />} tone="from-rose-500 to-pink-600" />
-                        </div>
-                    )}
-                    <Card padded={false}>
-                        <div className="flex flex-wrap items-end gap-3 border-b border-stone-100 p-4">
-                            <SearchInput value={search} onChange={setSearch} placeholder="Payment no., gateway ID, customer" className="w-full max-w-xs" inputClassName="rounded-full" />
-                            <Select wrapperClassName="w-40" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={PAYMENT_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
-                            <Select wrapperClassName="w-40" aria-label="Purpose" value={filters.purpose} onChange={(e) => setFilter('purpose', e.target.value)} placeholder="All purposes" options={PAYMENT_PURPOSES.map((s) => ({ value: s, label: titleCase(s) }))} />
-                            <Input wrapperClassName="w-40" label="From" type="date" value={filters.from} onChange={(e) => setFilter('from', e.target.value)} />
-                            <Input wrapperClassName="w-40" label="To" type="date" value={filters.to} min={filters.from || undefined} onChange={(e) => setFilter('to', e.target.value)} error={rangeError ? 'Must be after From' : undefined} />
+        <div className="space-y-4">
+            <ColorListShell icon={Wallet} tone="emerald" title="Payments management" subtitle="Collections, refunds, GST invoices and payment ledger">
+                <div className="px-3 pt-3 sm:px-4">
+                    <Tabs
+                        value={tab}
+                        onChange={(t) => set({ tab: t === 'payments' ? null : t, status: null, purpose: null, from: null, to: null, search: null })}
+                        tabs={[
+                            { value: 'payments', label: 'All payments' },
+                            { value: 'invoices', label: 'Invoices' },
+                        ]}
+                    />
+                </div>
+                {tab === 'payments' ? (
+                    <>
+                        {payments.data && (
+                            <div className="grid grid-cols-2 gap-3 p-3 sm:p-4 xl:grid-cols-4">
+                                <FinanceStat label="Collected (net)" value={money(payments.data.summary.collected, true)} icon={<Wallet className="size-5" />} tone="from-emerald-500 to-teal-600" />
+                                <FinanceStat label="Pending" value={money(payments.data.summary.pending, true)} icon={<Clock3 className="size-5" />} tone="from-amber-400 to-orange-500" />
+                                <FinanceStat label="Refunded" value={money(payments.data.summary.refunded, true)} icon={<Undo2 className="size-5" />} tone="from-violet-500 to-fuchsia-600" />
+                                <FinanceStat label="Failed attempts" value={payments.data.summary.failed ?? 0} icon={<CircleAlert className="size-5" />} tone="from-rose-500 to-pink-600" />
+                            </div>
+                        )}
+                        <div className="flex flex-wrap items-end gap-2 border-t border-stone-100 p-3 sm:gap-3 sm:p-4">
+                            <SearchInput value={search} onChange={setSearch} placeholder="Payment no., gateway ID, customer" className="min-w-[10rem] flex-1 sm:max-w-xs" inputClassName="rounded-full" />
+                            <Select wrapperClassName="w-36 sm:w-40" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={PAYMENT_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
+                            <Select wrapperClassName="w-36 sm:w-40" aria-label="Purpose" value={filters.purpose} onChange={(e) => setFilter('purpose', e.target.value)} placeholder="All purposes" options={PAYMENT_PURPOSES.map((s) => ({ value: s, label: titleCase(s) }))} />
+                            <Input wrapperClassName="w-36 sm:w-40" label="From" type="date" value={filters.from} onChange={(e) => setFilter('from', e.target.value)} />
+                            <Input wrapperClassName="w-36 sm:w-40" label="To" type="date" value={filters.to} min={filters.from || undefined} onChange={(e) => setFilter('to', e.target.value)} error={rangeError ? 'Must be after From' : undefined} />
                         </div>
                         <QueryState query={payments}>
                             {(d) => (
@@ -143,36 +143,36 @@ export default function AdminPayments() {
                                 </>
                             )}
                         </QueryState>
-                    </Card>
-                </>
-            ) : (
-                <Card padded={false}>
-                    <div className="border-b border-stone-100 p-4">
-                        <SearchInput value={search} onChange={setSearch} placeholder="Invoice no. or customer" className="w-full max-w-xs" inputClassName="rounded-full" />
-                    </div>
-                    <QueryState query={invoices}>
-                        {(d) => (
-                            <>
-                                <DataTable
-                                    rows={d.items}
-                                    rowKey={(r) => r.id}
-                                    onRowClick={(r) => setInvoiceId(r.id)}
-                                    empty={<EmptyState title="No invoices yet" description="An invoice is issued automatically for every successful payment." />}
-                                    columns={[
-                                        { key: 'no', header: 'Invoice', cell: (r) => <span className="font-medium text-stone-900">{r.invoice_no}</span> },
-                                        { key: 'customer', header: 'Customer', cell: (r) => r.customer_name },
-                                        { key: 'desc', header: 'For', cell: (r) => r.description ?? titleCase(r.purpose), hideOnMobile: true },
-                                        { key: 'date', header: 'Issued', cell: (r) => date(r.issued_at), hideOnMobile: true },
-                                        { key: 'tax', header: 'GST', cell: (r) => money(r.tax), hideOnMobile: true },
-                                        { key: 'total', header: 'Total', cell: (r) => money(r.total) },
-                                    ]}
-                                />
-                                <Pagination page={d.page} totalPages={d.totalPages} total={d.total} onPage={setPage} />
-                            </>
-                        )}
-                    </QueryState>
-                </Card>
-            )}
+                    </>
+                ) : (
+                    <>
+                        <div className="border-t border-stone-100 p-3 sm:p-4">
+                            <SearchInput value={search} onChange={setSearch} placeholder="Invoice no. or customer" className="w-full max-w-xs" inputClassName="rounded-full" />
+                        </div>
+                        <QueryState query={invoices}>
+                            {(d) => (
+                                <>
+                                    <DataTable
+                                        rows={d.items}
+                                        rowKey={(r) => r.id}
+                                        onRowClick={(r) => setInvoiceId(r.id)}
+                                        empty={<EmptyState title="No invoices yet" description="An invoice is issued automatically for every successful payment." />}
+                                        columns={[
+                                            { key: 'no', header: 'Invoice', cell: (r) => <span className="font-medium text-stone-900">{r.invoice_no}</span> },
+                                            { key: 'customer', header: 'Customer', cell: (r) => r.customer_name },
+                                            { key: 'desc', header: 'For', cell: (r) => r.description ?? titleCase(r.purpose), hideOnMobile: true },
+                                            { key: 'date', header: 'Issued', cell: (r) => date(r.issued_at), hideOnMobile: true },
+                                            { key: 'tax', header: 'GST', cell: (r) => money(r.tax), hideOnMobile: true },
+                                            { key: 'total', header: 'Total', cell: (r) => money(r.total) },
+                                        ]}
+                                    />
+                                    <Pagination page={d.page} totalPages={d.totalPages} total={d.total} onPage={setPage} />
+                                </>
+                            )}
+                        </QueryState>
+                    </>
+                )}
+            </ColorListShell>
             <PaymentDrawer id={openId} onClose={() => setOpenId(null)} onInvoice={setInvoiceId} />
             <InvoiceModal id={invoiceId} onClose={() => setInvoiceId(null)} />
         </div>
