@@ -407,12 +407,28 @@ export default function AdminEventDetail() {
                                                 <p className="rounded-xl border-2 border-dashed border-stone-200 px-4 py-6 text-center text-xs text-stone-500">Link a booking to collect advance or balance payments for this event.</p>
                                             )}
                                         </Card>
-                                        <Card title="Customer Gallery Link">
+                                        <Card title="Customer gallery QR">
                                             {customerLink ? (
                                                 <div className="space-y-3 text-sm">
                                                     <p className="text-xs text-stone-500">
-                                                        Direct public link created for customer and guests. Opening this link displays the cover photo and opens event photos for viewing and selection.
+                                                        Print or share this QR for this event only. Guests scan it, enter the customer phone, then see the photos.
                                                     </p>
+                                                    {e.qr_data_url ? (
+                                                        <div className="flex flex-col items-center gap-3 rounded-xl border border-stone-200 bg-white p-4">
+                                                            <img src={e.qr_data_url} alt={`QR for ${e.title}`} className="h-48 w-48 rounded-lg border border-stone-100 bg-white object-contain" />
+                                                            <a
+                                                                href={e.qr_data_url}
+                                                                download={`${e.event_code || e.id}-event-qr.png`}
+                                                                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                                                            >
+                                                                Download QR PNG
+                                                            </a>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="rounded-xl border-2 border-dashed border-stone-200 px-4 py-6 text-center text-xs text-stone-500">
+                                                            QR image is not ready yet. Open Gallery &amp; QR and tap Show QR, or regenerate the event QR.
+                                                        </p>
+                                                    )}
                                                     <div className="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 p-2">
                                                         <Link2 className="size-4 shrink-0 text-stone-400" />
                                                         <input
@@ -441,11 +457,11 @@ export default function AdminEventDetail() {
                                                             className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
                                                         >
                                                             <ExternalLink className="size-3.5" />
-                                                            Open Customer Gallery
+                                                            Open guest link
                                                         </a>
                                                         {e.gallery && (
-                                                            <ButtonLink to={`/admin/galleries/${e.gallery.id}`} size="sm" variant="secondary">
-                                                                <QrCode className="size-4" /> QR Code & Passcode
+                                                            <ButtonLink to={`/admin/galleries/${e.gallery.id}#event-qr`} size="sm" variant="secondary">
+                                                                <QrCode className="size-4" /> Manage QR codes
                                                             </ButtonLink>
                                                         )}
                                                     </div>
@@ -470,7 +486,7 @@ export default function AdminEventDetail() {
                                                         {e.gallery.expires_at && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">Expires {date(e.gallery.expires_at)}</span>}
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        <ButtonLink to={`/admin/galleries/${e.gallery.id}`} size="sm" variant="secondary">
+                                                        <ButtonLink to={`/admin/galleries/${e.gallery.id}#event-qr`} size="sm" variant="secondary">
                                                             <QrCode className="size-4" /> Gallery & QR
                                                         </ButtonLink>
                                                         <ButtonLink to={`/admin/events/${e.id}/upload`} size="sm" variant="secondary">
