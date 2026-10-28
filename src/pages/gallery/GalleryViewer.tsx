@@ -29,7 +29,22 @@ type PhotoPages = InfiniteData<Paged<GalleryPhoto>, number>;
  * The customer-facing gallery used by both QR access (/g/:token, with a gallery session header)
  * and the signed-in owner view (/customer/galleries/:id).
  */
-export function GalleryViewer({ galleryId, session, eventPhone, onAccessLost, dark = false }: { galleryId: number; session?: string | null; eventPhone?: string | null; onAccessLost?: (reason?: unknown) => void; dark?: boolean }) {
+export function GalleryViewer({
+    galleryId,
+    session,
+    eventPhone,
+    allowWithoutPhone = false,
+    onAccessLost,
+    dark = false,
+}: {
+    galleryId: number;
+    session?: string | null;
+    eventPhone?: string | null;
+    /** Scanned QR sessions can load photos without a phone proof. */
+    allowWithoutPhone?: boolean;
+    onAccessLost?: (reason?: unknown) => void;
+    dark?: boolean;
+}) {
     const qc = useQueryClient();
     const toast = useToast();
     const navigate = useNavigate();
@@ -65,19 +80,20 @@ export function GalleryViewer({ galleryId, session, eventPhone, onAccessLost, da
 
     const infoKey = ['gallery', galleryId, 'info'];
     const photosKey = ['gallery', galleryId, 'photos'];
+    const sessionReady = !session || !!eventPhone || allowWithoutPhone;
     const info = useQuery({
-        queryKey: [...infoKey, session ?? 'user', eventPhone ?? ''],
+        queryKey: [...infoKey, session ?? 'user', eventPhone ?? '', allowWithoutPhone ? 'qr' : 'link'],
         queryFn: () => api.get<GalleryInfo>(`/api/gallery/${galleryId}`, undefined, headers),
         retry: false,
-        enabled: !session || !!eventPhone,
+        enabled: sessionReady,
     });
 
     const photos = useInfiniteQuery({
-        queryKey: [...photosKey, { view, albumId, category, session: session ?? 'user', eventPhone: eventPhone ?? '' }],
+        queryKey: [...photosKey, { view, albumId, category, session: session ?? 'user', eventPhone: eventPhone ?? '', allowWithoutPhone }],
         queryFn: ({ pageParam }) => api.get<Paged<GalleryPhoto>>(`/api/gallery/${galleryId}/photos`, { page: pageParam, pageSize: PAGE_SIZE, view, albumId, category: category || undefined }, headers),
         initialPageParam: 1,
         getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
-        enabled: info.isSuccess && (!session || !!eventPhone),
+        enabled: info.isSuccess && sessionReady,
     });
 
     const lostAccess = (e: unknown) => e instanceof ApiError && (e.status === 401 || e.status === 403) && !!session;

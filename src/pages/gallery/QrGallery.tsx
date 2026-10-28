@@ -2,8 +2,8 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { QrCode } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { Link, useParams } from 'react-router';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router';
 import { BrandMark } from '../../components/brand';
 import { Loading } from '../../components/ui/Data';
 import { Button, ButtonLink } from '../../components/ui';
@@ -25,6 +25,8 @@ interface Access {
     galleryId: number;
     expiresAt: number;
     phoneProof?: string;
+    /** Scanned QR — photos open without phone. */
+    openAsQr?: boolean;
     title?: string | null;
     coverUrl?: string | null;
 }
@@ -45,6 +47,8 @@ function readStored(token: string): Access | null {
             session: v.session,
             galleryId: v.galleryId,
             expiresAt: v.expiresAt,
+            openAsQr: !!v.openAsQr,
+            phoneProof: v.openAsQr ? v.phoneProof : undefined,
             title: v.title,
             coverUrl: v.coverUrl,
         };
@@ -57,6 +61,8 @@ function readStored(token: string): Access | null {
 export default function QrGallery() {
     const { token: raw = '' } = useParams();
     const token = extractToken(raw);
+    const [search] = useSearchParams();
+    const fromQr = useMemo(() => search.get('src') === 'qr', [search]);
     const { status } = useAuth();
     const [access, setAccess] = useState<Access | null>(() => (token ? readStored(token) : null));
     const [error, setError] = useState(token ? '' : 'This gallery link is not valid.');
@@ -70,11 +76,19 @@ export default function QrGallery() {
         attempts.current += 1;
         setError('');
         try {
-            const r = await api.post<{ session: string; expiresInHours: number; galleryId: number; title?: string | null; coverUrl?: string | null }>('/api/gallery/access', { token });
+            const r = await api.post<{
+                session: string;
+                expiresInHours: number;
+                galleryId: number;
+                title?: string | null;
+                coverUrl?: string | null;
+                openAsQr?: boolean;
+            }>('/api/gallery/access', { token, openMode: fromQr ? 'qr' : 'link' });
             const a: Access = {
                 session: r.session,
                 galleryId: r.galleryId,
                 expiresAt: Date.now() + r.expiresInHours * 3600_000,
+                openAsQr: !!r.openAsQr || fromQr,
                 title: r.title ?? null,
                 coverUrl: r.coverUrl ?? null,
             };
@@ -85,7 +99,15 @@ export default function QrGallery() {
             setAccess(null);
             setError(errorMessage(e));
         }
-    }, [token]);
+    }, [token, fromQr]);
+
+    // Link sessions must not keep QR bypass (and vice versa) when the same token is opened again with a different URL.
+    useEffect(() => {
+        if (!access || !token) return;
+        if (fromQr === !!access.openAsQr) return;
+        sessionStorage.removeItem(storageKey(token));
+        setAccess(null);
+    }, [access, fromQr, token]);
 
     useEffect(() => {
         if (status === 'loading' || access || !token || error) return;
@@ -94,7 +116,7 @@ export default function QrGallery() {
 
     // Until the unlock API returns coverUrl, try event cover / first published photo (works when a studio account is signed in).
     useEffect(() => {
-        if (!access || access.coverUrl || access.phoneProof) return;
+        if (!access || access.coverUrl || access.phoneProof || access.openAsQr) return;
         let cancelled = false;
         void (async () => {
             try {
@@ -182,7 +204,14 @@ export default function QrGallery() {
             if (needPhone) {
                 setAccess((prev) => {
                     if (!prev) return prev;
-                    const next = { session: prev.session, galleryId: prev.galleryId, expiresAt: prev.expiresAt, title: prev.title, coverUrl: prev.coverUrl };
+                    const next = {
+                        session: prev.session,
+                        galleryId: prev.galleryId,
+                        expiresAt: prev.expiresAt,
+                        openAsQr: prev.openAsQr,
+                        title: prev.title,
+                        coverUrl: prev.coverUrl,
+                    };
                     sessionStorage.setItem(storageKey(token), JSON.stringify(next));
                     return next;
                 });
@@ -198,11 +227,12 @@ export default function QrGallery() {
     );
 
     const coverUrl = access?.coverUrl ?? null;
-    const showGate = !access?.phoneProof;
+    const needsPhone = !!access && !access.openAsQr && !access.phoneProof;
+    const galleryReady = !!access && (access.openAsQr || !!access.phoneProof);
 
     return (
         <div className="relative min-h-dvh overflow-hidden bg-ink-900">
-            {coverUrl && showGate && (
+            {coverUrl && needsPhone && (
                 <>
                     <img src={coverUrl} alt="" className="pointer-events-none absolute inset-0 size-full object-cover" />
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/80" />
@@ -232,9 +262,9 @@ export default function QrGallery() {
                                 <ButtonLink to="/contact">Contact the studio</ButtonLink>
                             </div>
                         </div>
-                    ) : access && !access.phoneProof ? (
+                    ) : needsPhone ? (
                         <form onSubmit={submitPhone} className="mx-auto w-full max-w-md rounded-2xl border border-white/15 bg-black/45 p-6 text-white shadow-2xl backdrop-blur-md sm:p-8">
-                            {access.title && <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent-300">{access.title}</p>}
+                            {access?.title && <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent-300">{access.title}</p>}
                             <h1 className="font-display text-2xl font-semibold">Enter your phone number</h1>
                             <p className="mt-2 text-sm text-white/70">This event link opens only for the customer phone number saved on the booking.</p>
                             <label className="mt-6 block text-sm font-medium text-white/80" htmlFor="event-phone">
@@ -255,8 +285,15 @@ export default function QrGallery() {
                                 Open photos
                             </Button>
                         </form>
-                    ) : access?.phoneProof ? (
-                        <GalleryViewer galleryId={access.galleryId} session={access.session} eventPhone={access.phoneProof} onAccessLost={onAccessLost} dark />
+                    ) : galleryReady ? (
+                        <GalleryViewer
+                            galleryId={access!.galleryId}
+                            session={access!.session}
+                            eventPhone={access!.phoneProof}
+                            allowWithoutPhone={!!access!.openAsQr}
+                            onAccessLost={onAccessLost}
+                            dark
+                        />
                     ) : (
                         <Loading className="min-h-[60vh] text-white/60" label="Unlocking gallery…" />
                     )}
