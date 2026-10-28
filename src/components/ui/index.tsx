@@ -60,9 +60,9 @@ export function ButtonLink({ variant = 'primary', size = 'md', className, ...res
     return <Link className={buttonClass(variant, size, className)} {...rest} />;
 }
 
-export function Card({ className, children, title, actions, padded = true }: { className?: string; children: ReactNode; title?: ReactNode; actions?: ReactNode; padded?: boolean }) {
+export function Card({ className, children, title, actions, padded = true, id }: { className?: string; children: ReactNode; title?: ReactNode; actions?: ReactNode; padded?: boolean; id?: string }) {
     return (
-        <section className={clsx('card overflow-hidden', className)}>
+        <section id={id} className={clsx('card overflow-hidden', className)}>
             {(title || actions) && (
                 <header className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 bg-gradient-to-b from-[#fffefb] to-white px-4 py-3 sm:px-5">
                     {typeof title === 'string' ? <h2 className="font-display text-base font-semibold tracking-tight text-stone-900">{title}</h2> : title}
