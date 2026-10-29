@@ -49,6 +49,7 @@ export const masterPageMenu: MenuGroup = {
         productTypes: item({ id: 'productTypes', text: 'Product types', path: '/admin/product-types', icon: 'Layers', anyOf: ['pricing.manage', 'orders.view'] }),
         website: item({ id: 'website', text: 'Website content', path: '/admin/website', icon: 'Globe', anyOf: ['pricing.manage'] }),
         settings: item({ id: 'settings', text: 'Settings', path: '/admin/settings', icon: 'Settings', anyOf: ['settings.manage', 'pricing.manage', 'roles.manage'] }),
+        companies: item({ id: 'companies', text: 'Companies & Studios', path: '/admin/companies', icon: 'Building2', roles: ['SUPER_ADMIN'] }),
         audit: item({ id: 'audit', text: 'Audit logs', path: '/admin/audit-logs', icon: 'ShieldCheck', anyOf: ['audit.view'] }),
     },
 };

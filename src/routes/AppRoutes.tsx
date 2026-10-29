@@ -226,7 +226,7 @@ export const router = createBrowserRouter([
                     { path: 'services', ...page(() => import('../pages/Admin/Services')) },
                     { path: 'packages', ...page(() => import('../pages/Admin/Packages')) },
                     { path: 'coupons', ...page(() => import('../pages/Coupon/Coupons')) },
-                    { path: 'companies', element: <Navigate to="/admin/settings?tab=studios" replace /> },
+                    { path: 'companies', ...page(() => import('../pages/Company/Companies')) },
                     { path: 'website', ...page(() => import('../pages/Admin/Website')) },
                     { path: 'staff', ...page(() => import('../pages/Admin/Staff')) },
                     { path: 'access/*', element: <Navigate to="/admin/staff" replace /> },

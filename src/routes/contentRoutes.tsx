@@ -7,6 +7,15 @@ import { adminAside, customerAside, deliveryAside, editorAside, photographerAsid
 import footers from './footerRoutes';
 import { GuestOnly, RequireAuth } from './guards';
 import { adminHeader, customerHeader, deliveryHeader, editorHeader, photographerHeader } from './headerRoutes';
+import { useAuth } from '../hooks/useAuth';
+
+function AdminIndexRedirect() {
+    const { hasRole } = useAuth();
+    if (hasRole('SUPER_ADMIN')) {
+        return <Navigate to="/admin/companies" replace />;
+    }
+    return <Navigate to="dashboard" replace />;
+}
 
 const page = (load: () => Promise<{ default: ComponentType }>): Pick<RouteObject, 'lazy'> => ({
     lazy: async () => ({ Component: (await load()).default }),
@@ -47,7 +56,7 @@ export const router = createBrowserRouter([
                     </RequireAuth>
                 ),
                 children: [
-                    { index: true, element: <Navigate to="dashboard" replace /> },
+                    { index: true, element: <AdminIndexRedirect /> },
                     { path: 'dashboard', ...page(() => import('../pages/Dashboard/Dashboard')) },
                     { path: 'customers', ...page(() => import('../pages/Customer/Customers')) },
                     { path: 'bookings', ...page(() => import('../pages/Booking/Bookings')) },
@@ -71,7 +80,7 @@ export const router = createBrowserRouter([
                     { path: 'services', ...page(() => import('../pages/Admin/Services')) },
                     { path: 'packages', ...page(() => import('../pages/Admin/Packages')) },
                     { path: 'coupons', ...page(() => import('../pages/Coupon/Coupons')) },
-                    { path: 'companies', element: <Navigate to="/admin/settings?tab=studios" replace /> },
+                    { path: 'companies', ...page(() => import('../pages/Company/Companies')) },
                     { path: 'website', ...page(() => import('../pages/Admin/Website')) },
                     { path: 'staff', ...page(() => import('../pages/Admin/Staff')) },
                     { path: 'access/*', element: <Navigate to="/admin/staff" replace /> },

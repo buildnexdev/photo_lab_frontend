@@ -72,6 +72,8 @@ export interface ShopOrder {
     payment: string;
     paymentStatus: 'Pending' | 'Paid';
     status: ShopOrderStatus;
+    trackingNumber?: string | null;
+    courierPartner?: string | null;
 }
 
 export interface ProductType {
@@ -86,7 +88,7 @@ export interface ProductType {
 export const SHOP_CATEGORIES: ProductCategory[] = ['Photo Frames', 'Photo Cups', 'Photo Albums', 'Photo Prints', 'Customized Gifts', 'Coming Soon'];
 export const SHOP_ORDER_STATUSES: ShopOrderStatus[] = ['New Order', 'Confirmed', 'Photo Verification', 'Design / Customization', 'Production', 'Ready', 'Shipped', 'Delivered'];
 
-const STORAGE = { types: 'photolab.shop.types.v1', products: 'photolab.shop.products.v1', cart: 'photolab.shop.cart.v1', orders: 'photolab.shop.orders.v1' } as const;
+const STORAGE = { types: 'photolab.shop.types.v1', products: 'photolab.shop.products.v1', cart: 'photolab.shop.cart.v1', orders: 'photolab.shop.orders.v1', wishlist: 'photolab.shop.wishlist.v1' } as const;
 
 export const seededProductTypes: ProductType[] = [
     { id: 'type-frames', name: 'Photo Frames', code: 'FRAMES', description: 'Hardwood and metal gallery frames with archival matting.', icon: 'Frame', active: true },
@@ -179,6 +181,14 @@ export const getCart = () => read<ShopCartItem[]>(STORAGE.cart, []);
 export const saveCart = (cart: ShopCartItem[]) => write(STORAGE.cart, cart);
 export const getOrders = () => read<ShopOrder[]>(STORAGE.orders, []);
 export const saveOrders = (orders: ShopOrder[]) => write(STORAGE.orders, orders);
+export const getWishlist = () => read<string[]>(STORAGE.wishlist, []);
+export const saveWishlist = (ids: string[]) => write(STORAGE.wishlist, ids);
+export const toggleWishlistHelper = (id: string): string[] => {
+    const current = getWishlist();
+    const updated = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+    saveWishlist(updated);
+    return updated;
+};
 
 export async function imageFileToDataUrl(file: File, maxEdge = 1800): Promise<string> {
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Choose a JPG, PNG or WebP image.');

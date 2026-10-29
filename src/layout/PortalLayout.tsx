@@ -3,11 +3,14 @@
 // Last Edited : 06-10-2026
 import clsx from 'clsx';
 import {
+    Building2,
     ExternalLink,
     LayoutGrid,
     LogOut,
     Menu,
     Search,
+    Settings,
+    ShieldCheck,
     User,
     X,
     type LucideIcon,
@@ -93,7 +96,8 @@ function Subheader({
     const tone = toneForPath(pathname, `${pageTitle} ${activeItem?.label ?? ''}`);
     const topbarTheme = ICON_TONE_TOPBAR[tone];
 
-    const topbarRole = ROLE_LABELS[(user?.roles[0] as Role) ?? 'CUSTOMER'] ?? area;
+    const isSuperAdmin = user?.roles?.includes('SUPER_ADMIN');
+    const topbarRole = isSuperAdmin ? 'Super Admin' : (ROLE_LABELS[(user?.roles[0] as Role) ?? 'CUSTOMER'] ?? area);
 
     return (
         <header className="portal-topbar">
@@ -130,25 +134,45 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
     const site = useSite();
     const [mobileOpen, setMobileOpen] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
     useEffect(() => setMobileOpen(false), [location.pathname]);
 
-    const visible = useMemo(
-        () =>
-            sections
-                .map((s) => ({
-                    ...s,
-                    items: s.items.filter((i) => (!i.roles?.length || hasRole(...i.roles)) && (!i.anyOf || can(...i.anyOf))),
-                }))
-                .filter((s) => s.items.length),
-        [sections, can, hasRole],
-    );
+    const isSuperAdmin = hasRole('SUPER_ADMIN');
+
+    // Super Admin is exclusively for SaaS platform company management
+    const SUPER_ADMIN_ALLOWED = ['/admin/companies', '/admin/audit-logs', '/admin/profile', '/admin/notifications'];
+    useEffect(() => {
+        if (isSuperAdmin && !SUPER_ADMIN_ALLOWED.some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))) {
+            navigate('/admin/companies', { replace: true });
+        }
+    }, [isSuperAdmin, location.pathname, navigate]);
+
+    const visible = useMemo(() => {
+        if (isSuperAdmin) {
+            return [
+                {
+                    title: 'Platform Administration',
+                    items: [
+                        { to: '/admin/companies', label: 'Companies & Studios', icon: Building2 },
+                        { to: '/admin/audit-logs', label: 'Platform Audit Logs', icon: ShieldCheck },
+                    ],
+                },
+            ];
+        }
+        return sections
+            .map((s) => ({
+                ...s,
+                items: s.items.filter((i) => (!i.roles?.length || hasRole(...i.roles)) && (!i.anyOf || can(...i.anyOf))),
+            }))
+            .filter((s) => s.items.length);
+    }, [sections, can, hasRole, isSuperAdmin]);
 
     // Dynamic page title
     const activeItem = visible
         .flatMap((s) => s.items)
         .filter((item) => (item.end ? location.pathname === item.to : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)))
         .sort((a, b) => b.to.length - a.to.length)[0];
-    const areaDashboard = `${area ? area.charAt(0).toUpperCase() + area.slice(1) : 'Admin'} dashboard`;
+    const areaDashboard = isSuperAdmin ? 'Super Admin Portal' : `${area ? area.charAt(0).toUpperCase() + area.slice(1) : 'Admin'} dashboard`;
     const pageTitle =
         location.pathname === profileLink
             ? 'My profile'
@@ -160,7 +184,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                     : activeItem.label
                 : areaDashboard;
 
-    const subtitleText = site.data?.studio.name ?? 'Studio suite';
+    const subtitleText = isSuperAdmin ? 'Platform Super Admin' : (site.data?.studio.name ?? 'Studio suite');
 
     const brandHeader = (
         <div className="portal-sidebar__brand">
@@ -235,7 +259,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                     <Subheader
                         pageTitle={pageTitle}
                         activeItem={activeItem}
-                        area={area}
+                        area={isSuperAdmin ? 'Platform Admin' : area}
                         pathname={location.pathname}
                         onMobileMenuOpen={() => setMobileOpen(true)}
                         notificationsLink={notificationsLink}
@@ -300,9 +324,11 @@ function UserMenu({ name, role, profileLink, onLogout }: { name: string; role: R
                     <Link role="menuitem" to={profileLink} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                         <User className="size-4 text-slate-400" /> My profile
                     </Link>
-                    <Link role="menuitem" to="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                        <ExternalLink className="size-4 text-slate-400" /> Visit website
-                    </Link>
+                    {role !== 'SUPER_ADMIN' && (
+                        <Link role="menuitem" to="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                            <ExternalLink className="size-4 text-slate-400" /> Visit website
+                        </Link>
+                    )}
                     <div className="my-1 border-t border-slate-100" />
                     <button role="menuitem" type="button" onClick={signOut} className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                         <LogOut className="size-4" /> Sign out

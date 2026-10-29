@@ -53,7 +53,7 @@ function* loginWorker(action: { type: typeof AUTH_LOGIN; payload: AuthLoginPaylo
             password: action.payload.password,
             studio: action.payload.studio,
         });
-        yield call(setAccessToken, session.accessToken);
+        yield call(setAccessToken, session.accessToken, session.studioSlug);
         yield put(authSession(session.user));
         finish(action.payload.id, null, session);
     } catch (error) {
@@ -65,7 +65,7 @@ function* registerWorker(action: { type: typeof AUTH_REGISTER; payload: AuthRegi
     try {
         const { id, ...body } = action.payload;
         const session: SessionPayload = yield call(registerRequest, body);
-        yield call(setAccessToken, session.accessToken);
+        yield call(setAccessToken, session.accessToken, session.studioSlug);
         yield put(authSession(session.user));
         finish(id, null, session);
     } catch (error) {

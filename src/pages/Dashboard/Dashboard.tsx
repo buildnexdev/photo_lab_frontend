@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { BarChart3, CalendarCheck, CalendarClock, Clock, Download, Eye, IndianRupee, Inbox, PieChart as PieIcon, ShoppingBag, TrendingUp, Users, Wallet } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, Navigate, useNavigate } from 'react-router';
 import { ChartCard, DonutChart, HBarChart, TrendChart, VIVID_COLORS } from '../../components/ui/Charts';
 import { EmptyState, ErrorState, Loading, StatusBadge } from '../../components/ui/Data';
 import { RangeFilter, rangeQuery, useRangeParams } from '../../components/ui/RangeFilter';
@@ -94,7 +94,10 @@ const greeting = () => {
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
-    const { can, user } = useAuth();
+    const { can, user, hasRole } = useAuth();
+    if (hasRole('SUPER_ADMIN')) {
+        return <Navigate to="/admin/companies" replace />;
+    }
     const [range, setRange] = useRangeParams('this_month');
     const rq = rangeQuery(range);
     const q = useQuery({
@@ -122,7 +125,7 @@ export default function AdminDashboard() {
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e6c97a]">Performance snapshot</p>
                         <h2 className="mt-1 text-xl font-semibold sm:text-2xl">
-                            {greeting()}, {user?.name?.split(' ')[0] ?? 'there'}
+                            {greeting()}, {user?.name || 'there'}
                         </h2>
                         <p className="mt-1 text-sm text-white/70">
                             {d ? `${d.range.label} · ${date(d.range.from)} – ${date(d.range.to)}` : 'Studio performance at a glance'}

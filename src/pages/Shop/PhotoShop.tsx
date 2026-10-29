@@ -1,9 +1,10 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ChevronRight, Crop, Minus, Move, Plus, RotateCcw, RotateCw, ShoppingBag, Sparkles, Upload, UserRound, X } from 'lucide-react';
-import { useEffect, useRef, useState, type ChangeEvent, type PointerEvent } from 'react';
-import { getCart, getOrders, getProducts, imageFileToDataUrl, saveCart, saveOrders, SHOP_CATEGORIES, type PhotoAdjustment, type ProductCategory, type ShopCartItem, type ShopOrder, type ShopProduct } from '../../helpers/shop/photoShop';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ChevronRight, Crop, Heart, Loader2, Minus, Move, Plus, QrCode, RotateCcw, RotateCw, Search, ShoppingBag, Sparkles, Upload, UserRound, X } from 'lucide-react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent } from 'react';
+import { getCart, getOrders, getProducts, getWishlist, imageFileToDataUrl, normalizeProducts, saveCart, saveOrders, saveProducts, saveWishlist, SHOP_CATEGORIES, toggleWishlistHelper, type PhotoAdjustment, type ProductCategory, type ShopCartItem, type ShopOrder, type ShopProduct } from '../../helpers/shop/photoShop';
+import { api } from '../../services/api';
 import { BRAND_LOGO_PUBLIC } from '../../lib/brand';
 import './PhotoShop.scss';
 
@@ -102,8 +103,11 @@ function StepLabel({ active, done, number, label }: { active: boolean; done: boo
 }
 
 export default function PhotoShop() {
-    const [products] = useState<ShopProduct[]>(getProducts);
+    const [products, setProducts] = useState<ShopProduct[]>(getProducts);
     const [cart, setCart] = useState<ShopCartItem[]>(getCart);
+    const [wishlist, setWishlist] = useState<string[]>(getWishlist);
+    const [wishlistOpen, setWishlistOpen] = useState(false);
+    const [search, setSearch] = useState('');
     const [category, setCategory] = useState<ProductCategory | 'All'>('All');
     const [activeProduct, setActiveProduct] = useState<ShopProduct | null>(null);
     const [step, setStep] = useState(1);
@@ -120,11 +124,50 @@ export default function PhotoShop() {
     const [error, setError] = useState('');
     const [payment, setPayment] = useState('UPI / online payment');
     const [placedOrder, setPlacedOrder] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const uploadRef = useRef<HTMLInputElement>(null);
 
+    // Fetch dynamic products configured by admin
+    useEffect(() => {
+        let mounted = true;
+        api.get<ShopProduct[]>('/api/public/products')
+            .then((res) => {
+                if (!mounted) return;
+                const items = normalizeProducts(res);
+                if (items && items.length > 0) {
+                    setProducts(items);
+                    saveProducts(items);
+                }
+            })
+            .catch((err) => {
+                console.warn('Using local catalog fallback:', err);
+            });
+        return () => { mounted = false; };
+    }, []);
+
     useEffect(() => { saveCart(cart); }, [cart]);
+    useEffect(() => { saveWishlist(wishlist); }, [wishlist]);
     useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(''), 2600); return () => window.clearTimeout(timer); }, [notice]);
-    const visibleProducts = products.filter((product) => product.active && (category === 'All' || product.category === category));
+
+    const toggleWishlist = (id: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        const updated = toggleWishlistHelper(id);
+        setWishlist(updated);
+        setNotice(updated.includes(id) ? 'Saved to your wishlist' : 'Removed from wishlist');
+    };
+
+    const visibleProducts = products.filter((product) => {
+        if (!product.active) return false;
+        if (category !== 'All' && product.category !== category) return false;
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            return product.name.toLowerCase().includes(q) || product.description.toLowerCase().includes(q);
+        }
+        return true;
+    });
+
+    const wishlistProducts = products.filter((p) => wishlist.includes(p.id));
+
     const subtotal = cart.reduce((sum, item) => sum + item.basePrice * item.quantity, 0);
     const customTotal = cart.reduce((sum, item) => sum + item.customizationPrice * item.quantity, 0);
     const delivery = cart.length ? subtotal + customTotal >= 2500 ? 0 : 99 : 0;
@@ -148,20 +191,155 @@ export default function PhotoShop() {
         setCart((current) => [...current, item]); setActiveProduct(null); setCartOpen(true); setNotice('Added to your bag'); setError('');
     };
     const updateQuantity = (id: string, delta: number) => setCart((items) => items.map((item) => item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta), lineTotal: (item.basePrice + item.customizationPrice) * Math.max(1, item.quantity + delta) } : item));
-    const placeOrder = (event: ChangeEvent<HTMLFormElement>) => {
+
+    const placeOrder = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setIsSubmitting(true);
+        setError('');
         const form = new FormData(event.currentTarget);
         const customer = Object.fromEntries(['name', 'mobile', 'email', 'address', 'city', 'state', 'pincode', 'instructions'].map((key) => [key, String(form.get(key) ?? '')])) as ShopOrder['customer'];
-        const order: ShopOrder = { id: `FL-${Date.now().toString().slice(-7)}`, createdAt: new Date().toISOString(), customer, items: cart, subtotal, customization: customTotal, delivery, discount: 0, total, payment, paymentStatus: 'Pending', status: 'New Order' };
-        saveOrders([order, ...getOrders()]); setCart([]); setCheckoutOpen(false); setCartOpen(false); setPlacedOrder(order.id); window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        const orderPayload = {
+            customer,
+            items: cart,
+            subtotal,
+            customization: customTotal,
+            delivery,
+            discount: 0,
+            total,
+            paymentMethod: payment,
+        };
+
+        try {
+            const res = await api.post<any>('/api/public/shop-orders', orderPayload);
+            const orderId = res?.id || res?.data?.id || `FL-${Date.now().toString().slice(-7)}`;
+            const order: ShopOrder = {
+                id: orderId,
+                createdAt: new Date().toISOString(),
+                customer,
+                items: cart,
+                subtotal,
+                customization: customTotal,
+                delivery,
+                discount: 0,
+                total,
+                payment,
+                paymentStatus: 'Pending',
+                status: 'New Order',
+            };
+            saveOrders([order, ...getOrders()]);
+            setCart([]);
+            setCheckoutOpen(false);
+            setCartOpen(false);
+            setPlacedOrder(orderId);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err: any) {
+            console.error('Order placement API failed, saving locally:', err);
+            const fallbackId = `FL-${Date.now().toString().slice(-7)}`;
+            const order: ShopOrder = {
+                id: fallbackId,
+                createdAt: new Date().toISOString(),
+                customer,
+                items: cart,
+                subtotal,
+                customization: customTotal,
+                delivery,
+                discount: 0,
+                total,
+                payment,
+                paymentStatus: 'Pending',
+                status: 'New Order',
+            };
+            saveOrders([order, ...getOrders()]);
+            setCart([]);
+            setCheckoutOpen(false);
+            setCartOpen(false);
+            setPlacedOrder(fallbackId);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return <div className="photo-shop">
-        <header className="shop-header"><a className="shop-header-products" href="#collection">Products</a><a className="shop-brand" href="/shop"><img src={BRAND_LOGO_PUBLIC} alt="" /><span>NAMMAQR<small>PHOTOGRAPHY</small></span></a><div className="shop-header-actions"><a className="shop-header-login" href="/login" aria-label="Login"><UserRound size={17} /><span>Login</span></a><button className="shop-bag-button" type="button" onClick={() => setCartOpen(true)} aria-label={`Shopping bag, ${cart.length} items`}><ShoppingBag size={18} /><span>Cart</span><b>{cart.length}</b></button></div></header>
+        <header className="shop-header">
+            <a className="shop-header-products" href="#collection">Products</a>
+            <a className="shop-brand" href="/shop">
+                <img src={BRAND_LOGO_PUBLIC} alt="" />
+                <span>NAMMAQR<small>PHOTOGRAPHY</small></span>
+            </a>
+            <div className="shop-header-actions">
+                <a className="shop-header-login" href="/login" aria-label="Login"><UserRound size={17} /><span>Login</span></a>
+                <button className="shop-wishlist-button" type="button" onClick={() => setWishlistOpen(true)} aria-label={`Wishlist, ${wishlist.length} items`}>
+                    <Heart size={18} fill={wishlist.length > 0 ? "currentColor" : "none"} />
+                    <span>Wishlist</span>
+                    {wishlist.length > 0 && <b>{wishlist.length}</b>}
+                </button>
+                <button className="shop-bag-button" type="button" onClick={() => setCartOpen(true)} aria-label={`Shopping bag, ${cart.length} items`}>
+                    <ShoppingBag size={18} />
+                    <span>Cart</span>
+                    <b>{cart.length}</b>
+                </button>
+            </div>
+        </header>
+
         {placedOrder ? <section className="shop-success"><span><Check size={26} /></span><p className="shop-eyebrow">A LITTLE MOMENT, MADE YOURS</p><h1>Your order is in good hands.</h1><p>Order <strong>{placedOrder}</strong> is placed. We’ll send the next update as your piece moves through our studio.</p><button type="button" className="shop-button shop-button-dark" onClick={() => { setPlacedOrder(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Keep exploring <ArrowRight size={16} /></button></section> : <>
             <section className="shop-hero"><div className="shop-hero-copy"><p className="shop-eyebrow"><Sparkles size={14} /> YOUR STORY, BEAUTIFULLY KEPT</p><h1>Some moments<br />deserve a <em>place.</em></h1><p>Turn the photographs you love into the things you’ll keep close. Made by hand, made for you.</p><a href="#collection" className="shop-button shop-button-light">Find your keepsake <ArrowRight size={16} /></a><div className="shop-hero-foot"><span>01 / 03</span><i /><span>THE PERSONAL COLLECTION</span></div></div><div className="shop-hero-image"><img src="/images/hero-couple-petals.jpg" alt="A couple sharing a quiet moment beneath a shower of rose petals" /><div className="shop-hero-caption">A moment worth coming back to <span>— 2025, Chennai</span></div></div><div className="shop-hero-vertical">MADE TO HOLD ON TO</div></section>
             <section className="shop-editorial" id="our-craft"><span>PHOTOGRAPHY BECOMES PERSONAL</span><p>Not just a print. The story behind it, made tangible.</p><div><i /> <span>CRAFTED IN OUR STUDIO · MADE TO LAST</span></div></section>
-            <section className="shop-collection" id="collection"><div className="shop-collection-head"><div><p className="shop-eyebrow">THE OBJECTS WE MAKE</p><h2>Keep the good things.</h2></div><p>Choose your piece, add the photograph that makes it yours.<br />Every order is made just for you.</p></div><div className="shop-categories" role="group" aria-label="Filter products">{['All', ...SHOP_CATEGORIES].map((item) => <button type="button" key={item} className={category === item ? 'selected' : ''} onClick={() => setCategory(item as ProductCategory | 'All')}>{item}</button>)}</div><div className="shop-product-grid">{visibleProducts.map((product, index) => <article className={`shop-product-card ${product.comingSoon ? 'is-coming-soon' : ''}`} key={product.id} style={{ animationDelay: `${index * 70}ms` }}><button type="button" className="shop-product-image" onClick={() => openProduct(product)}><img src={product.image} alt={product.name} />{product.comingSoon ? <span className="shop-coming-soon-badge">COMING SOON</span> : product.customizable ? <span><Sparkles size={13} /> PERSONALISE</span> : null}<i><ArrowRight size={17} /></i></button><div className="shop-product-meta"><div><span>{product.category}</span><h3>{product.name}</h3></div><strong>{money(Math.round(product.price * (100 - product.discount) / 100))}</strong></div><button type="button" className="shop-product-link" onClick={() => openProduct(product)}>{product.comingSoon ? 'Preview piece' : 'Make it yours'} <ChevronRight size={14} /></button></article>)}</div></section>
+            <section className="shop-collection" id="collection">
+                <div className="shop-collection-head">
+                    <div>
+                        <p className="shop-eyebrow">THE OBJECTS WE MAKE</p>
+                        <h2>Keep the good things.</h2>
+                    </div>
+                    <div className="shop-search-wrapper">
+                        <Search size={16} />
+                        <input
+                            type="search"
+                            placeholder="Search frames, cups, albums..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div className="shop-categories" role="group" aria-label="Filter products">
+                    {['All', ...SHOP_CATEGORIES].map((item) => (
+                        <button type="button" key={item} className={category === item ? 'selected' : ''} onClick={() => setCategory(item as ProductCategory | 'All')}>{item}</button>
+                    ))}
+                </div>
+                <div className="shop-product-grid">
+                    {visibleProducts.map((product, index) => (
+                        <article className={`shop-product-card ${product.comingSoon ? 'is-coming-soon' : ''}`} key={product.id} style={{ animationDelay: `${index * 70}ms` }}>
+                            <button
+                                type="button"
+                                className={`shop-wishlist-heart ${wishlist.includes(product.id) ? 'is-active' : ''}`}
+                                onClick={(e) => toggleWishlist(product.id, e)}
+                                aria-label={wishlist.includes(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                            >
+                                <Heart size={16} fill={wishlist.includes(product.id) ? 'currentColor' : 'none'} />
+                            </button>
+                            <button type="button" className="shop-product-image" onClick={() => openProduct(product)}>
+                                <img src={product.image} alt={product.name} />
+                                {product.comingSoon ? <span className="shop-coming-soon-badge">COMING SOON</span> : product.customizable ? <span><Sparkles size={13} /> PERSONALISE</span> : null}
+                                <i><ArrowRight size={17} /></i>
+                            </button>
+                            <div className="shop-product-meta">
+                                <div><span>{product.category}</span><h3>{product.name}</h3></div>
+                                <strong>{money(Math.round(product.price * (100 - product.discount) / 100))}</strong>
+                            </div>
+                            <button type="button" className="shop-product-link" onClick={() => openProduct(product)}>
+                                {product.comingSoon ? 'Preview piece' : 'Make it yours'} <ChevronRight size={14} />
+                            </button>
+                        </article>
+                    ))}
+                    {!visibleProducts.length && (
+                        <div className="shop-empty-search" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3.5rem 1rem', color: '#7a7062' }}>
+                            <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No products match your search or filter.</p>
+                            <button type="button" className="shop-button shop-button-dark" style={{ display: 'inline-flex', marginTop: '1rem' }} onClick={() => { setSearch(''); setCategory('All'); }}>Clear filters</button>
+                        </div>
+                    )}
+                </div>
+            </section>
             <section className="shop-note"><div><span>THE FINISHING TOUCH</span><h2>Printed with care.<br /><em>Kept for years.</em></h2><p>Archival papers, thoughtfully sourced materials and a real person checking every custom order before it leaves our studio.</p></div><img src="/images/hero-wedding-garlands.jpg" alt="A joyful wedding celebration, photographed in warm light" /></section>
             <footer className="shop-footer"><a className="shop-brand" href="/shop"><img src={BRAND_LOGO_PUBLIC} alt="" /><span>NAMMAQR<small>PHOTOGRAPHY</small></span></a><p>Made slowly, for the moments that stay.</p><span>© 2026 Nammaqr Photography</span></footer>
         </>}
@@ -175,9 +353,88 @@ export default function PhotoShop() {
             {error && <p className="shop-error">{error}</p>}{activeProduct.comingSoon ? <div className="shop-final-add"><button type="button" className="shop-button shop-button-dark shop-continue" onClick={() => { setActiveProduct(null); setNotice('Coming Soon! You will be notified once orders open.'); }}><Sparkles size={16} /> Coming Soon · Notify Me</button></div> : step < 3 ? <button type="button" className="shop-button shop-button-dark shop-continue" onClick={() => { if (step === 1 && activeProduct.customizable) { setStep(2); if (!photo) window.setTimeout(() => uploadRef.current?.click(), 0); } else setStep(3); }} disabled={step === 2 && activeProduct.customizable && !photo}>{step === 1 && activeProduct.customizable ? 'Add your photograph' : 'Review your piece'} <ArrowRight size={16} /></button> : <div className="shop-final-add"><span>YOUR CUSTOMISED PRODUCT</span><button type="button" className="shop-button shop-button-dark shop-continue" onClick={addToCart}><Check size={16} /> Looks Good — Add to Cart · {money((productPrice + activeProduct.customizationPrice) * quantity)}</button></div>}{step === 2 && photo && !activeProduct.comingSoon && <button type="button" className="shop-review-link" onClick={() => setStep(3)}>Continue to final preview <ArrowRight size={14} /></button>}<p className="shop-secure-note">Made to order in our studio · Secure checkout</p>
         </div></div></section></div>}
 
+        {/* Wishlist Drawer */}
+        {wishlistOpen && (
+            <div className="shop-modal-backdrop shop-drawer-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setWishlistOpen(false); }}>
+                <aside className="shop-cart-drawer" role="dialog" aria-modal="true" aria-label="Wishlist">
+                    <header>
+                        <div>
+                            <p className="shop-eyebrow">SAVED FOR LATER</p>
+                            <h2>Your Wishlist <span>({wishlist.length})</span></h2>
+                        </div>
+                        <button className="shop-icon-button" type="button" onClick={() => setWishlistOpen(false)} aria-label="Close wishlist"><X /></button>
+                    </header>
+                    {!wishlistProducts.length ? (
+                        <div className="shop-empty-cart">
+                            <Heart size={28} />
+                            <p>Your wishlist is waiting for a favourite piece.</p>
+                            <button className="shop-button shop-button-dark" type="button" onClick={() => { setWishlistOpen(false); document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' }); }}>
+                                Explore the collection
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="shop-cart-items" style={{ padding: '1rem' }}>
+                            {wishlistProducts.map((p) => (
+                                <article key={p.id} className="shop-cart-item" style={{ marginBottom: '1rem' }}>
+                                    <img src={p.image} alt={p.name} />
+                                    <div>
+                                        <span>{p.name}</span>
+                                        <small>{p.category} · {p.sizes.slice(0, 2).join(', ')}</small>
+                                        <b>{money(Math.round(p.price * (100 - p.discount) / 100))}</b>
+                                        <div className="shop-cart-qty" style={{ marginTop: '0.5rem' }}>
+                                            <button
+                                                type="button"
+                                                className="shop-button shop-button-dark"
+                                                style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', borderRadius: '4px' }}
+                                                onClick={() => {
+                                                    setWishlistOpen(false);
+                                                    openProduct(p);
+                                                }}
+                                            >
+                                                Personalise & Buy
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="shop-remove"
+                                                onClick={() => toggleWishlist(p.id)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+                </aside>
+            </div>
+        )}
+
         {cartOpen && <div className="shop-modal-backdrop shop-drawer-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCartOpen(false); }}><aside className="shop-cart-drawer" role="dialog" aria-modal="true" aria-label="Shopping bag"><header><div><p className="shop-eyebrow">YOUR KEEPERS</p><h2>Shopping bag <span>({cart.length})</span></h2></div><button className="shop-icon-button" type="button" onClick={() => setCartOpen(false)} aria-label="Close bag"><X /></button></header>{!cart.length ? <div className="shop-empty-cart"><ShoppingBag size={28} /><p>Your bag is waiting for a favourite.</p><button className="shop-button shop-button-dark" type="button" onClick={() => { setCartOpen(false); document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' }); }}>Explore the collection</button></div> : <><div className="shop-cart-items">{cart.map((item) => <article key={item.id} className="shop-cart-item"><img src={item.preview} alt={`${item.productName} preview`} /><div><span>{item.productName}</span><small>{item.size} · {item.variant}</small><b>{money(item.basePrice + item.customizationPrice)}</b><div className="shop-cart-qty"><button type="button" onClick={() => updateQuantity(item.id, -1)} aria-label="Decrease quantity"><Minus size={12} /></button><span>{item.quantity}</span><button type="button" onClick={() => updateQuantity(item.id, 1)} aria-label="Increase quantity"><Plus size={12} /></button><button type="button" className="shop-remove" onClick={() => setCart((items) => items.filter((row) => row.id !== item.id))}>Remove</button></div></div></article>)}</div><div className="shop-cart-summary"><div><span>Items</span><b>{money(subtotal)}</b></div><div><span>Personalisation</span><b>{money(customTotal)}</b></div><div><span>Delivery</span><b>{delivery ? money(delivery) : 'Complimentary'}</b></div><div className="shop-cart-total"><span>Total</span><b>{money(total)}</b></div><button type="button" className="shop-button shop-button-dark" onClick={() => { setCheckoutOpen(true); setCartOpen(false); }}>Continue to checkout <ArrowRight size={16} /></button><p>Complimentary delivery on orders over ₹2,500</p></div></>}</aside></div>}
 
-        {checkoutOpen && <div className="shop-modal-backdrop"><section className="shop-checkout" role="dialog" aria-modal="true" aria-label="Checkout"><header><div><p className="shop-eyebrow">ALMOST YOURS</p><h2>Delivery & payment</h2></div><button className="shop-icon-button" type="button" onClick={() => setCheckoutOpen(false)} aria-label="Close checkout"><X /></button></header><div className="shop-checkout-grid"><form onSubmit={placeOrder} className="shop-checkout-form"><div className="shop-form-grid"><label>Full name<input name="name" autoComplete="name" required /></label><label>Mobile number<input name="mobile" type="tel" autoComplete="tel" pattern="[0-9+() -]{8,16}" required /></label><label className="shop-form-wide">Email address<input name="email" type="email" autoComplete="email" required /></label><label className="shop-form-wide">Delivery address<textarea name="address" autoComplete="street-address" rows={2} required /></label><label>City<input name="city" autoComplete="address-level2" required /></label><label>State<input name="state" autoComplete="address-level1" required /></label><label>Pincode<input name="pincode" inputMode="numeric" pattern="[0-9]{6}" autoComplete="postal-code" required /></label><label className="shop-form-wide">Delivery instructions <span>Optional</span><textarea name="instructions" rows={2} /></label></div><fieldset className="shop-payment"><legend>PAYMENT METHOD</legend>{['UPI / online payment', 'Cash on delivery'].map((method) => <label key={method}><input type="radio" name="payment" checked={payment === method} onChange={() => setPayment(method)} />{method}</label>)}</fieldset><button className="shop-button shop-button-dark" type="submit">Place order · {money(total)} <ArrowRight size={16} /></button><p className="shop-payment-disclaimer">Checkout is in preview mode. Orders are saved to this browser and payment is recorded as a demo status.</p></form><div className="shop-order-summary"><h3>Your order</h3>{cart.map((item) => <div key={item.id} className="shop-summary-product"><img src={item.preview} alt="" /><div><span>{item.productName}</span><small>{item.size} · Qty {item.quantity}</small></div><b>{money(item.lineTotal)}</b></div>)}<div className="shop-summary-lines"><div><span>Product subtotal</span><b>{money(subtotal)}</b></div><div><span>Customisation</span><b>{money(customTotal)}</b></div><div><span>Delivery</span><b>{delivery ? money(delivery) : 'Complimentary'}</b></div><div className="shop-cart-total"><span>Final total</span><b>{money(total)}</b></div></div></div></div></section></div>}
+        {checkoutOpen && <div className="shop-modal-backdrop"><section className="shop-checkout" role="dialog" aria-modal="true" aria-label="Checkout"><header><div><p className="shop-eyebrow">ALMOST YOURS</p><h2>Delivery & payment</h2></div><button className="shop-icon-button" type="button" onClick={() => setCheckoutOpen(false)} aria-label="Close checkout"><X /></button></header><div className="shop-checkout-grid"><form onSubmit={placeOrder} className="shop-checkout-form"><div className="shop-form-grid"><label>Full name<input name="name" autoComplete="name" required /></label><label>Mobile number<input name="mobile" type="tel" autoComplete="tel" pattern="[0-9+() -]{8,16}" required /></label><label className="shop-form-wide">Email address<input name="email" type="email" autoComplete="email" required /></label><label className="shop-form-wide">Delivery address<textarea name="address" autoComplete="street-address" rows={2} required /></label><label>City<input name="city" autoComplete="address-level2" required /></label><label>State<input name="state" autoComplete="address-level1" required /></label><label>Pincode<input name="pincode" inputMode="numeric" pattern="[0-9]{6}" autoComplete="postal-code" required /></label><label className="shop-form-wide">Delivery instructions <span>Optional</span><textarea name="instructions" rows={2} /></label></div><fieldset className="shop-payment"><legend>PAYMENT METHOD</legend>{['UPI / online payment', 'Cash on delivery'].map((method) => <label key={method}><input type="radio" name="payment" checked={payment === method} onChange={() => setPayment(method)} />{method}</label>)}</fieldset>
+        {payment === 'UPI / online payment' && (
+            <div className="shop-upi-card">
+                <div>
+                    <QrCode size={20} className="text-stone-700" />
+                    <div>
+                        <b>Fast UPI / QR Checkout</b>
+                        <p>Scan & pay securely via GPay, PhonePe, Paytm or Netbanking after order confirmation.</p>
+                    </div>
+                </div>
+            </div>
+        )}
+        <button className="shop-button shop-button-dark" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+                <>
+                    <Loader2 className="animate-spin" size={16} /> Placing order...
+                </>
+            ) : (
+                <>
+                    Place order · {money(total)} <ArrowRight size={16} />
+                </>
+            )}
+        </button><p className="shop-payment-disclaimer">All orders are directly synced with studio order production & tracking.</p></form><div className="shop-order-summary"><h3>Your order</h3>{cart.map((item) => <div key={item.id} className="shop-summary-product"><img src={item.preview} alt="" /><div><span>{item.productName}</span><small>{item.size} · Qty {item.quantity}</small></div><b>{money(item.lineTotal)}</b></div>)}<div className="shop-summary-lines"><div><span>Product subtotal</span><b>{money(subtotal)}</b></div><div><span>Customisation</span><b>{money(customTotal)}</b></div><div><span>Delivery</span><b>{delivery ? money(delivery) : 'Complimentary'}</b></div><div className="shop-cart-total"><span>Final total</span><b>{money(total)}</b></div></div></div></div></section></div>}
         {notice && <div className="shop-toast" role="status"><Check size={16} />{notice}</div>}
     </div>;
-}
+}

@@ -46,18 +46,32 @@ export const errorMessage = (err: unknown, fallback = 'Something went wrong. Ple
 /* ---------------- Access token (cached in sessionStorage across refresh; refresh token is httpOnly cookie) ---------------- */
 
 const ACCESS_TOKEN_KEY = 'pl_access_token';
+const STUDIO_SLUG_KEY = 'pl_studio_slug';
 let accessToken: string | null = typeof window !== 'undefined' ? sessionStorage.getItem(ACCESS_TOKEN_KEY) : null;
+let studioSlug: string | null = typeof window !== 'undefined' ? sessionStorage.getItem(STUDIO_SLUG_KEY) : null;
 let refreshing: Promise<boolean> | null = null;
 let onSessionLost: (() => void) | null = null;
 
-export const setAccessToken = (t: string | null) => {
+export const setAccessToken = (t: string | null, slug?: string | null) => {
     accessToken = t;
     if (typeof window !== 'undefined') {
         if (t) sessionStorage.setItem(ACCESS_TOKEN_KEY, t);
         else sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+        if (slug !== undefined) {
+            if (slug) {
+                sessionStorage.setItem(STUDIO_SLUG_KEY, slug);
+                localStorage.setItem(STUDIO_SLUG_KEY, slug);
+                studioSlug = slug;
+            } else {
+                sessionStorage.removeItem(STUDIO_SLUG_KEY);
+                localStorage.removeItem(STUDIO_SLUG_KEY);
+                studioSlug = null;
+            }
+        }
     }
 };
 export const getAccessToken = () => accessToken;
+export const getStudioSlug = () => studioSlug;
 export const setSessionLostHandler = (fn: (() => void) | null) => {
     onSessionLost = fn;
 };
@@ -67,6 +81,7 @@ export interface SessionPayload {
     accessToken: string;
     refreshExpiresAt: string;
     home: string;
+    studioSlug?: string;
 }
 
 export interface SessionUser {
@@ -172,6 +187,12 @@ export async function apiSend<T>(path: string, opts: RequestOptions = {}): Promi
     const headers: Record<string, string> = { 'X-Requested-With': 'XMLHttpRequest', ...(opts.headers ?? {}) };
     if (!isForm && opts.body !== undefined) headers['Content-Type'] = 'application/json';
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    const activeStudio = typeof window !== 'undefined'
+        ? (new URLSearchParams(window.location.search).get('studio') || studioSlug || sessionStorage.getItem(STUDIO_SLUG_KEY) || localStorage.getItem(STUDIO_SLUG_KEY))
+        : null;
+    if (activeStudio && !headers['X-Studio-Slug']) {
+        headers['X-Studio-Slug'] = activeStudio;
+    }
     const res = await fetch(`${API_BASE}${path}${buildQuery(opts.query)}`, {
         method: opts.method ?? (opts.body !== undefined ? 'POST' : 'GET'),
         credentials: 'include',
