@@ -67,8 +67,9 @@ export function NammaqrBrand({
     clientLogoUrl?: string | null;
     dark?: boolean;
 }) {
-    const displayName = clientName?.trim() || 'Studio Workspace';
-    const initial = displayName.charAt(0).toUpperCase() || 'S';
+    if (!clientName) return null;
+    const displayName = clientName.trim();
+    const initial = displayName.charAt(0).toUpperCase();
 
     return (
         <div className={clsx('group flex select-none items-center gap-2.5', dark && 'portal-brand-dark')}>
@@ -87,13 +88,6 @@ export function NammaqrBrand({
                 <p className="portal-client-name truncate" title={displayName}>
                     {displayName}
                 </p>
-                {/* Nammaqr logo and name commented out as requested */}
-                {/* <div className="portal-platform-powered flex items-center gap-1 mt-0.5 whitespace-nowrap">
-                    <BrandMark variant={dark ? 'light' : 'default'} className="portal-platform-logo shrink-0" />
-                    <span>
-                        by <span className="platform-brand">Nammaqr Photography</span>
-                    </span>
-                </div> */}
             </div>
         </div>
     );
@@ -158,7 +152,7 @@ function Subheader({
 }
 
 export function PortalLayout({ area, sections, profileLink, notificationsLink }: { area: string; sections: NavSection[]; profileLink: string; notificationsLink?: string }) {
-    const { user, can, hasRole, logout, reload } = useAuth();
+    const { user, can, hasRole, logout } = useAuth();
     const site = useSite();
     const [mobileOpen, setMobileOpen] = useState(false);
     const location = useLocation();
@@ -166,13 +160,6 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
     useEffect(() => setMobileOpen(false), [location.pathname]);
 
     const isSuperAdmin = hasRole('SUPER_ADMIN');
-
-    // Auto-refresh session if logged in but companyName is missing
-    useEffect(() => {
-        if (user && !user.companyName && !isSuperAdmin) {
-            reload().catch(() => {});
-        }
-    }, [user?.id, user?.companyName, isSuperAdmin, reload]);
 
     // Super Admin is exclusively for SaaS platform company management
     const SUPER_ADMIN_ALLOWED = ['/admin/companies', '/admin/audit-logs', '/admin/profile', '/admin/notifications'];
@@ -221,7 +208,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
 
     const clientTitle = isSuperAdmin
         ? 'Platform Administration'
-        : (user?.companyName || 'Photography Studio');
+        : (user?.companyName || '');
 
     const brandHeader = (
         <div className="portal-sidebar__brand">
