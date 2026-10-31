@@ -87,12 +87,13 @@ export function NammaqrBrand({
                 <p className="portal-client-name truncate" title={displayName}>
                     {displayName}
                 </p>
-                <div className="portal-platform-powered flex items-center gap-1 mt-0.5 whitespace-nowrap">
+                {/* Nammaqr logo and name commented out as requested */}
+                {/* <div className="portal-platform-powered flex items-center gap-1 mt-0.5 whitespace-nowrap">
                     <BrandMark variant={dark ? 'light' : 'default'} className="portal-platform-logo shrink-0" />
                     <span>
                         by <span className="platform-brand">Nammaqr Photography</span>
                     </span>
-                </div>
+                </div> */}
             </div>
         </div>
     );
