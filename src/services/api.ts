@@ -1,6 +1,7 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
-// Last Edited : 06-10-2026
+import { encryptPayload, decryptPayload } from '../utils/crypto';
+
 const DEFAULT_PROD_API = 'https://flash-studio-backend-84en.onrender.com';
 
 const rawApiUrl = (import.meta.env.VITE_API_URL ?? '').trim();
@@ -90,6 +91,8 @@ export interface SessionUser {
     email: string | null;
     phone: string | null;
     companyId: number | null;
+    companyName?: string | null;
+    companySlug?: string | null;
     roles: string[];
     /** tblUser.is_admin = 1 or Super Admin; can manage page access. */
     isAdmin?: boolean;
@@ -115,7 +118,7 @@ export function refreshSession(): Promise<boolean> {
                 const res = await fetch(`${API_BASE}/api/auth/refresh`, {
                     method: 'POST',
                     credentials: 'include',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Encrypted': 'true', Accept: 'application/json' },
                     signal: controller.signal,
                 });
                 const type = res.headers.get('content-type') ?? '';
@@ -124,7 +127,10 @@ export function refreshSession(): Promise<boolean> {
                     refreshListeners.forEach((l) => l(null));
                     return false;
                 }
-                const body = (await res.json()) as { success?: boolean; data?: SessionPayload };
+                const rawJson = (await res.json()) as any;
+                const body = (rawJson && typeof rawJson.payload === 'string'
+                    ? await decryptPayload(rawJson.payload)
+                    : rawJson) as { success?: boolean; data?: SessionPayload };
                 if (body.success === false || !body.data?.accessToken || !body.data.user) {
                     accessToken = null;
                     refreshListeners.forEach((l) => l(null));
@@ -173,7 +179,15 @@ export interface ApiResult<T> {
 
 async function parse<T>(res: Response): Promise<ApiResult<T>> {
     const type = res.headers.get('content-type') ?? '';
-    const body = type.includes('application/json') ? ((await res.json()) as { success: boolean; message: string; data: T; errors?: FieldError[]; code?: string }) : null;
+    let body: any = null;
+    if (type.includes('application/json')) {
+        const rawJson = await res.json();
+        if (rawJson && typeof rawJson === 'object' && typeof rawJson.payload === 'string') {
+            body = await decryptPayload(rawJson.payload);
+        } else {
+            body = rawJson;
+        }
+    }
     if (!res.ok || (body && body.success === false)) {
         const msg = body?.message ?? (res.status === 429 ? 'Too many requests. Please wait a moment.' : `Request failed (${res.status})`);
         throw new ApiError(msg, res.status, body?.errors ?? [], body?.code);
@@ -184,8 +198,11 @@ async function parse<T>(res: Response): Promise<ApiResult<T>> {
 /** Full response (data + server message). */
 export async function apiSend<T>(path: string, opts: RequestOptions = {}): Promise<ApiResult<T>> {
     const isForm = typeof FormData !== 'undefined' && opts.body instanceof FormData;
-    const headers: Record<string, string> = { 'X-Requested-With': 'XMLHttpRequest', ...(opts.headers ?? {}) };
-    if (!isForm && opts.body !== undefined) headers['Content-Type'] = 'application/json';
+    const headers: Record<string, string> = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Encrypted': 'true',
+        ...(opts.headers ?? {}),
+    };
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
     const activeStudio = typeof window !== 'undefined'
         ? (new URLSearchParams(window.location.search).get('studio') || studioSlug || sessionStorage.getItem(STUDIO_SLUG_KEY) || localStorage.getItem(STUDIO_SLUG_KEY))
@@ -193,11 +210,23 @@ export async function apiSend<T>(path: string, opts: RequestOptions = {}): Promi
     if (activeStudio && !headers['X-Studio-Slug']) {
         headers['X-Studio-Slug'] = activeStudio;
     }
+
+    let requestBody: BodyInit | undefined = undefined;
+    if (opts.body !== undefined) {
+        if (isForm) {
+            requestBody = opts.body as FormData;
+        } else {
+            headers['Content-Type'] = 'application/json';
+            const encryptedHex = await encryptPayload(opts.body);
+            requestBody = JSON.stringify({ payload: encryptedHex });
+        }
+    }
+
     const res = await fetch(`${API_BASE}${path}${buildQuery(opts.query)}`, {
         method: opts.method ?? (opts.body !== undefined ? 'POST' : 'GET'),
         credentials: 'include',
         headers,
-        body: opts.body === undefined ? undefined : isForm ? (opts.body as FormData) : JSON.stringify(opts.body),
+        body: requestBody,
         signal: opts.signal,
     });
     if (res.status === 401 && !opts.noRetry && accessToken !== null) {
@@ -226,6 +255,7 @@ export function uploadWithProgress<T>(path: string, form: FormData, onProgress?:
         xhr.open('POST', `${API_BASE}${path}`);
         xhr.withCredentials = true;
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('X-Encrypted', 'true');
         if (accessToken) xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
         xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) onProgress?.(e.loaded / e.total);
@@ -233,7 +263,12 @@ export function uploadWithProgress<T>(path: string, form: FormData, onProgress?:
         xhr.onload = async () => {
             let body: { success?: boolean; message?: string; data?: T; errors?: FieldError[] } | null = null;
             try {
-                body = JSON.parse(xhr.responseText);
+                const parsed = JSON.parse(xhr.responseText);
+                if (parsed && typeof parsed.payload === 'string') {
+                    body = await decryptPayload(parsed.payload);
+                } else {
+                    body = parsed;
+                }
             } catch {
                 body = null;
             }

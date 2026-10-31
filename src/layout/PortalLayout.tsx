@@ -184,7 +184,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                     : activeItem.label
                 : areaDashboard;
 
-    const subtitleText = isSuperAdmin ? 'Platform Super Admin' : (site.data?.studio.name ?? 'Studio suite');
+    const subtitleText = isSuperAdmin ? 'Platform Super Admin' : (user?.companyName || site.data?.studio.name || 'Studio suite');
 
     const brandHeader = (
         <div className="portal-sidebar__brand">
