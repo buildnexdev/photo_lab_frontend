@@ -48,6 +48,7 @@
 .portal-brand-link {
     display: block;
     border-radius: 0.75rem;
+    padding: 0.25rem 0.35rem;
     transition: background-color 0.15s ease;
 
     &:hover {
@@ -55,27 +56,66 @@
     }
 }
 
-.portal-brand-dark {
-    .portal-brand-title {
-        color: #fff;
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 1.15rem;
-        letter-spacing: -0.02em;
+.portal-client-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    color: #0f172a;
+}
+
+.portal-client-badge {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #1c1917;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+    border: 1px solid rgba(251, 191, 36, 0.5);
+}
+
+.portal-client-logo {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.portal-platform-powered {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: rgba(100, 116, 139, 0.85);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+
+    .portal-platform-logo {
+        height: 0.8rem;
+        width: 1.1rem;
+        object-fit: contain;
     }
 
-    .portal-brand-sub {
+    .platform-brand {
         color: var(--portal-brand-gold-muted);
-        font-size: 0.65rem;
         font-weight: 700;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
+    }
+}
+
+.portal-brand-dark {
+    .portal-client-name {
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     }
 
-    .portal-brand-studio {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.75rem;
-        margin-top: 0.15rem;
+    .portal-platform-powered {
+        color: rgba(255, 255, 255, 0.55);
+
+        .portal-platform-logo {
+            opacity: 0.85;
+        }
+
+        .platform-brand {
+            color: var(--portal-brand-gold-muted);
+        }
     }
 }
 

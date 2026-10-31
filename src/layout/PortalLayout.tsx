@@ -53,19 +53,46 @@ export const AREA_LINKS: AreaLink[] = [
     { to: '/customer/dashboard', label: 'My account', anyOf: ['customer.portal'] },
 ];
 
-/** Nammaqr Photography brand mark. The lockup already includes the name. */
-export function NammaqrBrand({ subtitle, dark = false }: { subtitle?: string; dark?: boolean }) {
+/**
+ * Nammaqr Photography studio brand lockup:
+ * - Displays the client's studio name and logo in BOLD as the primary identity.
+ * - Displays Nammaqr Photography co-branding subtly in small uppercase underneath.
+ */
+export function NammaqrBrand({
+    clientName,
+    clientLogoUrl,
+    dark = false,
+}: {
+    clientName?: string;
+    clientLogoUrl?: string | null;
+    dark?: boolean;
+}) {
+    const displayName = clientName?.trim() || 'Studio Workspace';
+    const initial = displayName.charAt(0).toUpperCase() || 'S';
+
     return (
         <div className={clsx('group flex select-none items-center gap-3', dark && 'portal-brand-dark')}>
-            <BrandMark variant={dark ? 'light' : 'default'} className="h-10 w-14 shrink-0" />
-            <div className="min-w-0 text-left">
-                <p className={clsx('portal-brand-title truncate font-display', !dark && 'font-semibold tracking-tight text-stone-900')}>Nammaqr</p>
-                <p className={clsx('portal-brand-sub truncate', !dark && 'text-[10px] font-medium uppercase tracking-[0.18em] text-brand-700')}>
-                    Photography
+            {clientLogoUrl ? (
+                <img
+                    src={clientLogoUrl}
+                    alt={displayName}
+                    className="portal-client-logo size-10 shrink-0 rounded-xl object-contain bg-white/10 p-1 border border-white/15 shadow-sm"
+                />
+            ) : (
+                <div className="portal-client-badge size-10 shrink-0 rounded-xl flex items-center justify-center font-black text-lg select-none">
+                    {initial}
+                </div>
+            )}
+            <div className="min-w-0 flex-1 text-left">
+                <p className="portal-client-name truncate" title={displayName}>
+                    {displayName}
                 </p>
-                {subtitle ? (
-                    <p className={clsx('portal-brand-studio truncate', !dark && 'mt-0.5 text-xs font-medium text-stone-500')}>{subtitle}</p>
-                ) : null}
+                <div className="portal-platform-powered truncate">
+                    <BrandMark variant={dark ? 'light' : 'default'} className="portal-platform-logo shrink-0" />
+                    <span>
+                        by <span className="platform-brand">Nammaqr Photography</span>
+                    </span>
+                </div>
             </div>
         </div>
     );
@@ -130,7 +157,7 @@ function Subheader({
 }
 
 export function PortalLayout({ area, sections, profileLink, notificationsLink }: { area: string; sections: NavSection[]; profileLink: string; notificationsLink?: string }) {
-    const { user, can, hasRole, logout } = useAuth();
+    const { user, can, hasRole, logout, reload } = useAuth();
     const site = useSite();
     const [mobileOpen, setMobileOpen] = useState(false);
     const location = useLocation();
@@ -138,6 +165,13 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
     useEffect(() => setMobileOpen(false), [location.pathname]);
 
     const isSuperAdmin = hasRole('SUPER_ADMIN');
+
+    // Auto-refresh session if logged in but companyName is missing
+    useEffect(() => {
+        if (user && !user.companyName && !isSuperAdmin) {
+            reload().catch(() => {});
+        }
+    }, [user?.id, user?.companyName, isSuperAdmin, reload]);
 
     // Super Admin is exclusively for SaaS platform company management
     const SUPER_ADMIN_ALLOWED = ['/admin/companies', '/admin/audit-logs', '/admin/profile', '/admin/notifications'];
@@ -184,12 +218,14 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                     : activeItem.label
                 : areaDashboard;
 
-    const subtitleText = isSuperAdmin ? 'Platform Super Admin' : (user?.companyName || site.data?.studio.name || 'Studio suite');
+    const clientTitle = isSuperAdmin
+        ? 'Platform Administration'
+        : (user?.companyName || (user?.name ? `${user.name} Studio` : 'Studio Workspace'));
 
     const brandHeader = (
         <div className="portal-sidebar__brand">
             <Link to={homeFor(user)} className="portal-brand-link">
-                <NammaqrBrand subtitle={subtitleText} dark />
+                <NammaqrBrand clientName={clientTitle} clientLogoUrl={user?.companyLogoUrl} dark />
             </Link>
         </div>
     );
@@ -244,7 +280,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                         <aside className="portal-sidebar">
                             <div className="portal-sidebar__brand flex items-start justify-between gap-2">
                                 <Link to={homeFor(user)} className="portal-brand-link min-w-0 flex-1" onClick={() => setMobileOpen(false)}>
-                                    <NammaqrBrand subtitle={subtitleText} dark />
+                                    <NammaqrBrand clientName={clientTitle} clientLogoUrl={user?.companyLogoUrl} dark />
                                 </Link>
                                 <button type="button" onClick={() => setMobileOpen(false)} className="portal-icon-btn shrink-0 text-white/80" aria-label="Close menu">
                                     <X className="size-5" />

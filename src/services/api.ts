@@ -93,6 +93,7 @@ export interface SessionUser {
     companyId: number | null;
     companyName?: string | null;
     companySlug?: string | null;
+    companyLogoUrl?: string | null;
     roles: string[];
     /** tblUser.is_admin = 1 or Super Admin; can manage page access. */
     isAdmin?: boolean;
