@@ -221,7 +221,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
 
     const clientTitle = isSuperAdmin
         ? 'Platform Administration'
-        : (user?.companyName || (user?.name ? `${user.name} Studio` : 'Studio Workspace'));
+        : (user?.companyName || 'Photography Studio');
 
     const brandHeader = (
         <div className="portal-sidebar__brand">
