@@ -71,15 +71,15 @@ export function NammaqrBrand({
     const initial = displayName.charAt(0).toUpperCase() || 'S';
 
     return (
-        <div className={clsx('group flex select-none items-center gap-3', dark && 'portal-brand-dark')}>
+        <div className={clsx('group flex select-none items-center gap-2.5', dark && 'portal-brand-dark')}>
             {clientLogoUrl ? (
                 <img
                     src={clientLogoUrl}
                     alt={displayName}
-                    className="portal-client-logo size-10 shrink-0 rounded-xl object-contain bg-white/10 p-1 border border-white/15 shadow-sm"
+                    className="portal-client-logo size-9 shrink-0 rounded-xl object-contain bg-white/10 p-1 border border-white/15 shadow-sm"
                 />
             ) : (
-                <div className="portal-client-badge size-10 shrink-0 rounded-xl flex items-center justify-center font-black text-lg select-none">
+                <div className="portal-client-badge size-9 shrink-0 rounded-xl flex items-center justify-center font-black text-base select-none">
                     {initial}
                 </div>
             )}
@@ -87,7 +87,7 @@ export function NammaqrBrand({
                 <p className="portal-client-name truncate" title={displayName}>
                     {displayName}
                 </p>
-                <div className="portal-platform-powered truncate">
+                <div className="portal-platform-powered flex items-center gap-1 mt-0.5 whitespace-nowrap">
                     <BrandMark variant={dark ? 'light' : 'default'} className="portal-platform-logo shrink-0" />
                     <span>
                         by <span className="platform-brand">Nammaqr Photography</span>

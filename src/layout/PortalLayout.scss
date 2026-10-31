@@ -15,7 +15,7 @@
 
     @media (min-width: 1024px) {
         display: grid;
-        grid-template-columns: 14.5rem minmax(0, 1fr);
+        grid-template-columns: 16rem minmax(0, 1fr);
         gap: 0;
     }
 }
@@ -80,17 +80,18 @@
 .portal-platform-powered {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.3rem;
     color: rgba(100, 116, 139, 0.85);
-    font-size: 0.65rem;
+    font-size: 0.61rem;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.025em;
     text-transform: uppercase;
-    margin-top: 0.25rem;
+    margin-top: 0.2rem;
+    white-space: nowrap;
 
     .portal-platform-logo {
-        height: 0.8rem;
-        width: 1.1rem;
+        height: 0.72rem;
+        width: 0.95rem;
         object-fit: contain;
     }
 
@@ -107,10 +108,10 @@
     }
 
     .portal-platform-powered {
-        color: rgba(255, 255, 255, 0.55);
+        color: rgba(255, 255, 255, 0.6);
 
         .portal-platform-logo {
-            opacity: 0.85;
+            opacity: 0.9;
         }
 
         .platform-brand {
