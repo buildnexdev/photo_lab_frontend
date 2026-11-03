@@ -29,14 +29,34 @@ type PhotoPages = InfiniteData<Paged<GalleryPhoto>, number>;
  * The customer-facing gallery used by both QR access (/g/:token, with a gallery session header)
  * and the signed-in owner view (/customer/galleries/:id).
  */
-export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }: { galleryId: number; session?: string | null; onAccessLost?: () => void; dark?: boolean }) {
+export function GalleryViewer({
+    galleryId,
+    session,
+    eventPhone,
+    allowWithoutPhone = false,
+    onAccessLost,
+    dark = false,
+}: {
+    galleryId: number;
+    session?: string | null;
+    eventPhone?: string | null;
+    /** Scanned QR sessions can load photos without a phone proof. */
+    allowWithoutPhone?: boolean;
+    onAccessLost?: (reason?: unknown) => void;
+    dark?: boolean;
+}) {
     const qc = useQueryClient();
     const toast = useToast();
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
     const { pay, busy: paying, dialog: payDialog } = usePayment();
-    const headers = useMemo(() => (session ? { 'X-Gallery-Session': session } : undefined), [session]);
+    const headers = useMemo(() => {
+        const next: Record<string, string> = {};
+        if (session) next['X-Gallery-Session'] = session;
+        if (eventPhone) next['X-Event-Phone'] = eventPhone;
+        return Object.keys(next).length ? next : undefined;
+    }, [session, eventPhone]);
 
     const [view, setView] = useState<GalleryView>('all');
     const [albumId, setAlbumId] = useState<number | null>(null);
@@ -54,26 +74,33 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
     const [faceConsent, setFaceConsent] = useState(false);
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
-    const [phoneProof, setPhoneProof] = useState('');
+    const [phoneProof, setPhoneProof] = useState(eventPhone ?? '');
     const [devCode, setDevCode] = useState('');
     const sentinel = useRef<HTMLDivElement>(null);
 
     const infoKey = ['gallery', galleryId, 'info'];
     const photosKey = ['gallery', galleryId, 'photos'];
-    const info = useQuery({ queryKey: [...infoKey, session ?? 'user'], queryFn: () => api.get<GalleryInfo>(`/api/gallery/${galleryId}`, undefined, headers), retry: false });
+    const sessionReady = !session || !!eventPhone || allowWithoutPhone;
+    const info = useQuery({
+        queryKey: [...infoKey, session ?? 'user', eventPhone ?? '', allowWithoutPhone ? 'qr' : 'link'],
+        queryFn: () => api.get<GalleryInfo>(`/api/gallery/${galleryId}`, undefined, headers),
+        retry: false,
+        enabled: sessionReady,
+    });
 
     const photos = useInfiniteQuery({
-        queryKey: [...photosKey, { view, albumId, category, session: session ?? 'user' }],
+        queryKey: [...photosKey, { view, albumId, category, session: session ?? 'user', eventPhone: eventPhone ?? '', allowWithoutPhone }],
         queryFn: ({ pageParam }) => api.get<Paged<GalleryPhoto>>(`/api/gallery/${galleryId}/photos`, { page: pageParam, pageSize: PAGE_SIZE, view, albumId, category: category || undefined }, headers),
         initialPageParam: 1,
         getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
-        enabled: info.isSuccess,
+        enabled: info.isSuccess && sessionReady,
     });
 
     const lostAccess = (e: unknown) => e instanceof ApiError && (e.status === 401 || e.status === 403) && !!session;
     useEffect(() => {
-        if (lostAccess(info.error) || lostAccess(photos.error)) onAccessLost?.();
-    }, [info.error, photos.error]);
+        const err = lostAccess(info.error) ? info.error : lostAccess(photos.error) ? photos.error : null;
+        if (err) onAccessLost?.(err);
+    }, [info.error, photos.error, onAccessLost]);
 
     const list: GalleryPhoto[] = useMemo(() => face?.items ?? photos.data?.pages.flatMap((p) => p.items) ?? [], [face, photos.data]);
     const total = face ? face.items.length : (photos.data?.pages[0]?.total ?? 0);
@@ -220,19 +247,52 @@ export function GalleryViewer({ galleryId, session, onAccessLost, dark = false }
 
     return (
         <div className={clsx(dark ? 'text-white' : 'text-stone-900')}>
-            <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <h1 className="font-display text-2xl font-semibold sm:text-3xl">{g.title}</h1>
-                        {g.isLive && <StatusBadge status="LIVE" label="Live now" />}
+            {g.coverUrl && (
+                <div className="relative mb-6 -mx-4 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-8 overflow-hidden rounded-b-2xl sm:rounded-b-3xl bg-stone-900 shadow-md">
+                    <div className="relative h-56 sm:h-72 md:h-80 w-full">
+                        <img
+                            src={g.coverUrl}
+                            alt={g.title}
+                            className="size-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-white/20 backdrop-blur-md px-2.5 py-0.5 text-xs font-semibold text-white border border-white/20">
+                                    {g.eventTitle || g.title}
+                                </span>
+                                {g.isLive && <StatusBadge status="LIVE" label="Live now" />}
+                            </div>
+                            <h1 className="mt-1 font-display text-2xl font-bold text-white sm:text-3xl drop-shadow-sm">
+                                {g.title}
+                            </h1>
+                            <p className="mt-1 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-white/90">
+                                <span>{date(g.eventDate)}</span>
+                                {g.eventVenue && <span>· {g.eventVenue}</span>}
+                                <span>· {g.photoCount} photos</span>
+                                {g.expiresAt && <span className="text-white/70">· available until {date(g.expiresAt)}</span>}
+                            </p>
+                            {g.description && <p className="mt-1.5 max-w-2xl text-xs sm:text-sm text-white/80 line-clamp-2">{g.description}</p>}
+                        </div>
                     </div>
-                    <p className={clsx('mt-1 text-sm', dark ? 'text-white/60' : 'text-stone-500')}>
-                        {g.eventTitle} · {date(g.eventDate)} · {g.photoCount} photos
-                        {g.expiresAt && ` · available until ${date(g.expiresAt)}`}
-                    </p>
-                    {g.description && <p className={clsx('mt-2 max-w-2xl text-sm', dark ? 'text-white/70' : 'text-stone-600')}>{g.description}</p>}
                 </div>
-                <div className="flex flex-wrap gap-2">
+            )}
+
+            <header className={clsx('flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between', g.coverUrl ? 'pb-2' : '')}>
+                {!g.coverUrl && (
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h1 className="font-display text-2xl font-semibold sm:text-3xl">{g.title}</h1>
+                            {g.isLive && <StatusBadge status="LIVE" label="Live now" />}
+                        </div>
+                        <p className={clsx('mt-1 text-sm', dark ? 'text-white/60' : 'text-stone-500')}>
+                            {g.eventTitle} · {date(g.eventDate)} · {g.photoCount} photos
+                            {g.expiresAt && ` · available until ${date(g.expiresAt)}`}
+                        </p>
+                        {g.description && <p className={clsx('mt-2 max-w-2xl text-sm', dark ? 'text-white/70' : 'text-stone-600')}>{g.description}</p>}
+                    </div>
+                )}
+                <div className={clsx('flex flex-wrap gap-2', g.coverUrl ? 'w-full justify-end' : '')}>
                     {g.faceSearch && (
                         <>
                             <input ref={selfieRef} type="file" accept="image/jpeg,image/png,image/webp" capture="user" className="hidden" onChange={(e) => e.target.files?.[0] && runFaceSearch(e.target.files[0])} />

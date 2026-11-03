@@ -100,6 +100,15 @@ export default function AdminGalleryDetail() {
         onSuccess: setShown,
         onError: (e) => toast.error(e),
     });
+
+    // From the event page (#event-qr): jump to QR codes and open the active event guest QR.
+    useEffect(() => {
+        if (window.location.hash !== '#event-qr' || !q.data) return;
+        document.getElementById('event-qr')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const eventToken = q.data.tokens.find((t) => t.state === 'ACTIVE' && t.scope === 'EVENT') ?? q.data.tokens.find((t) => t.state === 'ACTIVE');
+        if (eventToken && !shown) viewQr.mutate(eventToken);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- open once when gallery detail loads from the event page
+    }, [q.data]);
     
     // Uploader
     const [dragging, setDragging] = useState(false);
@@ -250,6 +259,7 @@ export default function AdminGalleryDetail() {
                                     )}
                                 </Card>
                                 <Card
+                                    id="event-qr"
                                     title="QR codes"
                                     padded={false}
                                     actions={
@@ -270,6 +280,9 @@ export default function AdminGalleryDetail() {
                                         </>
                                     }
                                 >
+                                    <p className="border-b border-stone-100 px-4 py-2 text-xs text-stone-500">
+                                        For this event’s guest QR, use the row with scope <span className="font-semibold text-stone-700">Whole gallery</span> / EVENT, then tap the eye icon (Show QR).
+                                    </p>
                                     <DataTable
                                         rows={g.tokens}
                                         rowKey={(t) => t.id}
@@ -280,7 +293,12 @@ export default function AdminGalleryDetail() {
                                                 header: 'Code',
                                                 cell: (t) => (
                                                     <div>
-                                                        <p className="font-medium">{t.label || `${titleCase(t.scope)} QR`}</p>
+                                                        <p className="font-medium">
+                                                            {t.scope === 'EVENT' ? 'Event guest QR' : t.label || `${titleCase(t.scope)} QR`}
+                                                            {t.scope === 'EVENT' && t.state === 'ACTIVE' ? (
+                                                                <span className="ml-2 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-700">This event</span>
+                                                            ) : null}
+                                                        </p>
                                                         <p className="text-xs text-stone-500">
                                                             {t.scope === 'ALBUM' ? `Album: ${t.album_name ?? t.album_id}` : t.scope === 'PHOTO' ? `Photo #${t.photo_id}` : 'Whole gallery'} · {t.token_hint}…
                                                         </p>

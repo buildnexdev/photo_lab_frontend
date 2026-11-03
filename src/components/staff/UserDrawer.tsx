@@ -6,86 +6,57 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import {
     Briefcase,
+    Camera,
     Check,
     ChevronLeft,
     ClipboardList,
-    Eye,
-    FileText,
-    FolderUp,
     GraduationCap,
     HeartPulse,
     Home,
-    ImageIcon,
     KeyRound,
     MapPin,
     Pencil,
     Plus,
     ShieldCheck,
     Trash2,
-    Upload,
     UserCircle2,
     UserRound,
 } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useFieldArray, useForm, type FieldErrors } from 'react-hook-form';
 import { z } from 'zod';
 import { api, applyFieldErrors } from '../../services/api';
 import { ROLE_LABELS, useAuth, type Role } from '../../hooks/useAuth';
 import { useInvalidate } from '../../hooks';
-import { emailRule, optionalPhone, passwordRule } from '../../helpers/validation';
-import { Checkbox, Field, FormGrid, Input, Select, Textarea } from '../ui/Form';
+import { digitsOnly10, emailRule, passwordRule, phoneRule } from '../../helpers/validation';
+import { Checkbox, Field, FormGrid, Input, PasswordInput, Select, Textarea } from '../ui/Form';
 import { Drawer, useConfirm } from '../ui/Overlay';
 import { useToast } from '../ui/Toast';
 import { Button } from '../ui';
-import { Avatar, STAFF_ROLE_CODES, type StaffProfile, type UserDetail } from './staffCommon';
+import { ASSIGNABLE_STAFF_ROLES, Avatar, type StaffProfile, type UserDetail } from './staffCommon';
 
-const DOC_TYPES = [
-    { value: 'AADHAAR', label: 'Aadhaar card' },
-    { value: 'PAN', label: 'PAN card' },
-    { value: 'PHOTO', label: 'Passport photo' },
-    { value: 'RESUME', label: 'Resume / CV' },
-    { value: 'CERTIFICATE', label: 'Education certificate' },
-    { value: 'OFFER_LETTER', label: 'Offer / appointment letter' },
-    { value: 'BANK', label: 'Bank proof / cheque' },
-    { value: 'OTHER', label: 'Other' },
-];
-const docLabel = (t: string) => DOC_TYPES.find((d) => d.value === t)?.label ?? t;
-const DOC_ACCEPT = /\.(pdf|jpe?g|png|webp)$/i;
-const MAX_DOC_BYTES = 10 * 1024 * 1024;
-const formatSize = (n: number) => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+const PHOTO_ACCEPT = /^image\/(jpeg|png|webp)$/i;
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
-interface StaffDocument {
-    id: number;
-    doc_type: string;
-    file_name: string;
-    mime_type: string;
-    size_bytes: number;
-    created_at: string;
-    url: string;
-}
-interface PendingDoc {
-    key: string;
-    docType: string;
-    file: File;
-}
-
-const uploadDocument = (userId: number, docType: string, file: File) => {
+const uploadStaffPhoto = (userId: number, file: File) => {
     const form = new FormData();
-    form.append('docType', docType);
+    form.append('docType', 'PHOTO');
     form.append('file', file);
-    return api.send('POST', `/api/users/${userId}/documents`, form);
+    return api.send<{ id: number; url: string }[]>('POST', `/api/users/${userId}/documents`, form);
 };
 
 const text = (max: number) => z.string().trim().max(max, `Use at most ${max} characters`);
 const optionalPattern = (re: RegExp, message: string) => z.string().trim().refine((v) => !v || re.test(v), message);
 const address = z.object({ line1: text(160), line2: text(160), city: text(80), state: text(80), pincode: optionalPattern(/^\d{6}$/, 'Enter a 6-digit PIN code'), country: text(60) });
 
+const requiredText = (max: number, message = 'Required') => z.string().trim().min(1, message).max(max, `Use at most ${max} characters`);
+
 const schema = (isNew: boolean) =>
     z
         .object({
             name: z.string().trim().min(2, 'Enter a name').max(120),
             email: emailRule,
-            phone: optionalPhone,
+            phone: phoneRule,
             password: isNew ? passwordRule : z.union([z.literal(''), passwordRule]),
             confirmPassword: z.string(),
             roles: z.array(z.string()).min(1, 'Choose at least one role'),
@@ -95,7 +66,16 @@ const schema = (isNew: boolean) =>
             cameraGear: text(255),
             specialties: text(255),
             software: text(255),
-            personal: z.object({ dob: z.string(), gender: z.string(), bloodGroup: z.string(), joinedOn: z.string(), emergencyName: text(120), emergencyPhone: optionalPhone }),
+            personal: z.object({
+                dob: z.string().min(1, 'Date of birth is required'),
+                gender: z.string().min(1, 'Select gender'),
+                bloodGroup: z.string().min(1, 'Select blood group'),
+                joinedOn: z.string(),
+                emergencyName: requiredText(120, 'Emergency contact name is required'),
+                emergencyPhone: phoneRule,
+                emergencyPhone2: phoneRule,
+                photoUrl: z.string().optional(),
+            }),
             address,
             permanentAddress: address.extend({ same: z.boolean() }),
             education: z.array(z.object({ qualification: text(120), institution: text(160), field: text(120), year: optionalPattern(/^(19|20)\d{2}$/, 'Enter a year like 2018'), grade: text(20) })),
@@ -103,6 +83,9 @@ const schema = (isNew: boolean) =>
         })
         .superRefine((v, ctx) => {
             if (v.password && v.password !== v.confirmPassword) ctx.addIssue({ code: 'custom', path: ['confirmPassword'], message: 'Passwords do not match' });
+            if (v.personal.emergencyPhone && v.personal.emergencyPhone2 && v.personal.emergencyPhone === v.personal.emergencyPhone2) {
+                ctx.addIssue({ code: 'custom', path: ['personal', 'emergencyPhone2'], message: 'Use a different second number' });
+            }
             v.experience.forEach((e, i) => {
                 if (e.from && !e.current && e.to && e.to < e.from) ctx.addIssue({ code: 'custom', path: ['experience', i, 'to'], message: 'Ends before it starts' });
             });
@@ -128,7 +111,7 @@ function toForm(u: UserDetail | null, defaultRole?: Role): Form {
         cameraGear: u?.camera_gear ?? '',
         specialties: u?.photographer_specialties ?? u?.editor_specialties ?? '',
         software: u?.software ?? '',
-        personal: { dob: '', gender: '', bloodGroup: '', joinedOn: '', emergencyName: '', emergencyPhone: '', ...p.personal },
+        personal: { dob: '', gender: '', bloodGroup: '', joinedOn: '', emergencyName: '', emergencyPhone: '', emergencyPhone2: '', photoUrl: '', ...p.personal },
         address: { ...EMPTY_ADDRESS, ...p.address },
         permanentAddress: { ...EMPTY_ADDRESS, same: true, ...p.permanentAddress },
         education: (p.education ?? []).map((e) => ({ ...EMPTY_EDUCATION, ...e })),
@@ -155,7 +138,6 @@ const SECTIONS = [
     { title: 'Experience', hint: 'Previous jobs', icon: Briefcase, fields: ['experience'] },
     { title: 'Password', hint: 'Sign-in password', icon: KeyRound, fields: ['password', 'confirmPassword'] },
     { title: 'Role & access', hint: 'Role and account status', icon: ShieldCheck, fields: ['roles', 'status', 'cameraGear', 'specialties', 'software'] },
-    { title: 'Documents', hint: 'ID proofs and certificates', icon: FolderUp, fields: [] },
 ] as const;
 
 function Panel({ icon, title, action, children }: { icon: ReactNode; title: string; action?: ReactNode; children: ReactNode }) {
@@ -193,7 +175,7 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
     const { ask, dialog } = useConfirm();
     const isNew = id === 'new';
     const [step, setStep] = useState(0);
-    const [pending, setPending] = useState<PendingDoc[]>([]);
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
     const detail = useQuery({ queryKey: ['users', 'detail', id], queryFn: () => api.get<UserDetail>(`/api/users/${id}`), enabled: typeof id === 'number' });
     const {
         register,
@@ -210,7 +192,7 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
 
     useEffect(() => {
         setStep(0);
-        setPending([]);
+        setPhotoFile(null);
     }, [id]);
     useEffect(() => {
         if (isNew) reset(toForm(null, defaultRole));
@@ -219,10 +201,28 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
 
     const roles = watch('roles') ?? [];
     const name = watch('name') ?? '';
+    const photoUrl = watch('personal.photoUrl') || '';
     const sameAddress = watch('permanentAddress.same');
     const current = watch('experience');
     const self = typeof id === 'number' && id === user?.id;
     const selectRole = (r: Role) => setValue('roles', [r], { shouldValidate: true });
+    const photoPreview = useMemo(() => (photoFile ? URL.createObjectURL(photoFile) : photoUrl || null), [photoFile, photoUrl]);
+    useEffect(() => () => {
+        if (photoPreview && photoFile) URL.revokeObjectURL(photoPreview);
+    }, [photoPreview, photoFile]);
+
+    const pickPhoto = (file: File | undefined) => {
+        if (!file) return;
+        if (!PHOTO_ACCEPT.test(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) {
+            toast.error('Use a JPG, PNG or WebP image.');
+            return;
+        }
+        if (file.size > MAX_PHOTO_BYTES) {
+            toast.error('Photo must be 5 MB or smaller.');
+            return;
+        }
+        setPhotoFile(file);
+    };
 
     const del = useMutation({
         mutationFn: () => api.send('DELETE', `/api/users/${id}`),
@@ -255,10 +255,20 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
         };
         try {
             const r = isNew ? await api.send<UserDetail>('POST', '/api/users', body) : await api.send<UserDetail>('PUT', `/api/users/${id}`, body);
-            if (isNew && pending.length) {
-                const failed: string[] = [];
-                for (const p of pending) await uploadDocument(r.data.id, p.docType, p.file).catch(() => failed.push(p.file.name));
-                if (failed.length) toast.error(`Staff member created, but these documents did not upload: ${failed.join(', ')}`);
+            const userId = r.data.id;
+            if (photoFile) {
+                try {
+                    const docs = await uploadStaffPhoto(userId, photoFile);
+                    const photo = Array.isArray(docs.data) ? docs.data.find((d) => d.url) : null;
+                    if (photo?.url) {
+                        await api.send('PUT', `/api/users/${userId}`, {
+                            ...body,
+                            profile: { ...toProfile(v), personal: { ...toProfile(v).personal, photoUrl: photo.url } },
+                        });
+                    }
+                } catch {
+                    toast.error('Staff saved, but the profile photo did not upload.');
+                }
             }
             toast.success(r.message);
             await invalidate(['users']);
@@ -365,20 +375,58 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
                         {step === 0 && (
                             <>
                                 <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-stone-200/80 bg-stone-50/60 p-4">
-                                    <Avatar name={name || 'New staff'} className="size-20 rounded-full text-2xl" />
-                                    <div className="min-w-0">
+                                    <Avatar name={name || 'New staff'} src={photoPreview} className="size-20 rounded-full text-2xl" />
+                                    <div className="min-w-0 flex-1">
                                         <p className="font-semibold text-stone-900">{name || 'New staff member'}</p>
-                                        <p className="text-sm text-stone-500">The avatar uses their initials and helps teammates recognise them.</p>
+                                        <p className="text-sm text-stone-500">Upload a profile photo, or initials are used until one is added.</p>
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50">
+                                                <Camera className="size-3.5" />
+                                                Upload photo
+                                                <input
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                                                    className="sr-only"
+                                                    onChange={(e) => {
+                                                        pickPhoto(e.target.files?.[0]);
+                                                        e.target.value = '';
+                                                    }}
+                                                />
+                                            </label>
+                                            {(photoFile || photoUrl) && (
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                    onClick={() => {
+                                                        setPhotoFile(null);
+                                                        setValue('personal.photoUrl', '');
+                                                    }}
+                                                >
+                                                    <Trash2 className="size-3.5" /> Remove
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <Panel icon={<Pencil className="size-4 text-amber-500" />} title="Personal information">
                                     <FormGrid cols={3}>
                                         <Input label="Full name" required {...register('name')} error={errors.name?.message} />
                                         <Input label="Email" type="email" required autoComplete="off" {...register('email')} error={errors.email?.message} />
-                                        <Input label="Phone number" type="tel" {...register('phone')} error={errors.phone?.message} />
-                                        <Input label="Date of birth" type="date" {...register('personal.dob')} />
-                                        <Select label="Gender" placeholder="Select" {...register('personal.gender')} options={['Male', 'Female', 'Other'].map((g) => ({ value: g, label: g }))} />
-                                        <Select label="Blood group" placeholder="Select" {...register('personal.bloodGroup')} options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((g) => ({ value: g, label: g }))} />
+                                        <Input
+                                            label="Phone number"
+                                            type="tel"
+                                            inputMode="numeric"
+                                            maxLength={10}
+                                            required
+                                            {...register('phone', {
+                                                onChange: (e) => setValue('phone', digitsOnly10(e.target.value), { shouldValidate: true }),
+                                            })}
+                                            error={errors.phone?.message}
+                                            hint="Exactly 10 digits"
+                                        />
+                                        <Input label="Date of birth" type="date" required {...register('personal.dob')} error={errors.personal?.dob?.message} />
+                                        <Select label="Gender" required placeholder="Select" {...register('personal.gender')} error={errors.personal?.gender?.message} options={['Male', 'Female', 'Other'].map((g) => ({ value: g, label: g }))} />
+                                        <Select label="Blood group" required placeholder="Select" {...register('personal.bloodGroup')} error={errors.personal?.bloodGroup?.message} options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((g) => ({ value: g, label: g }))} />
                                     </FormGrid>
                                 </Panel>
                                 <Panel icon={<Briefcase className="size-4 text-sky-500" />} title="Job details">
@@ -389,9 +437,32 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
                                     </FormGrid>
                                 </Panel>
                                 <Panel icon={<HeartPulse className="size-4 text-rose-500" />} title="Emergency contact">
-                                    <FormGrid>
-                                        <Input label="Contact name" {...register('personal.emergencyName')} error={errors.personal?.emergencyName?.message} />
-                                        <Input label="Contact phone" type="tel" {...register('personal.emergencyPhone')} error={errors.personal?.emergencyPhone?.message} />
+                                    <FormGrid cols={3}>
+                                        <Input label="Contact name" required {...register('personal.emergencyName')} error={errors.personal?.emergencyName?.message} />
+                                        <Input
+                                            label="Emergency phone 1"
+                                            type="tel"
+                                            inputMode="numeric"
+                                            maxLength={10}
+                                            required
+                                            {...register('personal.emergencyPhone', {
+                                                onChange: (e) => setValue('personal.emergencyPhone', digitsOnly10(e.target.value), { shouldValidate: true }),
+                                            })}
+                                            error={errors.personal?.emergencyPhone?.message}
+                                            hint="10 digits"
+                                        />
+                                        <Input
+                                            label="Emergency phone 2"
+                                            type="tel"
+                                            inputMode="numeric"
+                                            maxLength={10}
+                                            required
+                                            {...register('personal.emergencyPhone2', {
+                                                onChange: (e) => setValue('personal.emergencyPhone2', digitsOnly10(e.target.value), { shouldValidate: true }),
+                                            })}
+                                            error={errors.personal?.emergencyPhone2?.message}
+                                            hint="10 digits · second number"
+                                        />
                                     </FormGrid>
                                 </Panel>
                             </>
@@ -495,8 +566,8 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
                         {step === 4 && (
                             <Panel icon={<KeyRound className="size-4 text-sky-500" />} title={isNew ? 'Create password' : 'Change password'}>
                                 <FormGrid>
-                                    <Input label={isNew ? 'Password' : 'New password'} type="password" autoComplete="new-password" required={isNew} {...register('password')} error={errors.password?.message} hint={isNew ? 'At least 8 characters with a letter and a number.' : 'Leave blank to keep the current password. Setting one signs them out.'} />
-                                    <Input label="Confirm password" type="password" autoComplete="new-password" required={isNew} {...register('confirmPassword')} error={errors.confirmPassword?.message} hint="Type the same password again." />
+                                    <PasswordInput label={isNew ? 'Password' : 'New password'} autoComplete="new-password" required={isNew} {...register('password')} error={errors.password?.message} hint={isNew ? 'At least 8 characters with a letter and a number.' : 'Leave blank to keep the current password. Setting one signs them out.'} />
+                                    <PasswordInput label="Confirm password" autoComplete="new-password" required={isNew} {...register('confirmPassword')} error={errors.confirmPassword?.message} hint="Type the same password again." />
                                 </FormGrid>
                             </Panel>
                         )}
@@ -506,10 +577,11 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
                                 <Panel icon={<UserRound className="size-4 text-violet-500" />} title="Role">
                                     <Field label="Role" required error={errors.roles?.message}>
                                         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                                            {STAFF_ROLE_CODES.filter((r) => r !== 'SUPER_ADMIN' && r !== 'STUDIO_OWNER').map((r) => (
+                                            {(roles.includes('COMPANY_ADMIN') ? (['COMPANY_ADMIN', ...ASSIGNABLE_STAFF_ROLES] as Role[]) : ASSIGNABLE_STAFF_ROLES).map((r) => (
                                                 <label key={r} className={clsx('flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors', roles.includes(r) ? 'border-accent-400 bg-accent-50 font-semibold text-accent-900' : 'border-stone-200 hover:bg-stone-50')}>
-                                                    <input type="radio" className="size-4 accent-[#c9a24b]" checked={roles.includes(r)} onChange={() => selectRole(r)} disabled={self} />
+                                                    <input type="radio" className="size-4 accent-[#c9a24b]" checked={roles.includes(r)} onChange={() => selectRole(r)} disabled={self || r === 'COMPANY_ADMIN'} />
                                                     {ROLE_LABELS[r]}
+                                                    {r === 'COMPANY_ADMIN' ? <span className="text-[10px] font-normal text-stone-500">(legacy)</span> : null}
                                                 </label>
                                             ))}
                                         </div>
@@ -534,121 +606,10 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
                                 </Panel>
                             </>
                         )}
-
-                        {step === 6 && <DocumentsSection userId={typeof id === 'number' ? id : null} pending={pending} onPending={setPending} />}
                     </div>
                 </form>
             )}
             {dialog}
         </Drawer>
-    );
-}
-
-function DocumentsSection({ userId, pending, onPending }: { userId: number | null; pending: PendingDoc[]; onPending: (p: PendingDoc[]) => void }) {
-    const toast = useToast();
-    const invalidate = useInvalidate();
-    const { ask, dialog } = useConfirm();
-    const [docType, setDocType] = useState(DOC_TYPES[0].value);
-    const docs = useQuery({ queryKey: ['users', 'documents', userId], queryFn: () => api.get<StaffDocument[]>(`/api/users/${userId}/documents`), enabled: userId !== null });
-    const upload = useMutation({
-        mutationFn: (file: File) => uploadDocument(userId!, docType, file),
-        onSuccess: (r) => (toast.success(r.message), invalidate(['users', 'documents'])),
-        onError: (e) => toast.error(e),
-    });
-    const remove = useMutation({
-        mutationFn: (docId: number) => api.send('DELETE', `/api/users/${userId}/documents/${docId}`),
-        onSuccess: (r) => (toast.success(r.message), invalidate(['users', 'documents'])),
-        onError: (e) => toast.error(e),
-    });
-
-    const pick = (files: FileList | null) => {
-        const accepted: File[] = [];
-        for (const f of files ?? []) {
-            if (!DOC_ACCEPT.test(f.name)) toast.error(`${f.name} is not a PDF, JPG, PNG or WebP file.`);
-            else if (f.size > MAX_DOC_BYTES) toast.error(`${f.name} is larger than 10 MB.`);
-            else accepted.push(f);
-        }
-        if (userId === null) onPending([...pending, ...accepted.map((file) => ({ key: `${file.name}-${file.size}-${Math.random()}`, docType, file }))]);
-        else accepted.forEach((f) => upload.mutate(f));
-    };
-
-    const rows = userId === null ? pending.map((p) => ({ key: p.key, type: p.docType, name: p.file.name, size: p.file.size, isImage: p.file.type.startsWith('image/'), url: null as string | null, date: null as string | null, onRemove: () => onPending(pending.filter((x) => x.key !== p.key)) })) : (docs.data ?? []).map((d) => ({ key: String(d.id), type: d.doc_type, name: d.file_name, size: d.size_bytes, isImage: d.mime_type.startsWith('image/'), url: d.url, date: d.created_at, onRemove: async () => (await ask({ title: 'Remove this document?', message: `${d.file_name} will be deleted permanently.`, confirmLabel: 'Remove' })) && remove.mutate(d.id) }));
-    const uploadedTypes = new Set(rows.map((r) => r.type));
-
-    return (
-        <>
-            <Panel icon={<Upload className="size-4 text-accent-600" />} title="Upload documents">
-                <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
-                    <div className="space-y-3">
-                        <Select label="Document type" value={docType} onChange={(e) => setDocType(e.target.value)} options={DOC_TYPES} />
-                        <div className="flex flex-wrap gap-1.5">
-                            {DOC_TYPES.filter((d) => d.value !== 'OTHER').map((d) => (
-                                <span key={d.value} className={clsx('inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold', uploadedTypes.has(d.value) ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500')}>
-                                    {uploadedTypes.has(d.value) && <Check className="size-3" />}
-                                    {d.label}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                    <label
-                        className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-accent-300 bg-accent-50/40 px-4 py-8 text-center transition-colors hover:bg-accent-50"
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                            e.preventDefault();
-                            pick(e.dataTransfer.files);
-                        }}
-                    >
-                        <span className="flex size-12 items-center justify-center rounded-full bg-ink-900 text-accent-400">
-                            <FolderUp className="size-5" />
-                        </span>
-                        <span className="text-sm font-semibold text-stone-900">{upload.isPending ? 'Uploading…' : `Click or drop files for: ${docLabel(docType)}`}</span>
-                        <span className="text-xs text-stone-500">PDF, JPG, PNG or WebP, up to 10 MB each</span>
-                        <input
-                            type="file"
-                            multiple
-                            accept=".pdf,.jpg,.jpeg,.png,.webp"
-                            className="sr-only"
-                            onChange={(e) => {
-                                pick(e.target.files);
-                                e.target.value = '';
-                            }}
-                        />
-                    </label>
-                </div>
-                {userId === null && <p className="mt-3 text-xs text-stone-500">Files are uploaded when you create the staff member.</p>}
-            </Panel>
-
-            <Panel icon={<FileText className="size-4 text-sky-500" />} title={`Documents (${rows.length})`}>
-                {docs.isLoading ? (
-                    <p className="py-6 text-center text-sm text-stone-500">Loading…</p>
-                ) : rows.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-stone-500">No documents yet.</p>
-                ) : (
-                    <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                        {rows.map((r) => (
-                            <li key={r.key} className="flex items-center gap-3 rounded-xl border border-stone-200 p-3">
-                                <span className={clsx('flex size-10 shrink-0 items-center justify-center rounded-lg', r.isImage ? 'bg-violet-50 text-violet-600' : 'bg-rose-50 text-rose-600')}>{r.isImage ? <ImageIcon className="size-5" /> : <FileText className="size-5" />}</span>
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-semibold text-stone-900">{r.name}</p>
-                                    <p className="truncate text-xs text-stone-500">
-                                        {docLabel(r.type)} · {formatSize(r.size)}
-                                        {r.date ? ` · ${new Date(r.date).toLocaleDateString()}` : ' · Not uploaded yet'}
-                                    </p>
-                                </div>
-                                {r.url && (
-                                    <a href={r.url} target="_blank" rel="noreferrer" aria-label={`View ${r.name}`} className="inline-flex size-8 items-center justify-center rounded-lg text-stone-600 hover:bg-stone-100">
-                                        <Eye className="size-4" />
-                                    </a>
-                                )}
-                                <button type="button" onClick={r.onRemove} aria-label={`Remove ${r.name}`} className="inline-flex size-8 items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50">
-                                    <Trash2 className="size-4" />
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </Panel>
-            {dialog}
-        </>
     );
 }

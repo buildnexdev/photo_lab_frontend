@@ -3,12 +3,13 @@
 // Last Edited : 06-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { ArrowLeft, CalendarDays, Camera, Clock3, Eye, Images, IndianRupee, MapPin, MessageSquare, Package, Pencil, Phone, QrCode, Trash2, UserPlus, UserRound, X } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Camera, Clock3, Copy, ExternalLink, Eye, Images, IndianRupee, Link2, MapPin, MessageSquare, Package, Pencil, Phone, QrCode, Trash2, Upload, UserPlus, UserRound, Wrench, X } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { EmptyState, QueryState, StatCard, StatusBadge } from '../../components/ui/Data';
 import { Avatar } from '../../components/staff/staffCommon';
 import { EventForm, type EventFormValue } from '../../components/event/EventForm';
+import { OfflinePaymentModal } from '../../components/payment/OfflinePaymentModal';
 import { Input, Select } from '../../components/ui/Form';
 import { Modal, useConfirm } from '../../components/ui/Overlay';
 import { useToast } from '../../components/ui/Toast';
@@ -31,6 +32,24 @@ interface StaffRow {
     role: StaffRole;
     camera_label: string | null;
     task_status: string;
+    pay_basis?: string;
+    share_pct?: number | null;
+    commission_pct?: number | null;
+    day_rate_override?: number | null;
+    flat_amount?: number | null;
+    payout_status?: string;
+}
+interface AssetRow {
+    assignment_id: number;
+    id: number;
+    asset_code: string;
+    name: string;
+    category: string;
+    status: string;
+    asset_condition: string;
+    assigned_at: string;
+    notes: string | null;
+    staff_name: string | null;
 }
 interface EventDetailData extends EventFormValue {
     event_code: string;
@@ -44,8 +63,12 @@ interface EventDetailData extends EventFormValue {
     started_at: string | null;
     completed_at: string | null;
     staff: StaffRow[];
+    assets: AssetRow[];
     gallery: { id: number; title: string; status: string; watermark_enabled: number; allow_download: number; photo_price: number | null; expires_at: string | null } | null;
     cover_url?: string | null;
+    public_url?: string | null;
+    qr_token?: string | null;
+    qr_data_url?: string | null;
     photos: Record<string, number>;
     photo_total: number;
     revenue: { booking: number; orders: number; total: number };
@@ -80,6 +103,8 @@ export default function AdminEventDetail() {
     const tab = (['overview', 'selection', 'culling'].includes(params.get('tab') ?? '') ? params.get('tab') : 'overview') as Tab;
     const [editing, setEditing] = useState(false);
     const [assigning, setAssigning] = useState(false);
+    const [assigningAsset, setAssigningAsset] = useState(false);
+    const [paying, setPaying] = useState(false);
     const q = useQuery({ queryKey: ['events', 'detail', id], queryFn: () => api.get<EventDetailData>(`/api/events/${id}`), enabled: id > 0 });
 
     useRealtime({ eventId: id, enabled: id > 0 }, {
@@ -123,9 +148,29 @@ export default function AdminEventDetail() {
             <QueryState query={q}>
                 {(e) => {
                     const actions = can('events.manage') ? EVENT_ACTIONS.filter((a) => a.from.includes(e.status)) : [];
+                    const customerLink = e.qr_token ? `${window.location.origin}/g/${e.qr_token}` : e.public_url;
                     return (
                         <>
                             <section className="mb-4 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[var(--soft-shadow)]">
+                                {e.cover_url && (
+                                    <div className="relative h-44 w-full overflow-hidden bg-stone-900 sm:h-52">
+                                        <img src={e.cover_url} alt={e.title} className="h-full w-full object-cover" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-stone-900/85 via-stone-900/25 to-transparent" />
+                                        {customerLink && (
+                                            <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                                                <a
+                                                    href={customerLink}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-stone-900 shadow-md backdrop-blur transition-all hover:bg-white hover:scale-105"
+                                                >
+                                                    <ExternalLink className="size-3.5 text-rose-500" />
+                                                    Customer View
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
                                     <div className="min-w-0">
                                         <Link to="/admin/events" className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-800">
@@ -161,6 +206,34 @@ export default function AdminEventDetail() {
                                             <Button variant="secondary" icon={<Pencil className="size-4" />} onClick={() => setEditing(true)}>
                                                 Edit
                                             </Button>
+                                        )}
+                                        {(can('photos.manage') || can('events.manage')) && (
+                                            <ButtonLink to={`/admin/events/${e.id}/upload`} variant="secondary">
+                                                <Upload className="size-4" /> Upload images
+                                            </ButtonLink>
+                                        )}
+                                        {customerLink && (
+                                            <>
+                                                <Button
+                                                    variant="secondary"
+                                                    icon={<Copy className="size-4" />}
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(customerLink);
+                                                        toast.success('Customer gallery link copied!');
+                                                    }}
+                                                >
+                                                    Copy Link
+                                                </Button>
+                                                <a
+                                                    href={customerLink}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-1.5 text-sm font-semibold text-stone-700 shadow-sm transition-colors hover:bg-stone-50"
+                                                >
+                                                    <ExternalLink className="size-4 text-rose-500" />
+                                                    Open Gallery
+                                                </a>
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -221,6 +294,14 @@ export default function AdminEventDetail() {
                                                                 <p className="truncate text-xs text-stone-500">
                                                                     {titleCase(s.role)}
                                                                     {s.camera_label && ` · ${s.camera_label}`}
+                                                                    {s.pay_basis && s.pay_basis !== 'NONE' && (
+                                                                        <>
+                                                                            {' · '}
+                                                                            {titleCase(s.pay_basis)}
+                                                                            {s.pay_basis === 'SHARE' && s.share_pct != null ? ` ${s.share_pct}%` : ''}
+                                                                            {s.pay_basis === 'COMMISSION' && s.commission_pct != null ? ` ${s.commission_pct}%` : ''}
+                                                                        </>
+                                                                    )}
                                                                 </p>
                                                             </div>
                                                             <StatusBadge status={s.task_status} />
@@ -236,8 +317,161 @@ export default function AdminEventDetail() {
                                                 <EmptyState title="No one assigned yet" description="Assign photographers so they can upload from the app." />
                                             )}
                                         </Card>
+                                        <Card
+                                            title="Assets allocated"
+                                            actions={
+                                                can('events.manage') && (
+                                                    <Button size="sm" variant="secondary" icon={<Wrench className="size-4" />} onClick={() => setAssigningAsset(true)}>
+                                                        Allocate
+                                                    </Button>
+                                                )
+                                            }
+                                        >
+                                            {(e.assets ?? []).length ? (
+                                                <ul className="grid gap-2 sm:grid-cols-2">
+                                                    {(e.assets ?? []).map((a) => (
+                                                        <li key={a.assignment_id} className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-stone-50/50 p-3">
+                                                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+                                                                <Camera className="size-4" />
+                                                            </span>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="truncate font-semibold text-stone-900">{a.name}</p>
+                                                                <p className="truncate text-xs text-stone-500">
+                                                                    {a.asset_code} · {titleCase(a.category)}
+                                                                    {a.staff_name ? ` · ${a.staff_name}` : ''}
+                                                                </p>
+                                                            </div>
+                                                            {can('events.manage') && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="rounded-lg px-2 py-1 text-xs font-semibold text-stone-500 hover:bg-emerald-50 hover:text-emerald-700"
+                                                                    onClick={async () => {
+                                                                        if (!(await ask({ title: 'Return asset?', message: `${a.name} will be marked available again.`, confirmLabel: 'Return' }))) return;
+                                                                        try {
+                                                                            await api.send('POST', `/api/assets/${a.id}/return`, { condition: a.asset_condition || 'GOOD', notes: null });
+                                                                            toast.success('Asset returned');
+                                                                            await invalidate(['events', 'detail', id], ['assets']);
+                                                                        } catch (err) {
+                                                                            toast.error(err);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Return
+                                                                </button>
+                                                            )}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <EmptyState title="No assets allocated" description="Allocate cameras, lenses and kit from studio equipment." />
+                                            )}
+                                        </Card>
                                     </div>
                                     <div className="space-y-4">
+                                        <Card
+                                            title="Payment"
+                                            actions={
+                                                e.booking_id && can('payments.manage') && Number(e.total_amount ?? 0) - Number(e.paid_amount ?? 0) > 0 ? (
+                                                    <Button size="sm" onClick={() => setPaying(true)}>
+                                                        Record payment
+                                                    </Button>
+                                                ) : undefined
+                                            }
+                                        >
+                                            {e.booking_id ? (
+                                                <div className="space-y-3 text-sm">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-stone-500">Status</span>
+                                                        <StatusBadge status={e.payment_status} />
+                                                    </div>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-stone-500">Paid</span>
+                                                        <span className="font-semibold text-stone-900">
+                                                            {money(e.paid_amount ?? 0)} / {money(e.total_amount ?? 0)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-stone-500">Due</span>
+                                                        <span className="font-semibold text-rose-700">{money(Math.max(0, Number(e.total_amount ?? 0) - Number(e.paid_amount ?? 0)))}</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 pt-1">
+                                                        <ButtonLink to={`/admin/bookings?open=${e.booking_id}`} size="sm" variant="secondary">
+                                                            Open booking
+                                                        </ButtonLink>
+                                                        <ButtonLink to="/admin/payments" size="sm" variant="secondary">
+                                                            Payments ledger
+                                                        </ButtonLink>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="rounded-xl border-2 border-dashed border-stone-200 px-4 py-6 text-center text-xs text-stone-500">Link a booking to collect advance or balance payments for this event.</p>
+                                            )}
+                                        </Card>
+                                        <Card title="Customer gallery QR">
+                                            {customerLink ? (
+                                                <div className="space-y-3 text-sm">
+                                                    <p className="text-xs text-stone-500">
+                                                        Print or share this QR for this event only. Guests scan it, enter the customer phone, then see the photos.
+                                                    </p>
+                                                    {e.qr_data_url ? (
+                                                        <div className="flex flex-col items-center gap-3 rounded-xl border border-stone-200 bg-white p-4">
+                                                            <img src={e.qr_data_url} alt={`QR for ${e.title}`} className="h-48 w-48 rounded-lg border border-stone-100 bg-white object-contain" />
+                                                            <a
+                                                                href={e.qr_data_url}
+                                                                download={`${e.event_code || e.id}-event-qr.png`}
+                                                                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                                                            >
+                                                                Download QR PNG
+                                                            </a>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="rounded-xl border-2 border-dashed border-stone-200 px-4 py-6 text-center text-xs text-stone-500">
+                                                            QR image is not ready yet. Open Gallery &amp; QR and tap Show QR, or regenerate the event QR.
+                                                        </p>
+                                                    )}
+                                                    <div className="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 p-2">
+                                                        <Link2 className="size-4 shrink-0 text-stone-400" />
+                                                        <input
+                                                            type="text"
+                                                            readOnly
+                                                            value={customerLink}
+                                                            className="w-full bg-transparent font-mono text-xs text-stone-800 outline-none select-all"
+                                                        />
+                                                        <Button
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            icon={<Copy className="size-3.5" />}
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(customerLink);
+                                                                toast.success('Gallery link copied to clipboard!');
+                                                            }}
+                                                        >
+                                                            Copy
+                                                        </Button>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                                                        <a
+                                                            href={customerLink}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
+                                                        >
+                                                            <ExternalLink className="size-3.5" />
+                                                            Open guest link
+                                                        </a>
+                                                        {e.gallery && (
+                                                            <ButtonLink to={`/admin/galleries/${e.gallery.id}#event-qr`} size="sm" variant="secondary">
+                                                                <QrCode className="size-4" /> Manage QR codes
+                                                            </ButtonLink>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="rounded-xl border-2 border-dashed border-stone-200 px-4 py-6 text-center text-xs text-stone-500">
+                                                    Customer link is generated upon event creation.
+                                                </p>
+                                            )}
+                                        </Card>
                                         <Card title="Gallery">
                                             {e.gallery ? (
                                                 <div className="space-y-3 text-sm">
@@ -252,8 +486,11 @@ export default function AdminEventDetail() {
                                                         {e.gallery.expires_at && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">Expires {date(e.gallery.expires_at)}</span>}
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        <ButtonLink to={`/admin/galleries/${e.gallery.id}`} size="sm" variant="secondary">
+                                                        <ButtonLink to={`/admin/galleries/${e.gallery.id}#event-qr`} size="sm" variant="secondary">
                                                             <QrCode className="size-4" /> Gallery & QR
+                                                        </ButtonLink>
+                                                        <ButtonLink to={`/admin/events/${e.id}/upload`} size="sm" variant="secondary">
+                                                            <Upload className="size-4" /> Upload images
                                                         </ButtonLink>
                                                         <ButtonLink to={`/admin/photos?eventId=${e.id}`} size="sm" variant="secondary">
                                                             <Images className="size-4" /> Manage photos
@@ -304,6 +541,16 @@ export default function AdminEventDetail() {
                             {tab === 'culling' && <CullingTab eventId={id} />}
                             <EventForm value={editing ? e : null} onClose={() => setEditing(false)} onSaved={() => setEditing(false)} />
                             <AssignStaffModal open={assigning} eventId={id} existing={e.staff} onClose={() => setAssigning(false)} />
+                            <AssignAssetModal open={assigningAsset} eventId={id} onClose={() => setAssigningAsset(false)} />
+                            <OfflinePaymentModal
+                                target={paying && e.booking_id ? { bookingId: e.booking_id } : null}
+                                due={Math.max(0, Number(e.total_amount ?? 0) - Number(e.paid_amount ?? 0))}
+                                onClose={() => setPaying(false)}
+                                onSaved={() => {
+                                    setPaying(false);
+                                    invalidate(['events', 'detail', id], ['payments'], ['bookings']);
+                                }}
+                            />
                         </>
                     );
                 }}
@@ -345,6 +592,10 @@ function AssignStaffModal({ open, eventId, existing, onClose }: { open: boolean;
     const [role, setRole] = useState<StaffRole>('PHOTOGRAPHER');
     const [userId, setUserId] = useState('');
     const [camera, setCamera] = useState('');
+    const [payBasis, setPayBasis] = useState('DAY_RATE');
+    const [sharePct, setSharePct] = useState('');
+    const [commissionPct, setCommissionPct] = useState('');
+    const [flatAmount, setFlatAmount] = useState('');
     const [error, setError] = useState('');
     const source = STAFF_ROLE_SOURCE[role];
     const users = useQuery({ queryKey: ['users', 'assignable', source ?? 'all'], queryFn: () => api.get<{ id: number; name: string; role: string }[]>('/api/users/assignable', { role: source }), enabled: open });
@@ -353,12 +604,25 @@ function AssignStaffModal({ open, eventId, existing, onClose }: { open: boolean;
         return (users.data ?? []).filter((u) => !seen.has(u.id) && seen.add(u.id) && !existing.some((s) => s.user_id === u.id && s.role === role));
     }, [users.data, existing, role]);
     const save = useMutation({
-        mutationFn: () => api.send('POST', `/api/events/${eventId}/staff`, { userId: Number(userId), role, cameraLabel: camera.trim() || null }),
+        mutationFn: () =>
+            api.send('POST', `/api/events/${eventId}/staff`, {
+                userId: Number(userId),
+                role,
+                cameraLabel: camera.trim() || null,
+                payBasis,
+                sharePct: sharePct === '' ? null : Number(sharePct),
+                commissionPct: commissionPct === '' ? null : Number(commissionPct),
+                flatAmount: flatAmount === '' ? null : Math.round(Number(flatAmount) * 100),
+            }),
         onSuccess: (r) => {
             toast.success(r.message);
-            invalidate(['events', 'detail', eventId]);
+            invalidate(['events', 'detail', eventId], ['payroll']);
             setUserId('');
             setCamera('');
+            setPayBasis('DAY_RATE');
+            setSharePct('');
+            setCommissionPct('');
+            setFlatAmount('');
             onClose();
         },
         onError: (e) => toast.error(e),
@@ -392,6 +656,77 @@ function AssignStaffModal({ open, eventId, existing, onClose }: { open: boolean;
                     error={error}
                 />
                 {(role === 'PHOTOGRAPHER' || role === 'VIDEOGRAPHER') && <Input label="Camera label" value={camera} onChange={(e) => setCamera(e.target.value)} maxLength={40} placeholder="e.g. Cam A" hint="Shown on uploads so you can tell cameras apart." />}
+                <Select
+                    label="How this member is paid"
+                    value={payBasis}
+                    onChange={(e) => setPayBasis(e.target.value)}
+                    options={[
+                        { value: 'DAY_RATE', label: 'Day rate' },
+                        { value: 'SHARE', label: 'Revenue share %' },
+                        { value: 'COMMISSION', label: 'Commission %' },
+                        { value: 'FLAT', label: 'Flat amount' },
+                        { value: 'NONE', label: 'No payout' },
+                    ]}
+                    hint="Used in Payroll → Event member shares and End of month."
+                />
+                {payBasis === 'SHARE' && <Input label="Share of booking paid (%)" type="number" min={0} max={100} step="0.01" value={sharePct} onChange={(e) => setSharePct(e.target.value)} />}
+                {payBasis === 'COMMISSION' && <Input label="Commission (%)" type="number" min={0} max={100} step="0.01" value={commissionPct} onChange={(e) => setCommissionPct(e.target.value)} />}
+                {payBasis === 'FLAT' && <Input label="Flat amount (₹)" type="number" min={0} step="0.01" value={flatAmount} onChange={(e) => setFlatAmount(e.target.value)} />}
+            </div>
+        </Modal>
+    );
+}
+
+function AssignAssetModal({ open, eventId, onClose }: { open: boolean; eventId: number; onClose: () => void }) {
+    const toast = useToast();
+    const invalidate = useInvalidate();
+    const [assetId, setAssetId] = useState('');
+    const [notes, setNotes] = useState('');
+    const [error, setError] = useState('');
+    const available = useQuery({
+        queryKey: ['assets', 'AVAILABLE'],
+        queryFn: () => api.get<{ id: number; asset_code: string; name: string; category: string }[]>('/api/assets', { status: 'AVAILABLE' }),
+        enabled: open,
+    });
+    const save = useMutation({
+        mutationFn: () => api.send('POST', `/api/assets/${assetId}/assign`, { eventId, notes: notes.trim() || null }),
+        onSuccess: (r) => {
+            toast.success(r.message);
+            invalidate(['events', 'detail', eventId], ['assets']);
+            setAssetId('');
+            setNotes('');
+            onClose();
+        },
+        onError: (e) => toast.error(e),
+    });
+    return (
+        <Modal
+            open={open}
+            onClose={onClose}
+            title="Allocate asset"
+            size="sm"
+            footer={
+                <>
+                    <Button variant="secondary" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button loading={save.isPending} onClick={() => (assetId ? save.mutate() : setError('Choose an asset'))}>
+                        Allocate
+                    </Button>
+                </>
+            }
+        >
+            <div className="space-y-4">
+                <Select
+                    label="Available equipment"
+                    required
+                    value={assetId}
+                    onChange={(e) => (setAssetId(e.target.value), setError(''))}
+                    placeholder={available.isLoading ? 'Loading…' : (available.data?.length ?? 0) ? 'Choose…' : 'No available assets'}
+                    options={(available.data ?? []).map((a) => ({ value: a.id, label: `${a.asset_code} · ${a.name}` }))}
+                    error={error}
+                />
+                <Input label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={200} placeholder="Optional" />
             </div>
         </Modal>
     );

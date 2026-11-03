@@ -2,10 +2,11 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import { useQuery } from '@tanstack/react-query';
+import { Images } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { DataTable, EmptyState, Pagination, QueryState, SearchInput, StatusBadge } from '../../components/ui/Data';
 import { Select } from '../../components/ui/Form';
-import { ButtonLink, Card, PageHeader } from '../../components/ui';
+import { ButtonLink, ColorListShell } from '../../components/ui';
 import { api, type Paged } from '../../services/api';
 import { date, num, titleCase } from '../../utils/format';
 import { useListParams } from '../../hooks';
@@ -39,60 +40,57 @@ export default function AdminGalleries() {
         placeholderData: (p) => p,
     });
     return (
-        <div>
-            <PageHeader
-                title="Galleries"
-                subtitle="Visibility, watermarking, albums and QR access for every event gallery."
-                actions={
+        <ColorListShell
+            icon={Images}
+            tone="violet"
+            title="Galleries"
+            subtitle={`${q.data?.total ?? 0} total · watermarking, albums & QR access`}
+            actions={
+                <>
+                    <SearchInput value={search} onChange={setSearch} placeholder="Gallery, event or customer" className="min-w-[10rem] flex-1 sm:max-w-xs" inputClassName="rounded-full" />
+                    <Select wrapperClassName="w-36 sm:w-44" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={GALLERY_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
+                    <ButtonLink to="/admin/qr" variant="secondary" size="sm">
+                        Manage QR
+                    </ButtonLink>
+                    <ButtonLink to="/admin/qr/create" size="sm">
+                        Create QR
+                    </ButtonLink>
+                </>
+            }
+        >
+            <QueryState query={q}>
+                {(d) => (
                     <>
-                        <ButtonLink to="/admin/qr" variant="secondary" size="sm">
-                            Manage QR
-                        </ButtonLink>
-                        <ButtonLink to="/admin/qr/create" size="sm">
-                            Create QR
-                        </ButtonLink>
+                        <DataTable
+                            rows={d.items}
+                            rowKey={(r) => r.id}
+                            onRowClick={(r) => navigate(`/admin/galleries/${r.id}`)}
+                            empty={<EmptyState title="No galleries found" description="A gallery is created automatically with every event." />}
+                            columns={[
+                                {
+                                    key: 'title',
+                                    header: 'Gallery',
+                                    cell: (r) => (
+                                        <div>
+                                            <p className="font-medium text-stone-900">{r.title}</p>
+                                            <p className="text-xs text-stone-500">
+                                                {r.event_code} · {date(r.event_date)} · {r.customer_name}
+                                            </p>
+                                        </div>
+                                    ),
+                                },
+                                { key: 'photos', header: 'Published', cell: (r) => `${num(r.published_count)} / ${num(r.photo_count)}` },
+                                { key: 'qr', header: 'Active QR', cell: (r) => num(r.active_qr), hideOnMobile: true },
+                                { key: 'opens', header: 'Opens', cell: (r) => num(r.opens), hideOnMobile: true },
+                                { key: 'wm', header: 'Protection', cell: (r) => `${r.watermark_enabled ? 'Watermark' : 'No watermark'}${r.allow_download ? '' : ' · no downloads'}`, hideOnMobile: true },
+                                { key: 'exp', header: 'Expires', cell: (r) => (r.expires_at ? date(r.expires_at) : 'Never'), hideOnMobile: true },
+                                { key: 'status', header: 'Status', cell: (r) => <StatusBadge status={r.status} /> },
+                            ]}
+                        />
+                        <Pagination page={d.page} totalPages={d.totalPages} total={d.total} onPage={setPage} />
                     </>
-                }
-            />
-            <Card padded={false}>
-                <div className="flex flex-wrap items-end gap-3 border-b border-stone-100 p-4">
-                    <SearchInput value={search} onChange={setSearch} placeholder="Gallery, event or customer" className="w-full max-w-xs" />
-                    <Select wrapperClassName="w-44" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={GALLERY_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
-                </div>
-                <QueryState query={q}>
-                    {(d) => (
-                        <>
-                            <DataTable
-                                rows={d.items}
-                                rowKey={(r) => r.id}
-                                onRowClick={(r) => navigate(`/admin/galleries/${r.id}`)}
-                                empty={<EmptyState title="No galleries found" description="A gallery is created automatically with every event." />}
-                                columns={[
-                                    {
-                                        key: 'title',
-                                        header: 'Gallery',
-                                        cell: (r) => (
-                                            <div>
-                                                <p className="font-medium text-stone-900">{r.title}</p>
-                                                <p className="text-xs text-stone-500">
-                                                    {r.event_code} · {date(r.event_date)} · {r.customer_name}
-                                                </p>
-                                            </div>
-                                        ),
-                                    },
-                                    { key: 'photos', header: 'Published', cell: (r) => `${num(r.published_count)} / ${num(r.photo_count)}` },
-                                    { key: 'qr', header: 'Active QR', cell: (r) => num(r.active_qr), hideOnMobile: true },
-                                    { key: 'opens', header: 'Opens', cell: (r) => num(r.opens), hideOnMobile: true },
-                                    { key: 'wm', header: 'Protection', cell: (r) => `${r.watermark_enabled ? 'Watermark' : 'No watermark'}${r.allow_download ? '' : ' · no downloads'}`, hideOnMobile: true },
-                                    { key: 'exp', header: 'Expires', cell: (r) => (r.expires_at ? date(r.expires_at) : 'Never'), hideOnMobile: true },
-                                    { key: 'status', header: 'Status', cell: (r) => <StatusBadge status={r.status} /> },
-                                ]}
-                            />
-                            <Pagination page={d.page} totalPages={d.totalPages} total={d.total} onPage={setPage} />
-                        </>
-                    )}
-                </QueryState>
-            </Card>
-        </div>
+                )}
+            </QueryState>
+        </ColorListShell>
     );
 }

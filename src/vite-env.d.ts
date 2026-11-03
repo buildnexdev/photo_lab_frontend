@@ -7,6 +7,7 @@ interface ImportMetaEnv {
     readonly VITE_API_URL?: string;
     readonly VITE_MAX_UPLOAD_MB?: string;
     readonly VITE_DEV_API_TARGET?: string;
+    readonly VITE_API_CRYPTO_SECRET?: string;
 }
 
 interface ImportMeta {

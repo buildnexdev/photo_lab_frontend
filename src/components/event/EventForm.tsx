@@ -5,7 +5,7 @@
  */
 import clsx from 'clsx';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle, CalendarDays, Clock, MapPin, UserRound } from 'lucide-react';
+import { AlertCircle, CalendarDays, Clock, ImagePlus, MapPin, Trash2, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -36,6 +36,7 @@ export interface EventFormValue {
     end_time: string | null;
     venue: string | null;
     notes?: string | null;
+    cover_url?: string | null;
 }
 
 interface SameDayEvent {
@@ -93,6 +94,10 @@ export function EventForm({
     const [customerError, setCustomerError] = useState('');
     const [slot, setSlot] = useState('');
 
+    // Cover image state
+    const [coverFile, setCoverFile] = useState<File | null>(null);
+    const [coverPreview, setCoverPreview] = useState<string | null>(null);
+
     // Confirmation modal state for existing events on the same date
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const [conflictingEvents, setConflictingEvents] = useState<SameDayEvent[]>([]);
@@ -122,6 +127,8 @@ export function EventForm({
 
         if (value === 'new') {
             setCustomer(null);
+            setCoverFile(null);
+            setCoverPreview(null);
             reset({ title: '', eventType: '', eventDate: '', startTime: '', endTime: '', venue: '', notes: '' });
         } else {
             setCustomer({
@@ -130,6 +137,8 @@ export function EventForm({
                 phone: value.customer_phone ?? null,
                 email: value.customer_email ?? null,
             });
+            setCoverFile(null);
+            setCoverPreview(value.cover_url ?? null);
             reset({
                 title: value.title,
                 eventType: value.event_type,
@@ -194,6 +203,19 @@ export function EventForm({
             const r = isNew
                 ? await api.send<{ id: number }>('POST', '/api/events', body)
                 : await api.send<{ id: number }>('PUT', `/api/events/${(value as EventFormValue).id}`, body);
+
+            // Upload cover image if selected
+            if (coverFile) {
+                try {
+                    const coverData = new FormData();
+                    coverData.append('cover', coverFile);
+                    await api.send('POST', `/api/events/${r.data.id}/cover`, coverData);
+                } catch (coverErr) {
+                    console.error('Failed to upload cover image:', coverErr);
+                    toast.warning('Event saved, but cover image upload failed.');
+                }
+            }
+
             toast.success(r.message);
             await invalidate(['events']);
             setConfirmModalOpen(false);
@@ -337,6 +359,59 @@ export function EventForm({
                             {...register('notes')}
                             error={errors.notes?.message}
                         />
+                        <div className="sm:col-span-2">
+                            <label className="mb-1 block text-sm font-medium text-stone-700">Cover Image</label>
+                            {coverPreview ? (
+                                <div className="group relative h-40 w-full overflow-hidden rounded-xl border border-stone-200 bg-stone-100">
+                                    <img src={coverPreview} alt="Cover preview" className="size-full object-cover" />
+                                    <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                                        <label className="cursor-pointer rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-stone-800 shadow hover:bg-stone-50">
+                                            Change cover
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const f = e.target.files?.[0];
+                                                    if (f) {
+                                                        setCoverFile(f);
+                                                        setCoverPreview(URL.createObjectURL(f));
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCoverFile(null);
+                                                setCoverPreview(null);
+                                            }}
+                                            className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-red-700"
+                                        >
+                                            <Trash2 className="size-3.5" /> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <label className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 hover:bg-stone-100/80 transition-colors">
+                                    <ImagePlus className="size-8 text-stone-400 mb-1" />
+                                    <span className="text-sm font-medium text-stone-700">Upload Cover Image</span>
+                                    <span className="text-xs text-stone-500">JPG, PNG, or WebP up to 10MB</span>
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const f = e.target.files?.[0];
+                                            if (f) {
+                                                setCoverFile(f);
+                                                setCoverPreview(URL.createObjectURL(f));
+                                            }
+                                        }}
+                                    />
+                                </label>
+                            )}
+                        </div>
                     </FormGrid>
                 </form>
             </Modal>

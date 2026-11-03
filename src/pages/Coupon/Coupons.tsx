@@ -11,12 +11,12 @@ import { DataTable, EmptyState, QueryState, StatusBadge, TableHeaderToolbar, COL
 import { Checkbox, FormGrid, Input, Select } from '../../components/ui/Form';
 import { Modal, useConfirm } from '../../components/ui/Overlay';
 import { useToast } from '../../components/ui/Toast';
-import { Button, Card, IconButton, PageHeader } from '../../components/ui';
+import { Button, ColorListShell, IconButton } from '../../components/ui';
 import { api, applyFieldErrors } from '../../services/api';
 import { dateTime, localInputToUtc, money, toLocalInput, toPaise, toRupees } from '../../utils/format';
 import { useInvalidate, useViewMode } from '../../hooks';
 import { clsx } from 'clsx';
-import { Tag } from 'lucide-react';
+import { Tag, TicketPercent } from 'lucide-react';
 import './Coupons.scss';
 
 interface CouponRow {
@@ -83,11 +83,7 @@ export default function AdminCoupons() {
     });
     return (
         <div>
-            <PageHeader
-                title="Coupons"
-                subtitle="Discount codes for bookings and orders."
-            />
-            <Card padded={false}>
+            <ColorListShell icon={TicketPercent} tone="amber" title="Coupons" subtitle="Discount codes for bookings and orders">
                 <TableHeaderToolbar
                     search={search}
                     onSearch={setSearch}
@@ -98,6 +94,7 @@ export default function AdminCoupons() {
                     onViewModeChange={setViewMode}
                     onAdd={() => setEditing('new')}
                     addLabel="New coupon"
+                    className="rounded-none border-0"
                 />
                 <QueryState query={q}>
                     {(rows) => {
@@ -165,7 +162,7 @@ export default function AdminCoupons() {
                         />
                     )}}
                 </QueryState>
-            </Card>
+            </ColorListShell>
             <CouponModal value={editing} onClose={() => setEditing(null)} />
             {dialog}
         </div>

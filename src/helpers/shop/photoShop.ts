@@ -1,7 +1,7 @@
 // Developer by: Buildnexdev.in
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
-export type ProductCategory = 'Photo Frames' | 'Photo Cups' | 'Photo Albums' | 'Photo Prints' | 'Customized Gifts';
+export type ProductCategory = 'Photo Frames' | 'Photo Cups' | 'Photo Albums' | 'Photo Prints' | 'Customized Gifts' | 'Coming Soon';
 
 export interface PhotoPlacement {
     x: number;
@@ -28,6 +28,7 @@ export interface ShopProduct {
     image: string;
     frameOverlay: string;
     placement: PhotoPlacement;
+    comingSoon?: boolean;
 }
 
 export interface PhotoAdjustment {
@@ -71,6 +72,8 @@ export interface ShopOrder {
     payment: string;
     paymentStatus: 'Pending' | 'Paid';
     status: ShopOrderStatus;
+    trackingNumber?: string | null;
+    courierPartner?: string | null;
 }
 
 export interface ProductType {
@@ -82,10 +85,10 @@ export interface ProductType {
     active: boolean;
 }
 
-export const SHOP_CATEGORIES: ProductCategory[] = ['Photo Frames', 'Photo Cups', 'Photo Albums', 'Photo Prints', 'Customized Gifts'];
+export const SHOP_CATEGORIES: ProductCategory[] = ['Photo Frames', 'Photo Cups', 'Photo Albums', 'Photo Prints', 'Customized Gifts', 'Coming Soon'];
 export const SHOP_ORDER_STATUSES: ShopOrderStatus[] = ['New Order', 'Confirmed', 'Photo Verification', 'Design / Customization', 'Production', 'Ready', 'Shipped', 'Delivered'];
 
-const STORAGE = { types: 'photolab.shop.types.v1', products: 'photolab.shop.products.v1', cart: 'photolab.shop.cart.v1', orders: 'photolab.shop.orders.v1' } as const;
+const STORAGE = { types: 'photolab.shop.types.v1', products: 'photolab.shop.products.v1', cart: 'photolab.shop.cart.v1', orders: 'photolab.shop.orders.v1', wishlist: 'photolab.shop.wishlist.v1' } as const;
 
 export const seededProductTypes: ProductType[] = [
     { id: 'type-frames', name: 'Photo Frames', code: 'FRAMES', description: 'Hardwood and metal gallery frames with archival matting.', icon: 'Frame', active: true },
@@ -93,6 +96,7 @@ export const seededProductTypes: ProductType[] = [
     { id: 'type-prints', name: 'Photo Prints', code: 'PRINTS', description: 'Fine-art museum quality cotton & lustre prints.', icon: 'Image', active: true },
     { id: 'type-cups', name: 'Photo Cups & Mugs', code: 'CUPS', description: 'Custom printed ceramic mugs and travel tumblers.', icon: 'Coffee', active: true },
     { id: 'type-gifts', name: 'Customized Gifts', code: 'GIFTS', description: 'Engraved keepsake boxes, acrylic blocks & merchandise.', icon: 'Gift', active: true },
+    { id: 'type-coming', name: 'Coming Soon', code: 'COMING', description: 'Exclusive bespoke photo merchandise launching soon.', icon: 'Sparkles', active: true },
 ];
 
 const seededProducts: ShopProduct[] = [
@@ -102,6 +106,13 @@ const seededProducts: ShopProduct[] = [
     { id: 'prints-fineart', name: 'Fine art photo prints', category: 'Photo Prints', description: 'Rich, true-to-life colour on archival matte paper with a beautifully soft texture.', price: 299, discount: 0, variants: ['Matte', 'Lustre', 'Fine-art cotton'], sizes: ['5 × 7', '8 × 10', '12 × 18'], stock: 80, active: true, customizable: true, customizationPrice: 0, image: '/images/weddingphoto1.jpg', frameOverlay: '', placement: { x: 10, y: 10, width: 80, height: 80, aspectRatio: '4:5', padding: 0 } },
     { id: 'cup-photo', name: 'Personalised photo cup', category: 'Photo Cups', description: 'A glossy ceramic cup, made personal with the photograph you choose.', price: 449, discount: 0, variants: ['White ceramic', 'Colour inside'], sizes: ['11 oz', '15 oz'], stock: 32, active: true, customizable: true, customizationPrice: 75, image: '/images/BabyShower.jfif', frameOverlay: '', placement: { x: 10, y: 22, width: 80, height: 54, aspectRatio: '3:2', padding: 0 } },
     { id: 'gift-keepsake', name: 'Printed keepsake box', category: 'Customized Gifts', description: 'A keepsake box finished with a favourite photograph and a soft-touch lid.', price: 999, discount: 5, variants: ['Ivory', 'Midnight'], sizes: ['Small', 'Large'], stock: 9, active: true, customizable: true, customizationPrice: 125, image: '/images/house warming.jfif', frameOverlay: '', placement: { x: 15, y: 12, width: 70, height: 76, aspectRatio: '4:5', padding: 4 } },
+    // Client Requested Products (Coming Soon)
+    { id: 'cs-3d-photo', name: '3D Photo Printing', category: 'Coming Soon', description: 'Lifelike 3D depth sculpted photo crystal printing with multi-angle projection.', price: 1499, discount: 0, variants: ['Crystal block', 'Acrylic 3D'], sizes: ['5 × 7', '8 × 10'], stock: 0, active: true, customizable: true, customizationPrice: 200, image: '/images/weddingphoto1.jpg', frameOverlay: '', placement: { x: 15, y: 12, width: 70, height: 76, aspectRatio: '4:5', padding: 4 }, comingSoon: true },
+    { id: 'cs-pencil-art', name: 'Handcrafted Pencil Arts', category: 'Coming Soon', description: 'Master charcoal and graphite pencil sketch conversion crafted by fine artists.', price: 1299, discount: 0, variants: ['Graphite', 'Charcoal', 'Tinted Sepia'], sizes: ['A4', 'A3', 'A2'], stock: 0, active: true, customizable: true, customizationPrice: 150, image: '/images/hero-couple-outdoor.jpg', frameOverlay: '', placement: { x: 15, y: 12, width: 70, height: 76, aspectRatio: '4:5', padding: 4 }, comingSoon: true },
+    { id: 'cs-led-frame', name: 'LED Glowing Photo Frame', category: 'Coming Soon', description: 'Backlit warm-glow ambient LED crystal frame that illuminates your portrait at night.', price: 1199, discount: 0, variants: ['Warm Gold LED', 'Natural White LED'], sizes: ['8 × 10', '12 × 18'], stock: 0, active: true, customizable: true, customizationPrice: 150, image: '/images/hero-wedding-garlands.jpg', frameOverlay: '', placement: { x: 15, y: 12, width: 70, height: 76, aspectRatio: '4:5', padding: 4 }, comingSoon: true },
+    { id: 'cs-magic-mug', name: 'Heat Magic Color Mug', category: 'Coming Soon', description: 'Thermosensitive ceramic mug that reveals your hidden photograph when hot beverage is poured.', price: 549, discount: 0, variants: ['Matte Black Magic', 'Glossy Night Blue'], sizes: ['11 oz', '15 oz'], stock: 0, active: true, customizable: true, customizationPrice: 50, image: '/images/BabyShower.jfif', frameOverlay: '', placement: { x: 10, y: 22, width: 80, height: 54, aspectRatio: '3:2', padding: 0 }, comingSoon: true },
+    { id: 'cs-phone-case', name: 'Custom Photo Phone Case', category: 'Coming Soon', description: 'Impact-resistant military grade hybrid phone cover printed with your high-definition photo.', price: 599, discount: 0, variants: ['Tough Armor', 'Slim Glossy'], sizes: ['iPhone', 'Samsung', 'OnePlus', 'Vivo'], stock: 0, active: true, customizable: true, customizationPrice: 50, image: '/images/hero-couple-petals.jpg', frameOverlay: '', placement: { x: 20, y: 10, width: 60, height: 80, aspectRatio: '9:16', padding: 2 }, comingSoon: true },
+    { id: 'cs-photo-pillow', name: 'Personalised Photo Pillow', category: 'Coming Soon', description: 'Ultra-soft plush velvet memory pillow printed with vibrant fade-proof photo inks.', price: 699, discount: 0, variants: ['Plush Velvet', 'Satin Silk'], sizes: ['16 × 16 inches', '18 × 18 inches'], stock: 0, active: true, customizable: true, customizationPrice: 80, image: '/images/house warming.jfif', frameOverlay: '', placement: { x: 15, y: 15, width: 70, height: 70, aspectRatio: '1:1', padding: 4 }, comingSoon: true },
 ];
 
 function read<T>(key: string, fallback: T): T {
@@ -170,6 +181,14 @@ export const getCart = () => read<ShopCartItem[]>(STORAGE.cart, []);
 export const saveCart = (cart: ShopCartItem[]) => write(STORAGE.cart, cart);
 export const getOrders = () => read<ShopOrder[]>(STORAGE.orders, []);
 export const saveOrders = (orders: ShopOrder[]) => write(STORAGE.orders, orders);
+export const getWishlist = () => read<string[]>(STORAGE.wishlist, []);
+export const saveWishlist = (ids: string[]) => write(STORAGE.wishlist, ids);
+export const toggleWishlistHelper = (id: string): string[] => {
+    const current = getWishlist();
+    const updated = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+    saveWishlist(updated);
+    return updated;
+};
 
 export async function imageFileToDataUrl(file: File, maxEdge = 1800): Promise<string> {
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Choose a JPG, PNG or WebP image.');

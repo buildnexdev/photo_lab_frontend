@@ -19,6 +19,71 @@
     --soft-shadow-lg: 0 10px 40px rgba(40, 32, 16, 0.1);
     --soft-radius: 1rem;
     --soft-radius-lg: 1.25rem;
+    --font-sans: 'Outfit', system-ui, sans-serif;
+    --font-display: 'Fraunces', Georgia, serif;
+    --tone-sky: #0ea5e9;
+    --tone-violet: #8b5cf6;
+    --tone-rose: #f43f5e;
+    --tone-amber: #f59e0b;
+    --tone-emerald: #10b981;
+    --tone-fuchsia: #d946ef;
+    --tone-cyan: #06b6d4;
+    --tone-orange: #f97316;
+}
+
+.nq-icon-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.75rem;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+}
+
+.nq-icon-tile--sm {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.55rem;
+    box-shadow: none;
+}
+
+.nq-icon-tile--sky { background: linear-gradient(135deg, #38bdf8, #0284c7); }
+.nq-icon-tile--violet { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+.nq-icon-tile--rose { background: linear-gradient(135deg, #fb7185, #e11d48); }
+.nq-icon-tile--amber { background: linear-gradient(135deg, #fbbf24, #d97706); }
+.nq-icon-tile--emerald { background: linear-gradient(135deg, #34d399, #059669); }
+.nq-icon-tile--fuchsia { background: linear-gradient(135deg, #e879f9, #c026d3); }
+.nq-icon-tile--cyan { background: linear-gradient(135deg, #22d3ee, #0891b2); }
+.nq-icon-tile--orange { background: linear-gradient(135deg, #fb923c, #ea580c); }
+.nq-icon-tile--gold { background: var(--portal-gold-gradient); color: #1c1917; }
+.nq-icon-tile--ink { background: linear-gradient(135deg, #3f3f46, #18181b); }
+
+.nq-list-shell {
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid #e7e0d2;
+    background: #fff;
+    box-shadow: var(--soft-shadow);
+}
+
+.nq-list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #ebe5d8;
+    background: linear-gradient(180deg, #fffefb 0%, #fff 100%);
+}
+
+@media (max-width: 640px) {
+    .nq-list-toolbar {
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
 }
 
 .soft-card {

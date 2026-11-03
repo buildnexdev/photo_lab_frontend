@@ -7,6 +7,15 @@ import { adminAside, customerAside, deliveryAside, editorAside, photographerAsid
 import footers from './footerRoutes';
 import { GuestOnly, RequireAuth } from './guards';
 import { adminHeader, customerHeader, deliveryHeader, editorHeader, photographerHeader } from './headerRoutes';
+import { useAuth } from '../hooks/useAuth';
+
+function AdminIndexRedirect() {
+    const { hasRole } = useAuth();
+    if (hasRole('SUPER_ADMIN')) {
+        return <Navigate to="/admin/companies" replace />;
+    }
+    return <Navigate to="dashboard" replace />;
+}
 
 const page = (load: () => Promise<{ default: ComponentType }>): Pick<RouteObject, 'lazy'> => ({
     lazy: async () => ({ Component: (await load()).default }),
@@ -48,11 +57,12 @@ export const router = createBrowserRouter([
                     </RequireAuth>
                 ),
                 children: [
-                    { index: true, element: <Navigate to="dashboard" replace /> },
+                    { index: true, element: <AdminIndexRedirect /> },
                     { path: 'dashboard', ...page(() => import('../pages/Dashboard/Dashboard')) },
                     { path: 'customers', ...page(() => import('../pages/Customer/Customers')) },
                     { path: 'bookings', ...page(() => import('../pages/Booking/Bookings')) },
                     { path: 'events', ...page(() => import('../pages/Event/Events')) },
+                    { path: 'events/:id/upload', ...page(() => import('../pages/Admin/EventUpload')) },
                     { path: 'events/:id', ...page(() => import('../pages/Admin/EventDetail')) },
                     { path: 'galleries', ...page(() => import('../pages/Admin/Galleries')) },
                     { path: 'galleries/:id', ...page(() => import('../pages/Admin/GalleryDetail')) },
@@ -63,8 +73,11 @@ export const router = createBrowserRouter([
                     { path: 'upload', ...page(() => import('../pages/Photographer/Upload')) },
                     { path: 'orders', ...page(() => import('../pages/Admin/Orders')) },
                     { path: 'product-types', ...page(() => import('../pages/Admin/ProductTypes')) },
-                    { path: 'products', ...page(() => import('../pages/Admin/PhotoProducts')) },
+                    { path: 'products', element: <Navigate to="/admin/settings?tab=products" replace /> },
                     { path: 'payments', ...page(() => import('../pages/Admin/Payments')) },
+                    { path: 'payroll', ...page(() => import('../pages/Admin/Payroll')) },
+                    { path: 'closing/day', ...page(() => import('../pages/Admin/EndOfDay')) },
+                    { path: 'closing/month', ...page(() => import('../pages/Admin/EndOfMonth')) },
                     { path: 'services', ...page(() => import('../pages/Admin/Services')) },
                     { path: 'packages', ...page(() => import('../pages/Admin/Packages')) },
                     { path: 'coupons', ...page(() => import('../pages/Coupon/Coupons')) },

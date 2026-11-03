@@ -58,11 +58,11 @@ export default function AdminBookings() {
             <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[var(--soft-shadow)]">
                 <header className="flex flex-wrap items-center gap-2 border-b border-stone-200 px-4 py-3">
                     <div className="mr-1 flex items-center gap-2.5">
-                        <span className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
+                        <span className="nq-icon-tile nq-icon-tile--orange" aria-hidden>
                             <CalendarDays className="size-5" />
                         </span>
                         <div className="leading-tight">
-                            <p className="text-sm font-semibold text-stone-900">Bookings</p>
+                            <p className="font-display text-base font-semibold tracking-tight text-stone-900">Bookings</p>
                             <p className="text-xs text-stone-500">{q.data?.total ?? 0} total</p>
                         </div>
                     </div>

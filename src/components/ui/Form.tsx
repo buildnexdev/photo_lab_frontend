@@ -2,7 +2,8 @@
 // Devevloper : Nandhakumar@gmail.com
 // Last Edited : 06-10-2026
 import clsx from 'clsx';
-import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import { forwardRef, useId, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 
 const control =
     'block w-full rounded-lg border bg-white px-3 text-sm text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 disabled:bg-stone-100 disabled:text-stone-500';
@@ -53,6 +54,39 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
             ) : (
                 input
             )}
+        </Field>
+    );
+});
+
+type PasswordInputProps = Omit<InputProps, 'type' | 'prefix'>;
+
+/** Password field with show / hide toggle. */
+export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(function PasswordInput({ label, error, hint, wrapperClassName, className, id, required, ...rest }, ref) {
+    const auto = useId();
+    const inputId = id ?? auto;
+    const [show, setShow] = useState(false);
+    return (
+        <Field label={label} error={error} hint={hint} required={required} className={wrapperClassName} htmlFor={inputId}>
+            <div className="relative">
+                <input
+                    ref={ref}
+                    id={inputId}
+                    type={show ? 'text' : 'password'}
+                    aria-invalid={!!error || undefined}
+                    required={required}
+                    className={clsx(control, 'h-10 pr-10', error ? 'border-red-400' : 'border-stone-300', className)}
+                    {...rest}
+                />
+                <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShow((s) => !s)}
+                    aria-label={show ? 'Hide password' : 'Show password'}
+                    className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-stone-500 hover:text-stone-800"
+                >
+                    {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+            </div>
         </Field>
     );
 });

@@ -62,7 +62,7 @@ export function useAuth(): AuthState {
             user,
             status,
             acceptSession(session) {
-                setAccessToken(session.accessToken);
+                setAccessToken(session.accessToken, session.studioSlug);
                 dispatch(authSession(session.user));
             },
             login(identifier, password, studio) {

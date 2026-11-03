@@ -31,7 +31,7 @@ export const ROLE_LEVEL: Record<Role, number> = {
 };
 
 const ROLE_HOME: Record<Role, string> = {
-    SUPER_ADMIN: '/admin/dashboard',
+    SUPER_ADMIN: '/admin/companies',
     STUDIO_OWNER: '/admin/dashboard',
     COMPANY_ADMIN: '/admin/dashboard',
     MANAGER: '/admin/dashboard',

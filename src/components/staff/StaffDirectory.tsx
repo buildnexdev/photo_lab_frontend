@@ -158,15 +158,15 @@ export function StaffDirectory({ role, title }: { role?: Role; title: string; su
             <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[var(--soft-shadow)]">
                 <header className="flex flex-wrap items-center gap-2 border-b border-stone-200 px-4 py-3">
                     <div className="mr-1 flex items-center gap-2.5">
-                        <span className="flex size-10 items-center justify-center rounded-xl bg-ink-900 text-accent-400 shadow-sm">
-                            <Users className="size-5" />
+                        <span className="nq-icon-tile nq-icon-tile--rose" aria-hidden>
+                            <Users className="size-5" strokeWidth={2.25} />
                         </span>
                         <div className="leading-tight">
-                            <p className="text-sm font-semibold text-stone-900">{title}</p>
+                            <p className="font-display text-base font-semibold tracking-tight text-stone-900">{title}</p>
                             <p className="text-xs text-stone-500">{q.data?.total ?? 0} total</p>
                         </div>
                     </div>
-                    <SearchInput value={search} onChange={setSearch} placeholder="Search name, email or phone" className="min-w-[12rem] flex-1" />
+                    <SearchInput value={search} onChange={setSearch} placeholder="Search name, email or phone" className="min-w-[12rem] flex-1" inputClassName="rounded-full" />
                     {!role && <Select wrapperClassName="w-48" aria-label="Role" value={filters.role} onChange={(e) => setFilter('role', e.target.value)} placeholder="All roles" options={STAFF_ROLE_CODES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))} />}
                     <div className="inline-flex rounded-lg border border-stone-200 bg-stone-50 p-0.5" role="radiogroup" aria-label="Status">
                         {statusTabs.map((t) => (
