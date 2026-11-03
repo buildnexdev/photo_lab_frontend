@@ -20,6 +20,7 @@ const ADMIN_ACCESS = ['dashboard.view', 'customers.view', 'bookings.view', 'even
 
 const profile = page(() => import('../pages/Shared/ProfilePage'));
 const notifications = page(() => import('../pages/Shared/NotificationsPage'));
+const tickets = page(() => import('../pages/Shared/TicketsPage'));
 
 export const router = createBrowserRouter([
     {
@@ -78,6 +79,7 @@ export const router = createBrowserRouter([
                     { path: 'reports', ...page(() => import('../pages/Admin/Reports')) },
                     { path: 'settings', ...page(() => import('../pages/Admin/Settings')) },
                     { path: 'audit-logs', ...page(() => import('../pages/Audit/AuditLogs')) },
+                    { path: 'tickets', ...tickets },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
                 ],
@@ -100,6 +102,7 @@ export const router = createBrowserRouter([
                     { path: 'orders', ...page(() => import('../pages/Customer/Orders')) },
                     { path: 'payments', ...page(() => import('../pages/Customer/Payments')) },
                     { path: 'downloads', ...page(() => import('../pages/Customer/Downloads')) },
+                    { path: 'tickets', ...tickets },
                     { path: 'notifications', ...notifications },
                     { path: 'profile', ...profile },
                 ],
@@ -119,6 +122,7 @@ export const router = createBrowserRouter([
                     { path: 'upload', ...page(() => import('../pages/Photographer/Upload')) },
                     { path: 'camera-setup', ...page(() => import('../pages/Photographer/CameraSetup')) },
                     { path: 'tasks', ...page(() => import('../pages/Photographer/Tasks')) },
+                    { path: 'tickets', ...tickets },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
                 ],
@@ -137,6 +141,7 @@ export const router = createBrowserRouter([
                     { path: 'photos', ...page(() => import('../pages/Editor/Photos')) },
                     { path: 'albums', ...page(() => import('../pages/Editor/Albums')) },
                     { path: 'proofs', ...page(() => import('../pages/Editor/Proofs')) },
+                    { path: 'tickets', ...tickets },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
                 ],
@@ -154,6 +159,7 @@ export const router = createBrowserRouter([
                     { path: 'orders', ...page(() => import('../pages/Delivery/Orders')) },
                     { path: 'printing', ...page(() => import('../pages/Delivery/Printing')) },
                     { path: 'dispatch', ...page(() => import('../pages/Delivery/Dispatch')) },
+                    { path: 'tickets', ...tickets },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
                 ],

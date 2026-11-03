@@ -168,6 +168,15 @@ export const adminMenus: MenuGroup[] = [
     financePageMenu,
     reportsPageMenu,
     settingsPageMenu,
+    {
+        id: 'support',
+        text: 'Support',
+        path: '/admin/tickets',
+        icon: 'Ticket',
+        subMenu: {
+            tickets: item({ id: 'adminTickets', text: 'Tickets', path: '/admin/tickets', icon: 'Ticket' }),
+        },
+    },
 ];
 
 export const customerPageMenu: MenuGroup = {
@@ -184,6 +193,7 @@ export const customerPageMenu: MenuGroup = {
         orders: item({ id: 'customerOrders', text: 'Orders', path: '/customer/orders', icon: 'ShoppingBag' }),
         payments: item({ id: 'customerPayments', text: 'Payments', path: '/customer/payments', icon: 'Receipt' }),
         downloads: item({ id: 'customerDownloads', text: 'Downloads', path: '/customer/downloads', icon: 'Download' }),
+        tickets: item({ id: 'customerTickets', text: 'Tickets', path: '/customer/tickets', icon: 'Ticket' }),
         notifications: item({ id: 'customerNotifications', text: 'Notifications', path: '/customer/notifications', icon: 'Bell' }),
         profile: item({ id: 'customerProfile', text: 'Profile', path: '/customer/profile', icon: 'User' }),
     },
@@ -200,6 +210,7 @@ export const photographerPageMenu: MenuGroup = {
         upload: item({ id: 'photographerUpload', text: 'Upload', path: '/photographer/upload', icon: 'Upload' }),
         camera: item({ id: 'photographerCamera', text: 'Camera setup', path: '/photographer/camera-setup', icon: 'Camera' }),
         tasks: item({ id: 'photographerTasks', text: 'Tasks', path: '/photographer/tasks', icon: 'ListChecks' }),
+        tickets: item({ id: 'photographerTickets', text: 'Tickets', path: '/photographer/tickets', icon: 'Ticket' }),
         profile: item({ id: 'photographerProfile', text: 'Profile', path: '/photographer/profile', icon: 'User' }),
     },
 };
@@ -215,6 +226,7 @@ export const editorPageMenu: MenuGroup = {
         photos: item({ id: 'editorPhotos', text: 'Photos', path: '/editor/photos', icon: 'Wand2', anyOf: ['photos.edit'] }),
         albums: item({ id: 'editorAlbums', text: 'Albums', path: '/editor/albums', icon: 'BookImage', anyOf: ['proofs.manage'] }),
         proofs: item({ id: 'editorProofs', text: 'Proofs and revisions', path: '/editor/proofs', icon: 'BookOpen', anyOf: ['proofs.manage'] }),
+        tickets: item({ id: 'editorTickets', text: 'Tickets', path: '/editor/tickets', icon: 'Ticket' }),
         profile: item({ id: 'editorProfile', text: 'Profile', path: '/editor/profile', icon: 'User' }),
     },
 };
@@ -229,6 +241,7 @@ export const deliveryPageMenu: MenuGroup = {
         orders: item({ id: 'deliveryOrders', text: 'Orders', path: '/delivery/orders', icon: 'ShoppingBag', anyOf: ['orders.view'] }),
         printing: item({ id: 'deliveryPrinting', text: 'Printing', path: '/delivery/printing', icon: 'Printer', anyOf: ['printing.manage'] }),
         dispatch: item({ id: 'deliveryDispatch', text: 'Dispatch', path: '/delivery/dispatch', icon: 'Truck', anyOf: ['delivery.manage'] }),
+        tickets: item({ id: 'deliveryTickets', text: 'Tickets', path: '/delivery/tickets', icon: 'Ticket' }),
         profile: item({ id: 'deliveryProfile', text: 'Profile', path: '/delivery/profile', icon: 'User' }),
     },
 };

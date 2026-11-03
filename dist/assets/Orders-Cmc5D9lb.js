@@ -1,1 +1,0 @@
-import{y as e}from"./react-DPoVlDbV.js";import{OrdersTable as t}from"./Orders-BOVwKvtd.js";var n=e();function r(){return(0,n.jsx)(t,{base:`delivery`,title:`Orders`,subtitle:`Paid orders moving through production and delivery.`})}export{r as default};
