@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { z } from 'zod';
 import { useAuth } from '../../../hooks/useAuth';
-import { BRAND_LOGO_LIGHT_SRC, BRAND_NAME, BRAND_TAGLINE } from '../../../lib/brand';
+import { BRAND_LOGO_SRC, BRAND_NAME, BRAND_TAGLINE } from '../../../lib/brand';
 import { errorMessage } from '../../../services/api';
 import './Login.scss';
 
@@ -23,12 +23,6 @@ const pwSchema = z.object({
     studio: z.string().trim().max(80).optional(),
 });
 
-const BG_SLIDES = [
-    '/images/hero-couple-petals.jpg',
-    '/images/hero-wedding-garlands.jpg',
-    '/images/hero-couple-outdoor.jpg',
-] as const;
-
 const REMEMBER_KEY = 'nammaqr_remember_identifier';
 
 export const safeNext = (next: string | null) =>
@@ -38,7 +32,6 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [showStudio, setShowStudio] = useState(false);
     const [error, setError] = useState('');
-    const [bgSlide, setBgSlide] = useState(0);
 
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -58,12 +51,6 @@ export default function Login() {
             /* ignore */
         }
     }, [pw]);
-
-    useEffect(() => {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const id = window.setInterval(() => setBgSlide((i) => (i + 1) % BG_SLIDES.length), 8000);
-        return () => window.clearInterval(id);
-    }, []);
 
     useEffect(() => {
         document.documentElement.classList.add('login-no-scroll');
@@ -90,36 +77,82 @@ export default function Login() {
     });
 
     return (
-        <div className="cinematic-login-root">
-            <div className="cinematic-bg-layer" aria-hidden="true">
-                {BG_SLIDES.map((src, index) => (
-                    <img key={src} src={src} alt="" className={`bg-photo${index === bgSlide ? ' is-active' : ''}`} />
-                ))}
-                <div className="blur-scrim" />
-            </div>
+        <div className="split-login">
+            <aside className="split-login__visual" aria-hidden="true">
+                <div className="split-login__scene">
+                    <div className="orb orb--pink" />
+                    <div className="orb orb--gold" />
+                    <div className="orb orb--cyan" />
+                    <div className="orb orb--violet" />
 
-            <div className="login-center-stage">
-                <div className="login-glass-card">
-                    <header className="login-brand">
-                        <img src={BRAND_LOGO_LIGHT_SRC} alt={BRAND_NAME} className="login-brand__logo" />
-                        <h1 className="login-brand__title">{BRAND_NAME}</h1>
-                        <p className="login-brand__subtitle">{BRAND_TAGLINE}</p>
+                    <div className="cam-rig">
+                        <div className="cam-body">
+                            <div className="cam-top">
+                                <span className="cam-flash" />
+                                <span className="cam-hotshoe" />
+                            </div>
+                            <div className="cam-face">
+                                <div className="cam-lens">
+                                    <span className="lens-ring lens-ring--outer" />
+                                    <span className="lens-ring lens-ring--mid" />
+                                    <span className="lens-core" />
+                                </div>
+                                <div className="cam-grip" />
+                            </div>
+                        </div>
+                        <div className="cam-shadow" />
+                    </div>
+
+                    <div className="polaroid polaroid--a">
+                        <div className="polaroid__photo" />
+                        <div className="polaroid__caption" />
+                    </div>
+                    <div className="polaroid polaroid--b">
+                        <div className="polaroid__photo polaroid__photo--alt" />
+                        <div className="polaroid__caption" />
+                    </div>
+                </div>
+
+                <div className="split-login__visual-copy">
+                    <p className="split-login__eyebrow">Studio platform</p>
+                    <h2 className="split-login__headline">
+                        Capture. Share.
+                        <br />
+                        Deliver live.
+                    </h2>
+                    <p className="split-login__sub">
+                        QR galleries, AI face match, and print orders — one login for your whole team.
+                    </p>
+                </div>
+            </aside>
+
+            <main className="split-login__form-side">
+                <div className="split-login__form-card">
+                    <header className="split-login__brand">
+                        <img src={BRAND_LOGO_SRC} alt={BRAND_NAME} className="split-login__logo" />
+                        <div>
+                            <h1 className="split-login__title">{BRAND_NAME}</h1>
+                            <p className="split-login__tagline">{BRAND_TAGLINE}</p>
+                        </div>
                     </header>
 
+                    <h2 className="split-login__welcome">Welcome back</h2>
+                    <p className="split-login__hint">Sign in with your studio phone number</p>
+
                     {error && (
-                        <div className="login-error" role="alert">
+                        <div className="split-login__error" role="alert">
                             <AlertCircle className="size-3.5 shrink-0" aria-hidden />
                             <span>{error}</span>
                         </div>
                     )}
 
-                    <form onSubmit={submitPassword} noValidate className="login-form">
-                        <div className="login-field">
-                            <label htmlFor="phone" className="login-label">
+                    <form onSubmit={submitPassword} noValidate className="split-login__form">
+                        <div className="split-login__field">
+                            <label htmlFor="phone" className="split-login__label">
                                 Phone number
                             </label>
-                            <div className="login-input-wrap">
-                                <Phone className="login-input-icon size-4" aria-hidden />
+                            <div className="split-login__input-wrap">
+                                <Phone className="split-login__icon size-4" aria-hidden />
                                 <input
                                     id="phone"
                                     {...pw.register('phone')}
@@ -129,45 +162,45 @@ export default function Login() {
                                     autoFocus
                                     maxLength={10}
                                     placeholder="e.g. 9000000001"
-                                    className="login-input login-input--gold"
+                                    className="split-login__input"
                                 />
                             </div>
                             {pw.formState.errors.phone && (
-                                <p className="login-field-error">{pw.formState.errors.phone.message}</p>
+                                <p className="split-login__field-error">{pw.formState.errors.phone.message}</p>
                             )}
                         </div>
 
-                        <div className="login-field">
-                            <label htmlFor="password" className="login-label">
+                        <div className="split-login__field">
+                            <label htmlFor="password" className="split-login__label">
                                 Password
                             </label>
-                            <div className="login-input-wrap">
-                                <Lock className="login-input-icon size-4" aria-hidden />
+                            <div className="split-login__input-wrap">
+                                <Lock className="split-login__icon size-4" aria-hidden />
                                 <input
                                     id="password"
                                     {...pw.register('password')}
                                     type={showPassword ? 'text' : 'password'}
                                     autoComplete="current-password"
                                     placeholder="Enter your password"
-                                    className="login-input login-input--password"
+                                    className="split-login__input split-login__input--password"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((p) => !p)}
-                                    className="login-password-toggle"
+                                    className="split-login__toggle"
                                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
                                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                 </button>
                             </div>
                             {pw.formState.errors.password && (
-                                <p className="login-field-error">{pw.formState.errors.password.message}</p>
+                                <p className="split-login__field-error">{pw.formState.errors.password.message}</p>
                             )}
                         </div>
 
                         {showStudio && (
-                            <div className="login-field login-field--studio">
-                                <label htmlFor="studio" className="login-label">
+                            <div className="split-login__field">
+                                <label htmlFor="studio" className="split-login__label">
                                     Studio code
                                 </label>
                                 <input
@@ -176,12 +209,12 @@ export default function Login() {
                                     type="text"
                                     autoComplete="organization"
                                     placeholder="sunrise-studio"
-                                    className="login-input login-input--plain !pl-3"
+                                    className="split-login__input split-login__input--plain"
                                 />
                             </div>
                         )}
 
-                        <button type="submit" disabled={pw.formState.isSubmitting} className="login-submit">
+                        <button type="submit" disabled={pw.formState.isSubmitting} className="split-login__submit">
                             {pw.formState.isSubmitting ? (
                                 <>
                                     <NqLoader size="xs" aria-hidden label="" />
@@ -193,28 +226,24 @@ export default function Login() {
                         </button>
                     </form>
 
-                    <footer className="login-footer">
-                        <div className="login-footer-links">
-                            <Link to="/forgot-password" className="login-footer-link">
+                    <footer className="split-login__footer">
+                        <div className="split-login__links">
+                            <Link to="/forgot-password" className="split-login__link">
                                 Forgot password?
                             </Link>
-                            <span className="login-footer-dot" aria-hidden>
+                            <span className="split-login__dot" aria-hidden>
                                 ·
                             </span>
-                            <Link to="/register" className="login-footer-link">
+                            <Link to="/register" className="split-login__link">
                                 Register your company
                             </Link>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => setShowStudio((s) => !s)}
-                            className="login-footer-studio"
-                        >
+                        <button type="button" onClick={() => setShowStudio((s) => !s)} className="split-login__studio">
                             {showStudio ? 'Hide studio code' : 'Signing in to another studio?'}
                         </button>
                     </footer>
                 </div>
-            </div>
+            </main>
         </div>
     );
 }

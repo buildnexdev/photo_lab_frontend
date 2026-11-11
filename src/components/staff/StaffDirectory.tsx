@@ -353,8 +353,8 @@ export function StaffDirectory({ role, title }: { role?: Role; title: string; su
                                                     </button>
                                                 )}
                                             </article>
-                                        ))}
-                                    </div>
+                            ))}
+                        </div>
                                 )}
                                 <PageFooter page={d.page} totalPages={d.totalPages} total={d.total} onPage={setPage} />
                             </>

@@ -65,7 +65,7 @@ export default function AdminBookings() {
                             <p className="font-display text-base font-semibold tracking-tight text-stone-900">Bookings</p>
                             <p className="text-xs text-stone-500">{q.data?.total ?? 0} total</p>
                         </div>
-                    </div>
+                                            </div>
                     <SearchInput value={search} onChange={setSearch} placeholder="Booking no, customer, phone, venue" className="min-w-[12rem] flex-1" inputClassName="rounded-full" />
                     <Select wrapperClassName="w-40" aria-label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)} placeholder="All statuses" options={BOOKING_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} />
                     <div className="inline-flex rounded-lg border border-stone-200 bg-stone-50 p-0.5" role="radiogroup" aria-label="View">
@@ -74,7 +74,7 @@ export default function AdminBookings() {
                                 {v === 'table' ? <List className="size-4" /> : <LayoutGrid className="size-4" />}
                             </button>
                         ))}
-                    </div>
+                                            </div>
                     {manage && (
                         <button type="button" onClick={() => setCreating(true)} aria-label="New booking" title="New booking" className="inline-flex size-10 items-center justify-center rounded-xl bg-accent-500 text-ink-900 shadow-sm transition-colors hover:bg-accent-400">
                             <CalendarPlus className="size-5" />
@@ -108,7 +108,7 @@ export default function AdminBookings() {
                                             <tbody>
                                                 {d.items.map((r, i) => {
                                                     const due = Math.max(0, r.total_amount - r.paid_amount);
-                                                    return (
+    return (
                                                         <tr key={r.id} onClick={() => open(r)} className="cursor-pointer">
                                                             <td className="text-stone-500">{(d.page - 1) * PAGE_SIZE + i + 1}</td>
                                                             <td>
@@ -131,7 +131,7 @@ export default function AdminBookings() {
                                                                             )}
                                                                         </p>
                                                                     </div>
-                                                                </div>
+            </div>
                                                             </td>
                                                             <td>
                                                                 <span className={clsx('inline-flex rounded-md px-2 py-0.5 text-xs font-semibold', eventTone(r.event_type))}>{r.event_type}</span>
@@ -145,7 +145,7 @@ export default function AdminBookings() {
                                                                     <span className="inline-flex items-center gap-1.5 text-stone-700">
                                                                         <MapPin className="size-3.5 shrink-0 text-rose-500" />
                                                                         <span className="truncate">{r.venue}</span>
-                                                                    </span>
+                                        </span>
                                                                 ) : (
                                                                     <span className="text-stone-300">—</span>
                                                                 )}
@@ -177,12 +177,12 @@ export default function AdminBookings() {
                                                     <div className={clsx('h-1.5 bg-gradient-to-r', tone.bar)} />
                                                     <div className="p-4">
                                                         <div className="flex items-start justify-between gap-2">
-                                                            <div>
+                                        <div>
                                                                 <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">{r.booking_no}</p>
                                                                 <h3 className="font-semibold text-stone-900">{r.event_type}</h3>
                                                             </div>
                                                             <StatusBadge status={r.status} />
-                                                        </div>
+                                        </div>
                                                         <div className="mt-3 flex items-center gap-2 text-sm text-stone-700">
                                                             <span className={clsx('flex size-8 items-center justify-center rounded-lg', tone.icon)}>
                                                                 <UserRound className="size-4" />
@@ -191,7 +191,7 @@ export default function AdminBookings() {
                                                                 <span className="block truncate font-medium">{r.customer_name}</span>
                                                                 <span className="block truncate text-xs text-stone-500">{r.customer_phone ?? r.customer_email ?? '—'}</span>
                                                             </span>
-                                                        </div>
+                                    </div>
                                                         <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-stone-600">
                                                             <span className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-1 text-sky-700">
                                                                 <CalendarDays className="size-3" />
@@ -207,7 +207,7 @@ export default function AdminBookings() {
                                                                 <IndianRupee className="size-3" />
                                                                 {due > 0 ? `Due ${money(due)}` : r.total_amount ? 'Paid' : 'To quote'}
                                                             </span>
-                                                        </div>
+                                                    </div>
                                                     </div>
                                                 </article>
                                             );
@@ -219,7 +219,7 @@ export default function AdminBookings() {
                         )
                     }
                 </QueryState>
-            </section>
+                                </section>
 
             <BookingDrawer
                 id={creating ? 'new' : openId}

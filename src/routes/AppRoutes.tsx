@@ -17,6 +17,7 @@ import {
     Globe,
     Image,
     Images,
+    KeyRound,
     Layers,
     LayoutDashboard,
     ListChecks,
@@ -47,7 +48,7 @@ import { RouteError } from '../pages/Error/RouteError';
 type Loader = () => Promise<{ default: ComponentType }>;
 const page = (load: Loader): Pick<RouteObject, 'lazy'> => ({ lazy: async () => ({ Component: (await load()).default }) });
 
-const ADMIN_ACCESS = ['dashboard.view', 'customers.view', 'bookings.view', 'events.view', 'galleries.manage', 'photos.manage', 'orders.view', 'payments.view', 'pricing.manage', 'users.manage', 'staff.manage', 'reports.view', 'settings.manage', 'audit.view'];
+const ADMIN_ACCESS = ['dashboard.view', 'customers.view', 'bookings.view', 'events.view', 'galleries.manage', 'photos.manage', 'orders.view', 'payments.view', 'pricing.manage', 'users.manage', 'staff.manage', 'reports.view', 'settings.manage', 'audit.view', 'roles.manage'];
 
 const adminNav: NavSection[] = [
     {
@@ -59,9 +60,15 @@ const adminNav: NavSection[] = [
             { to: '/admin/packages', label: 'Packages', icon: PackageIcon, anyOf: ['pricing.manage'] },
             { to: '/admin/coupons', label: 'Coupons', icon: Tag, anyOf: ['pricing.manage'] },
             { to: '/admin/product-types', label: 'Product types', icon: Layers, anyOf: ['pricing.manage', 'orders.view'] },
+        ],
+    },
+    {
+        title: 'Settings',
+        items: [
             { to: '/admin/website', label: 'Website content', icon: Globe, anyOf: ['pricing.manage'] },
             { to: '/admin/settings', label: 'Settings', icon: Settings, anyOf: ['settings.manage', 'pricing.manage', 'roles.manage'] },
             { to: '/admin/audit-logs', label: 'Audit logs', icon: ShieldCheck, anyOf: ['audit.view'] },
+            { to: '/admin/user-access-control', label: 'User access control', icon: KeyRound, anyOf: ['roles.manage', 'users.manage'] },
         ],
     },
     {
@@ -237,6 +244,7 @@ export const router = createBrowserRouter([
                     { path: 'reports', ...page(() => import('../pages/Admin/Reports')) },
                     { path: 'settings', ...page(() => import('../pages/Admin/Settings')) },
                     { path: 'audit-logs', ...page(() => import('../pages/Audit/AuditLogs')) },
+                    { path: 'user-access-control', ...page(() => import('../pages/Admin/UserAccessControl')) },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },
                 ],

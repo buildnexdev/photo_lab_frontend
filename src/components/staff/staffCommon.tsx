@@ -32,6 +32,24 @@ export interface StaffAddress {
     country?: string;
 }
 
+export interface StaffKyc {
+    aadhaarNumber?: string;
+    aadhaarName?: string;
+    panNumber?: string;
+    panName?: string;
+    bankAccountName?: string;
+    bankAccountNumber?: string;
+    bankIfsc?: string;
+    bankName?: string;
+    bankBranch?: string;
+}
+
+export interface StaffOffice {
+    phone?: string;
+    email?: string;
+    loginUsername?: string;
+}
+
 export interface StaffProfile {
     personal?: {
         dob?: string;
@@ -47,7 +65,30 @@ export interface StaffProfile {
     permanentAddress?: StaffAddress & { same?: boolean };
     education?: { qualification?: string; institution?: string; field?: string; year?: string; grade?: string }[];
     experience?: { company?: string; role?: string; from?: string; to?: string; current?: boolean; description?: string }[];
+    kyc?: StaffKyc;
+    office?: StaffOffice;
 }
+
+export interface StaffDocument {
+    id: number;
+    doc_type: string;
+    file_name: string;
+    mime_type: string;
+    size_bytes: number;
+    created_at: string;
+    url: string;
+}
+
+export const STAFF_DOC_TYPES = [
+    { value: 'AADHAAR', label: 'Aadhaar' },
+    { value: 'PAN', label: 'PAN' },
+    { value: 'BANK', label: 'Bank proof' },
+    { value: 'PHOTO', label: 'Photo' },
+    { value: 'RESUME', label: 'Resume' },
+    { value: 'CERTIFICATE', label: 'Certificate' },
+    { value: 'OFFER_LETTER', label: 'Offer letter' },
+    { value: 'OTHER', label: 'Other' },
+] as const;
 
 export interface UserDetail extends UserRow {
     editor_specialties: string | null;

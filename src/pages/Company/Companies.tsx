@@ -325,10 +325,10 @@ export default function AdminCompanies({ embedded = false }: { embedded?: boolea
     return (
         <div className="companies-container space-y-6">
             {!embedded && (
-                <PageHeader
+            <PageHeader
                     title="Super Admin — Company Management"
                     subtitle="Review incoming studio requests and provision multi-tenant company accounts with selected services."
-                    actions={
+                actions={
                         <Button icon={<Plus className="size-4" />} onClick={() => openCreateModal()}>
                             New company / studio
                         </Button>
@@ -400,7 +400,7 @@ export default function AdminCompanies({ embedded = false }: { embedded?: boolea
                         }
                     >
                         {(requests) => (
-                            <div className="overflow-x-auto">
+                        <div className="overflow-x-auto">
                                 <table className="w-full min-w-[780px] text-left text-sm">
                                     <thead className="border-b border-stone-200 bg-stone-50 text-xs font-semibold uppercase tracking-wider text-stone-600">
                                         <tr>
@@ -410,9 +410,9 @@ export default function AdminCompanies({ embedded = false }: { embedded?: boolea
                                             <th className="px-4 py-3">Status</th>
                                             <th className="px-4 py-3">Submitted</th>
                                             <th className="px-4 py-3 text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-stone-100">
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-stone-100">
                                         {requests.map((req) => (
                                             <tr key={req.id} className="hover:bg-stone-50/70 transition">
                                                 <td className="px-4 py-3.5">
@@ -445,7 +445,7 @@ export default function AdminCompanies({ embedded = false }: { embedded?: boolea
                                                     ) : (
                                                         <span className="text-xs italic text-stone-400">— No notes —</span>
                                                     )}
-                                                </td>
+                                            </td>
                                                 <td className="px-4 py-3.5">
                                                     <span
                                                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -460,13 +460,13 @@ export default function AdminCompanies({ embedded = false }: { embedded?: boolea
                                                     >
                                                         {req.status}
                                                     </span>
-                                                </td>
+                                            </td>
                                                 <td className="px-4 py-3.5 text-xs text-stone-500">
                                                     {dateTime(req.created_at)}
                                                     <span className="block text-[11px] text-stone-400">
                                                         ({relative(req.created_at)})
                                                     </span>
-                                                </td>
+                                            </td>
                                                 <td className="px-4 py-3.5 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         {req.status !== 'APPROVED' ? (
@@ -496,8 +496,8 @@ export default function AdminCompanies({ embedded = false }: { embedded?: boolea
                                                                 }
                                                             >
                                                                 Mark Contacted
-                                                            </Button>
-                                                        )}
+                                                    </Button>
+                                                )}
 
                                                         <button
                                                             type="button"
@@ -512,15 +512,15 @@ export default function AdminCompanies({ embedded = false }: { embedded?: boolea
                                                             <Trash2 className="size-4" />
                                                         </button>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </QueryState>
-                </Card>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </QueryState>
+            </Card>
             )}
 
             {/* TAB 2: All Active Studios / Companies */}

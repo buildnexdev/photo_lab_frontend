@@ -25,7 +25,7 @@ if (!footers.some((item) => item.path === loginPages.login.path && item.element 
     throw new Error('Login is missing from the plain footer routes');
 }
 
-const ADMIN_ACCESS = ['dashboard.view', 'customers.view', 'bookings.view', 'events.view', 'galleries.manage', 'photos.manage', 'orders.view', 'payments.view', 'pricing.manage', 'users.manage', 'staff.manage', 'reports.view', 'settings.manage', 'audit.view'];
+const ADMIN_ACCESS = ['dashboard.view', 'customers.view', 'bookings.view', 'events.view', 'galleries.manage', 'photos.manage', 'orders.view', 'payments.view', 'pricing.manage', 'users.manage', 'staff.manage', 'reports.view', 'settings.manage', 'audit.view', 'roles.manage'];
 
 const profile = page(() => import('../pages/Shared/ProfilePage'));
 const notifications = page(() => import('../pages/Shared/NotificationsPage'));
@@ -92,6 +92,7 @@ export const router = createBrowserRouter([
                     { path: 'reports', ...page(() => import('../pages/Admin/Reports')) },
                     { path: 'settings', ...page(() => import('../pages/Admin/Settings')) },
                     { path: 'audit-logs', ...page(() => import('../pages/Audit/AuditLogs')) },
+                    { path: 'user-access-control', ...page(() => import('../pages/Admin/UserAccessControl')) },
                     { path: 'tickets', ...tickets },
                     { path: 'profile', ...profile },
                     { path: 'notifications', ...notifications },

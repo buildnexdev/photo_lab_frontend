@@ -47,10 +47,27 @@ export const masterPageMenu: MenuGroup = {
         packages: item({ id: 'packages', text: 'Packages', path: '/admin/packages', icon: 'Package', anyOf: ['pricing.manage'] }),
         coupons: item({ id: 'coupons', text: 'Coupons', path: '/admin/coupons', icon: 'Tag', anyOf: ['pricing.manage'] }),
         productTypes: item({ id: 'productTypes', text: 'Product types', path: '/admin/product-types', icon: 'Layers', anyOf: ['pricing.manage', 'orders.view'] }),
+        companies: item({ id: 'companies', text: 'Companies & Studios', path: '/admin/companies', icon: 'Building2', roles: ['SUPER_ADMIN'] }),
+    },
+};
+
+/** Studio configuration, website, access and audit. */
+export const settingsPageMenu: MenuGroup = {
+    id: 'settings',
+    text: 'Settings',
+    path: '/admin/settings',
+    icon: 'Settings',
+    subMenu: {
         website: item({ id: 'website', text: 'Website content', path: '/admin/website', icon: 'Globe', anyOf: ['pricing.manage'] }),
         settings: item({ id: 'settings', text: 'Settings', path: '/admin/settings', icon: 'Settings', anyOf: ['settings.manage', 'pricing.manage', 'roles.manage'] }),
-        companies: item({ id: 'companies', text: 'Companies & Studios', path: '/admin/companies', icon: 'Building2', roles: ['SUPER_ADMIN'] }),
         audit: item({ id: 'audit', text: 'Audit logs', path: '/admin/audit-logs', icon: 'ShieldCheck', anyOf: ['audit.view'] }),
+        userAccess: item({
+            id: 'userAccess',
+            text: 'User access control',
+            path: '/admin/user-access-control',
+            icon: 'KeyRound',
+            anyOf: ['roles.manage', 'users.manage'],
+        }),
     },
 };
 
@@ -102,7 +119,6 @@ export const userManagementPageMenu = masterPageMenu;
 export const customerManagementPageMenu = masterPageMenu;
 export const packageManagementPageMenu = masterPageMenu;
 export const productManagementPageMenu = masterPageMenu;
-export const settingsPageMenu = masterPageMenu;
 export const eventManagementPageMenu = operationPageMenu;
 export const orderManagementPageMenu = operationPageMenu;
 export const assetManagementPageMenu = operationPageMenu;
