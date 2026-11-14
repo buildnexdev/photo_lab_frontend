@@ -47,6 +47,7 @@ export const masterPageMenu: MenuGroup = {
         packages: item({ id: 'packages', text: 'Packages', path: '/admin/packages', icon: 'Package', anyOf: ['pricing.manage'] }),
         coupons: item({ id: 'coupons', text: 'Coupons', path: '/admin/coupons', icon: 'Tag', anyOf: ['pricing.manage'] }),
         productTypes: item({ id: 'productTypes', text: 'Product types', path: '/admin/product-types', icon: 'Layers', anyOf: ['pricing.manage', 'orders.view'] }),
+        products: item({ id: 'products', text: 'Products & Frames', path: '/admin/products', icon: 'ShoppingBag', anyOf: ['pricing.manage', 'orders.view'] }),
         companies: item({ id: 'companies', text: 'Companies & Studios', path: '/admin/companies', icon: 'Building2', roles: ['SUPER_ADMIN'] }),
     },
 };
@@ -97,6 +98,7 @@ export const financePageMenu: MenuGroup = {
     path: '/admin/payments',
     icon: 'Banknote',
     subMenu: {
+        expenses: item({ id: 'expenses', text: 'Day-to-day expenses', path: '/admin/expenses', icon: 'Receipt', anyOf: ['payments.view'] }),
         payments: item({ id: 'payments', text: 'Payments management', path: '/admin/payments', icon: 'Banknote', anyOf: ['payments.view'] }),
         payroll: item({ id: 'payroll', text: 'Payroll', path: '/admin/payroll', icon: 'Briefcase', anyOf: ['payments.view', 'staff.manage'] }),
         endOfDay: item({ id: 'endOfDay', text: 'End of day', path: '/admin/closing/day', icon: 'CalendarCheck', anyOf: ['payments.view', 'reports.view'] }),

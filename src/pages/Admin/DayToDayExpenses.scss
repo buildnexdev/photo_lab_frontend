@@ -1,0 +1,175 @@
+// Developer by: Buildnexdev.in
+// Devevloper : Nandhakumar@gmail.com
+// Last Edited : 13-11-2026
+
+.day-expenses {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .stat-card-glow {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        color: #fff;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: -2.5rem;
+            right: -2.5rem;
+            width: 7rem;
+            height: 7rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            pointer-events: none;
+        }
+    }
+
+    .modal-type-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+
+        &.active-expense {
+            background-color: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.39);
+        }
+
+        &.active-income {
+            background-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
+        }
+
+        &.inactive {
+            background-color: #f1f5f9;
+            color: #64748b;
+
+            &:hover {
+                background-color: #e2e8f0;
+                color: #334155;
+            }
+        }
+    }
+
+    .category-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #475569;
+
+        &:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        &.selected-expense {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+            font-weight: 600;
+        }
+
+        &.selected-income {
+            background: #d1fae5;
+            border-color: #6ee7b7;
+            color: #047857;
+            font-weight: 600;
+        }
+    }
+
+    .payment-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+
+        &.cash {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        &.upi {
+            background-color: #eef2ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+        }
+
+        &.bank {
+            background-color: #f0f9ff;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        &.card {
+            background-color: #faf5ff;
+            color: #6b21a8;
+            border: 1px solid #e9d5ff;
+        }
+
+        &.cheque {
+            background-color: #fefce8;
+            color: #854d0e;
+            border: 1px solid #fef08a;
+        }
+    }
+
+    .date-group-header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .txn-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background-color 0.15s ease;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover {
+            background-color: #f8fafc;
+        }
+    }
+}
+

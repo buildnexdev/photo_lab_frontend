@@ -95,9 +95,9 @@ export interface UserDetail extends UserRow {
     profile?: StaffProfile;
 }
 
-export const STAFF_ROLE_CODES: Role[] = ['SUPER_ADMIN', 'STUDIO_OWNER', 'COMPANY_ADMIN', 'MANAGER', 'PHOTOGRAPHER', 'EDITOR_DESIGNER', 'STAFF', 'PRINTER_DELIVERY_STAFF', 'REPORT_MANAGER', 'FINANCE'];
+export const STAFF_ROLE_CODES: Role[] = ['SUPER_ADMIN', 'STUDIO_OWNER', 'COMPANY_ADMIN', 'MANAGER', 'FINANCE', 'PHOTOGRAPHER', 'VIDEOGRAPHER', 'EDITOR_DESIGNER', 'STAFF', 'PRINTER_DELIVERY_STAFF', 'REPORT_MANAGER'];
 /** Roles shown when creating / editing staff (Company Admin removed). */
-export const ASSIGNABLE_STAFF_ROLES: Role[] = ['MANAGER', 'PHOTOGRAPHER', 'EDITOR_DESIGNER', 'STAFF', 'PRINTER_DELIVERY_STAFF', 'REPORT_MANAGER', 'FINANCE'];
+export const ASSIGNABLE_STAFF_ROLES: Role[] = ['MANAGER', 'FINANCE', 'PHOTOGRAPHER', 'VIDEOGRAPHER', 'EDITOR_DESIGNER', 'STAFF', 'PRINTER_DELIVERY_STAFF', 'REPORT_MANAGER'];
 
 const AVATAR_TONES = ['bg-violet-100 text-violet-700', 'bg-amber-100 text-amber-700', 'bg-rose-100 text-rose-700', 'bg-sky-100 text-sky-700', 'bg-emerald-100 text-emerald-700', 'bg-orange-100 text-orange-700', 'bg-teal-100 text-teal-700', 'bg-fuchsia-100 text-fuchsia-700'];
 

@@ -1008,7 +1008,7 @@ export default function AdminCompanies({ embedded = false }: { embedded?: boolea
                             className="w-full"
                             icon={<Copy className="size-4" />}
                             onClick={() => {
-                                const details = `Welcome to NammaQR Studio Platform!\n\nCompany: ${created.name}\nStudio Code: ${created.slug}\nEmail: ${created.ownerEmail}\nPassword: ${created.ownerPassword}\nLogin Portal: https://nammaqr.in/login`;
+                                const details = `Welcome to Buildnex Studio Platform!\n\nCompany: ${created.name}\nStudio Code: ${created.slug}\nEmail: ${created.ownerEmail}\nPassword: ${created.ownerPassword}\nLogin Portal: https://buildnexstudio.in/login`;
                                 navigator.clipboard.writeText(details).then(() => toast.success('Credentials copied to clipboard!'));
                             }}
                         >

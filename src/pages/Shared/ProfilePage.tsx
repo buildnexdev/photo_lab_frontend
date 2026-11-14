@@ -58,7 +58,7 @@ const passwordSchema = z
 
 const describeAgent = (ua: string | null) => {
     if (!ua) return 'Unknown device';
-    if (/NammaqrMobile|PhotoLabMobile|okhttp/i.test(ua)) return 'Nammaqr mobile app';
+    if (/BuildnexMobile|NammaqrMobile|PhotoLabMobile|okhttp/i.test(ua)) return 'Buildnex mobile app';
     const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
     const os = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Mac OS/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';
     return os ? `${browser} on ${os}` : browser;

@@ -3,7 +3,7 @@
 // Last Edited : 06-10-2026
 import { Check, CheckCircle2, ChevronDown, ChevronUp, Clock, ExternalLink, ImagePlus, Loader2, Package, PackageCheck, PackagePlus, Pencil, RefreshCw, Save, Search, ShoppingBag, Trash2, Truck, Upload, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api';
 import { ProductCanvas } from '../Shop/PhotoShop';
 import { getOrders, getProducts, imageFileToDataUrl, normalizeProducts, saveOrders, saveProducts, SHOP_CATEGORIES, SHOP_ORDER_STATUSES, type PhotoAdjustment, type ProductCategory, type ShopOrder, type ShopProduct } from '../../helpers/shop/photoShop';
@@ -14,6 +14,7 @@ const adjustment: PhotoAdjustment = { x: 0, y: 0, zoom: 1, rotation: 0, fit: 'fi
 const money = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 
 export default function PhotoProducts({ embedded = false }: { embedded?: boolean }) {
+    const queryClient = useQueryClient();
     const [products, setProducts] = useState(getProducts);
     const [orders, setOrders] = useState<ShopOrder[]>(getOrders);
     const [tab, setTab] = useState<'products' | 'orders'>('products');
@@ -64,6 +65,7 @@ export default function PhotoProducts({ embedded = false }: { embedded?: boolean
                 ...currentWebsite,
                 products: newProducts,
             });
+            queryClient.invalidateQueries({ queryKey: ['settings'] });
         } catch (err) {
             console.error('Failed to sync products to website settings:', err);
         }

@@ -1,4 +1,4 @@
-/** Admin / portal shell — shared layout tokens (Nammaqr studio suite). */
+/** Admin / portal shell — shared layout tokens (Buildnex Studio suite). */
 
 export const portalSidebarWidth = 'lg:pl-[280px]';
 

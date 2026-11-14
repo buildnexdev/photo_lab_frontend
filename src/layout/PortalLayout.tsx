@@ -66,6 +66,8 @@ export function NammaqrBrand({ dark = false }: { clientName?: string; clientLogo
     );
 }
 
+export const BuildnexBrand = NammaqrBrand;
+
 function useLiveClock() {
     const [now, setNow] = useState(() => new Date());
     useEffect(() => {

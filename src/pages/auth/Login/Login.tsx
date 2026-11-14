@@ -23,7 +23,7 @@ const pwSchema = z.object({
     studio: z.string().trim().max(80).optional(),
 });
 
-const REMEMBER_KEY = 'nammaqr_remember_identifier';
+const REMEMBER_KEY = 'buildnex_remember_identifier';
 
 export const safeNext = (next: string | null) =>
     next && next.startsWith('/') && !next.startsWith('//') ? next : null;

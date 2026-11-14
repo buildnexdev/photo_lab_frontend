@@ -9,7 +9,7 @@ type Props = ImgHTMLAttributes<HTMLImageElement> & {
     variant?: 'default' | 'light';
 };
 
-/** Standard NQ / Nammaqr emblem image (transparent PNG). */
+/** Standard Buildnexstudio emblem image (transparent PNG). */
 export function BrandMark({ className, alt = BRAND_NAME, variant = 'default', src, ...rest }: Props) {
     const source = src ?? (variant === 'light' ? BRAND_LOGO_LIGHT_SRC : BRAND_LOGO_SRC);
     return <img src={source} alt={alt} className={clsx('object-contain', className)} draggable={false} {...rest} />;

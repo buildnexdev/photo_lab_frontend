@@ -1,46 +1,62 @@
 import type { SessionPayload, SessionUser } from '../../services/api';
 
-export type Role = 'SUPER_ADMIN' | 'STUDIO_OWNER' | 'COMPANY_ADMIN' | 'MANAGER' | 'PHOTOGRAPHER' | 'EDITOR_DESIGNER' | 'STAFF' | 'PRINTER_DELIVERY_STAFF' | 'REPORT_MANAGER' | 'FINANCE' | 'CUSTOMER';
+export type Role =
+    | 'SUPER_ADMIN'
+    | 'STUDIO_OWNER'
+    | 'COMPANY_ADMIN'
+    | 'MANAGER'
+    | 'FINANCE'
+    | 'PHOTOGRAPHER'
+    | 'VIDEOGRAPHER'
+    | 'EDITOR_DESIGNER'
+    | 'STAFF'
+    | 'PRINTER_DELIVERY_STAFF'
+    | 'REPORT_MANAGER'
+    | 'CUSTOMER'
+    | string;
 
-export const ROLE_LABELS: Record<Role, string> = {
+export const ROLE_LABELS: Record<string, string> = {
     SUPER_ADMIN: 'Super Admin',
-    STUDIO_OWNER: 'Company Owner',
+    STUDIO_OWNER: 'Admin / Owner',
     COMPANY_ADMIN: 'Company Admin',
     MANAGER: 'Manager',
+    FINANCE: 'Finance',
     PHOTOGRAPHER: 'Photographer',
+    VIDEOGRAPHER: 'Videographer',
     EDITOR_DESIGNER: 'Editor',
-    STAFF: 'Staff',
+    STAFF: 'Studio Staff',
     PRINTER_DELIVERY_STAFF: 'Print & Delivery Staff',
     REPORT_MANAGER: 'Report Manager',
-    FINANCE: 'Finance Team',
     CUSTOMER: 'Customer',
 };
 
-export const ROLE_LEVEL: Record<Role, number> = {
+export const ROLE_LEVEL: Record<string, number> = {
     SUPER_ADMIN: 100,
     STUDIO_OWNER: 1,
     COMPANY_ADMIN: 1,
     MANAGER: 2,
-    PHOTOGRAPHER: 3,
-    EDITOR_DESIGNER: 4,
-    STAFF: 5,
-    PRINTER_DELIVERY_STAFF: 5,
-    REPORT_MANAGER: 6,
-    FINANCE: 7,
+    FINANCE: 3,
+    PHOTOGRAPHER: 4,
+    VIDEOGRAPHER: 4,
+    EDITOR_DESIGNER: 5,
+    STAFF: 6,
+    PRINTER_DELIVERY_STAFF: 6,
+    REPORT_MANAGER: 7,
     CUSTOMER: 0,
 };
 
-const ROLE_HOME: Record<Role, string> = {
+const ROLE_HOME: Record<string, string> = {
     SUPER_ADMIN: '/admin/companies',
     STUDIO_OWNER: '/admin/dashboard',
     COMPANY_ADMIN: '/admin/dashboard',
     MANAGER: '/admin/dashboard',
+    FINANCE: '/admin/expenses',
     PHOTOGRAPHER: '/photographer/dashboard',
+    VIDEOGRAPHER: '/photographer/dashboard',
     EDITOR_DESIGNER: '/editor/dashboard',
     STAFF: '/delivery/dashboard',
     PRINTER_DELIVERY_STAFF: '/delivery/dashboard',
     REPORT_MANAGER: '/admin/reports',
-    FINANCE: '/admin/payments',
     CUSTOMER: '/customer/dashboard',
 };
 

@@ -45,7 +45,7 @@ async function razorpayCheckout(intent: CheckoutIntent, form: OnboardingForm): P
             key: intent.keyId ?? '',
             amount: intent.amount,
             currency: intent.currency,
-            name: 'Nammaqr',
+            name: 'Buildnexstudio',
             description: `Studio setup — ${form.companyName}`,
             order_id: intent.providerOrderId,
             prefill: { name: form.ownerName, email: form.email, contact: form.phone },
