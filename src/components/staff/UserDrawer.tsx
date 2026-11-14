@@ -6,13 +6,16 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import {
     Briefcase,
+    Building2,
     Camera,
     Check,
     ChevronLeft,
     ClipboardList,
+    FileUp,
     GraduationCap,
     HeartPulse,
     Home,
+    IdCard,
     KeyRound,
     MapPin,
     Pencil,
@@ -25,7 +28,7 @@ import {
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useFieldArray, useForm, type FieldErrors } from 'react-hook-form';
 import { z } from 'zod';
-import { api, applyFieldErrors } from '../../services/api';
+import { api, applyFieldErrors, errorMessage } from '../../services/api';
 import { ROLE_LABELS, useAuth, type Role } from '../../hooks/useAuth';
 import { useInvalidate } from '../../hooks';
 import { digitsOnly10, emailRule, passwordRule, phoneRule } from '../../helpers/validation';
@@ -33,16 +36,25 @@ import { Checkbox, Field, FormGrid, Input, PasswordInput, Select, Textarea } fro
 import { Drawer, useConfirm } from '../ui/Overlay';
 import { useToast } from '../ui/Toast';
 import { Button } from '../ui';
-import { ASSIGNABLE_STAFF_ROLES, Avatar, type StaffProfile, type UserDetail } from './staffCommon';
+import { ASSIGNABLE_STAFF_ROLES, Avatar, STAFF_DOC_TYPES, type StaffDocument, type StaffProfile, type UserDetail } from './staffCommon';
 
 const PHOTO_ACCEPT = /^image\/(jpeg|png|webp)$/i;
+const DOC_ACCEPT = /^image\/(jpeg|png|webp)|application\/pdf$/i;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const MAX_DOC_BYTES = 10 * 1024 * 1024;
 
 const uploadStaffPhoto = (userId: number, file: File) => {
     const form = new FormData();
     form.append('docType', 'PHOTO');
     form.append('file', file);
     return api.send<{ id: number; url: string }[]>('POST', `/api/users/${userId}/documents`, form);
+};
+
+const uploadStaffDocument = (userId: number, docType: string, file: File) => {
+    const form = new FormData();
+    form.append('docType', docType);
+    form.append('file', file);
+    return api.send<StaffDocument[]>('POST', `/api/users/${userId}/documents`, form);
 };
 
 const text = (max: number) => z.string().trim().max(max, `Use at most ${max} characters`);
@@ -80,6 +92,22 @@ const schema = (isNew: boolean) =>
             permanentAddress: address.extend({ same: z.boolean() }),
             education: z.array(z.object({ qualification: text(120), institution: text(160), field: text(120), year: optionalPattern(/^(19|20)\d{2}$/, 'Enter a year like 2018'), grade: text(20) })),
             experience: z.array(z.object({ company: text(160), role: text(120), from: z.string(), to: z.string(), current: z.boolean(), description: text(1000) })),
+            kyc: z.object({
+                aadhaarNumber: optionalPattern(/^\d{12}$/, 'Enter a 12-digit Aadhaar number'),
+                aadhaarName: text(120),
+                panNumber: optionalPattern(/^[A-Z]{5}[0-9]{4}[A-Z]$/i, 'Enter a valid PAN (e.g. ABCDE1234F)'),
+                panName: text(120),
+                bankAccountName: text(120),
+                bankAccountNumber: optionalPattern(/^\d{9,18}$/, 'Enter a valid account number'),
+                bankIfsc: optionalPattern(/^[A-Z]{4}0[A-Z0-9]{6}$/i, 'Enter a valid IFSC'),
+                bankName: text(120),
+                bankBranch: text(120),
+            }),
+            office: z.object({
+                phone: z.union([z.literal(''), phoneRule]),
+                email: z.union([z.literal(''), emailRule]),
+                loginUsername: text(120),
+            }),
         })
         .superRefine((v, ctx) => {
             if (v.password && v.password !== v.confirmPassword) ctx.addIssue({ code: 'custom', path: ['confirmPassword'], message: 'Passwords do not match' });
@@ -95,6 +123,18 @@ type Form = z.infer<ReturnType<typeof schema>>;
 const EMPTY_ADDRESS = { line1: '', line2: '', city: '', state: '', pincode: '', country: 'India' };
 const EMPTY_EDUCATION = { qualification: '', institution: '', field: '', year: '', grade: '' };
 const EMPTY_EXPERIENCE = { company: '', role: '', from: '', to: '', current: false, description: '' };
+const EMPTY_KYC = {
+    aadhaarNumber: '',
+    aadhaarName: '',
+    panNumber: '',
+    panName: '',
+    bankAccountName: '',
+    bankAccountNumber: '',
+    bankIfsc: '',
+    bankName: '',
+    bankBranch: '',
+};
+const EMPTY_OFFICE = { phone: '', email: '', loginUsername: '' };
 
 function toForm(u: UserDetail | null, defaultRole?: Role): Form {
     const p: StaffProfile = u?.profile ?? {};
@@ -116,6 +156,8 @@ function toForm(u: UserDetail | null, defaultRole?: Role): Form {
         permanentAddress: { ...EMPTY_ADDRESS, same: true, ...p.permanentAddress },
         education: (p.education ?? []).map((e) => ({ ...EMPTY_EDUCATION, ...e })),
         experience: (p.experience ?? []).map((e) => ({ ...EMPTY_EXPERIENCE, ...e })),
+        kyc: { ...EMPTY_KYC, ...p.kyc, panNumber: (p.kyc?.panNumber ?? '').toUpperCase(), bankIfsc: (p.kyc?.bankIfsc ?? '').toUpperCase() },
+        office: { ...EMPTY_OFFICE, ...p.office },
     };
 }
 
@@ -128,15 +170,23 @@ function toProfile(v: Form): StaffProfile {
         permanentAddress: v.permanentAddress.same ? { same: true } : compact(v.permanentAddress),
         education: v.education.filter((e) => e.qualification || e.institution).map(compact),
         experience: v.experience.filter((e) => e.company || e.role).map((e) => compact({ ...e, to: e.current ? '' : e.to })),
+        kyc: compact({
+            ...v.kyc,
+            panNumber: v.kyc.panNumber.toUpperCase(),
+            bankIfsc: v.kyc.bankIfsc.toUpperCase(),
+        }),
+        office: compact(v.office),
     };
 }
 
 const SECTIONS = [
     { title: 'Account details', hint: 'Basic and personal details', icon: ClipboardList, fields: ['name', 'email', 'phone', 'designation', 'department', 'personal'] },
     { title: 'Address', hint: 'Current and permanent address', icon: MapPin, fields: ['address', 'permanentAddress'] },
+    { title: 'KYC details', hint: 'Aadhaar, PAN and bank', icon: IdCard, fields: ['kyc'] },
+    { title: 'Documents', hint: 'Upload ID and proofs', icon: FileUp, fields: [] },
     { title: 'Education', hint: 'Degrees and courses', icon: GraduationCap, fields: ['education'] },
     { title: 'Experience', hint: 'Previous jobs', icon: Briefcase, fields: ['experience'] },
-    { title: 'Password', hint: 'Sign-in password', icon: KeyRound, fields: ['password', 'confirmPassword'] },
+    { title: 'Office details', hint: 'Office contact and login', icon: Building2, fields: ['office', 'password', 'confirmPassword'] },
     { title: 'Role & access', hint: 'Role and account status', icon: ShieldCheck, fields: ['roles', 'status', 'cameraGear', 'specialties', 'software'] },
 ] as const;
 
@@ -176,7 +226,13 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
     const isNew = id === 'new';
     const [step, setStep] = useState(0);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [docType, setDocType] = useState<string>('AADHAAR');
     const detail = useQuery({ queryKey: ['users', 'detail', id], queryFn: () => api.get<UserDetail>(`/api/users/${id}`), enabled: typeof id === 'number' });
+    const docs = useQuery({
+        queryKey: ['users', 'documents', id],
+        queryFn: () => api.get<StaffDocument[]>(`/api/users/${id}/documents`),
+        enabled: typeof id === 'number',
+    });
     const {
         register,
         control,
@@ -193,6 +249,7 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
     useEffect(() => {
         setStep(0);
         setPhotoFile(null);
+        setDocType('AADHAAR');
     }, [id]);
     useEffect(() => {
         if (isNew) reset(toForm(null, defaultRole));
@@ -224,6 +281,39 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
         setPhotoFile(file);
     };
 
+    const uploadDoc = useMutation({
+        mutationFn: ({ file, type }: { file: File; type: string }) => uploadStaffDocument(id as number, type, file),
+        onSuccess: (r) => {
+            toast.success(r.message || 'Document uploaded');
+            invalidate(['users', 'documents', id], ['users']);
+            docs.refetch();
+        },
+        onError: (e) => toast.error(errorMessage(e)),
+    });
+
+    const removeDoc = useMutation({
+        mutationFn: (docId: number) => api.send('DELETE', `/api/users/${id}/documents/${docId}`),
+        onSuccess: (r) => {
+            toast.success(r.message || 'Document removed');
+            invalidate(['users', 'documents', id], ['users']);
+            docs.refetch();
+        },
+        onError: (e) => toast.error(errorMessage(e)),
+    });
+
+    const pickDocument = (file: File | undefined) => {
+        if (!file || typeof id !== 'number') return;
+        if (!DOC_ACCEPT.test(file.type) && !/\.(jpe?g|png|webp|pdf)$/i.test(file.name)) {
+            toast.error('Use a JPG, PNG, WebP or PDF file.');
+            return;
+        }
+        if (file.size > MAX_DOC_BYTES) {
+            toast.error('Document must be 10 MB or smaller.');
+            return;
+        }
+        uploadDoc.mutate({ file, type: docType });
+    };
+
     const del = useMutation({
         mutationFn: () => api.send('DELETE', `/api/users/${id}`),
         onSuccess: (r) => {
@@ -239,8 +329,8 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
         if (idx >= 0) setStep(idx);
     };
     const submit = handleSubmit(async (v) => {
-        const { confirmPassword: _, personal: _1, address: _2, permanentAddress: _3, education: _4, experience: _5, ...core } = v;
-        void _; void _1; void _2; void _3; void _4; void _5;
+        const { confirmPassword: _, personal: _1, address: _2, permanentAddress: _3, education: _4, experience: _5, kyc: _6, office: _7, ...core } = v;
+        void _; void _1; void _2; void _3; void _4; void _5; void _6; void _7;
         const body = {
             ...core,
             roles: v.roles,
@@ -496,7 +586,134 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
                             </>
                         )}
 
-                        {step === 2 &&
+                        {step === 2 && (
+                            <>
+                                <Panel icon={<IdCard className="size-4 text-amber-500" />} title="Aadhaar">
+                                    <FormGrid cols={2}>
+                                        <Input
+                                            label="Aadhaar number"
+                                            inputMode="numeric"
+                                            maxLength={12}
+                                            {...register('kyc.aadhaarNumber', {
+                                                onChange: (e) => setValue('kyc.aadhaarNumber', String(e.target.value).replace(/\D/g, '').slice(0, 12), { shouldValidate: true }),
+                                            })}
+                                            error={errors.kyc?.aadhaarNumber?.message}
+                                            hint="12 digits"
+                                        />
+                                        <Input label="Name as on Aadhaar" {...register('kyc.aadhaarName')} error={errors.kyc?.aadhaarName?.message} />
+                                    </FormGrid>
+                                </Panel>
+                                <Panel icon={<IdCard className="size-4 text-sky-500" />} title="PAN">
+                                    <FormGrid cols={2}>
+                                        <Input
+                                            label="PAN number"
+                                            maxLength={10}
+                                            {...register('kyc.panNumber', {
+                                                onChange: (e) => setValue('kyc.panNumber', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10), { shouldValidate: true }),
+                                            })}
+                                            error={errors.kyc?.panNumber?.message}
+                                            hint="e.g. ABCDE1234F"
+                                        />
+                                        <Input label="Name as on PAN" {...register('kyc.panName')} error={errors.kyc?.panName?.message} />
+                                    </FormGrid>
+                                </Panel>
+                                <Panel icon={<Building2 className="size-4 text-emerald-500" />} title="Bank details">
+                                    <FormGrid cols={3}>
+                                        <Input label="Account holder name" {...register('kyc.bankAccountName')} error={errors.kyc?.bankAccountName?.message} />
+                                        <Input label="Account number" inputMode="numeric" {...register('kyc.bankAccountNumber')} error={errors.kyc?.bankAccountNumber?.message} />
+                                        <Input
+                                            label="IFSC"
+                                            maxLength={11}
+                                            {...register('kyc.bankIfsc', {
+                                                onChange: (e) => setValue('kyc.bankIfsc', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11), { shouldValidate: true }),
+                                            })}
+                                            error={errors.kyc?.bankIfsc?.message}
+                                        />
+                                        <Input label="Bank name" {...register('kyc.bankName')} error={errors.kyc?.bankName?.message} />
+                                        <Input label="Branch" {...register('kyc.bankBranch')} error={errors.kyc?.bankBranch?.message} />
+                                    </FormGrid>
+                                </Panel>
+                            </>
+                        )}
+
+                        {step === 3 && (
+                            <>
+                                {isNew ? (
+                                    <EmptyBlock
+                                        icon={<FileUp className="size-6" />}
+                                        title="Save staff first"
+                                        hint="Create the staff member, then reopen to upload Aadhaar, PAN, bank proof and other documents."
+                                        onAdd={() => setStep(SECTIONS.length - 1)}
+                                        addLabel="Continue to role"
+                                    />
+                                ) : (
+                                    <>
+                                        <Panel icon={<FileUp className="size-4 text-violet-500" />} title="Upload documents">
+                                            <FormGrid cols={3}>
+                                                <Select label="Document type" value={docType} onChange={(e) => setDocType(e.target.value)} options={STAFF_DOC_TYPES.map((d) => ({ value: d.value, label: d.label }))} />
+                                                <div className="sm:col-span-2 flex items-end">
+                                                    <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-stone-300 bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700 hover:bg-white">
+                                                        <Plus className="size-4" />
+                                                        {uploadDoc.isPending ? 'Uploading…' : 'Choose file (PDF / JPG / PNG)'}
+                                                        <input
+                                                            type="file"
+                                                            accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf"
+                                                            className="sr-only"
+                                                            disabled={uploadDoc.isPending}
+                                                            onChange={(e) => {
+                                                                pickDocument(e.target.files?.[0]);
+                                                                e.target.value = '';
+                                                            }}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </FormGrid>
+                                            <p className="mt-2 text-xs text-stone-500">Max 10 MB each. You can upload multiple documents of any type.</p>
+                                        </Panel>
+                                        <Panel icon={<ClipboardList className="size-4 text-stone-500" />} title={`Uploaded files (${docs.data?.length ?? 0})`}>
+                                            {docs.isLoading ? (
+                                                <p className="text-sm text-stone-500">Loading documents…</p>
+                                            ) : (docs.data?.length ?? 0) === 0 ? (
+                                                <p className="text-sm text-stone-500">No documents uploaded yet.</p>
+                                            ) : (
+                                                <ul className="divide-y divide-stone-100">
+                                                    {(docs.data ?? []).map((d) => (
+                                                        <li key={d.id} className="flex flex-wrap items-center gap-3 py-3">
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="truncate text-sm font-semibold text-stone-900">{d.file_name}</p>
+                                                                <p className="text-xs text-stone-500">
+                                                                    {STAFF_DOC_TYPES.find((t) => t.value === d.doc_type)?.label ?? d.doc_type}
+                                                                    {' · '}
+                                                                    {(d.size_bytes / 1024).toFixed(0)} KB
+                                                                </p>
+                                                            </div>
+                                                            <a href={d.url} target="_blank" rel="noreferrer" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50">
+                                                                View
+                                                            </a>
+                                                            <button
+                                                                type="button"
+                                                                className="inline-flex size-8 items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50"
+                                                                disabled={removeDoc.isPending}
+                                                                onClick={async () => {
+                                                                    if (await ask({ title: 'Remove document?', message: `${d.file_name} will be deleted.`, confirmLabel: 'Remove' })) {
+                                                                        removeDoc.mutate(d.id);
+                                                                    }
+                                                                }}
+                                                                aria-label={`Remove ${d.file_name}`}
+                                                            >
+                                                                <Trash2 className="size-4" />
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </Panel>
+                                    </>
+                                )}
+                            </>
+                        )}
+
+                        {step === 4 &&
                             (education.fields.length === 0 ? (
                                 <EmptyBlock icon={<GraduationCap className="size-6" />} title="No education added" hint="Add degrees, diplomas or certifications, starting with the highest." onAdd={() => education.append(EMPTY_EDUCATION)} addLabel="Add education" />
                             ) : (
@@ -527,7 +744,7 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
                                 </>
                             ))}
 
-                        {step === 3 &&
+                        {step === 5 &&
                             (experience.fields.length === 0 ? (
                                 <EmptyBlock icon={<Briefcase className="size-6" />} title="No experience added" hint="Add previous studios or companies, starting with the most recent. Leave empty for freshers." onAdd={() => experience.append(EMPTY_EXPERIENCE)} addLabel="Add experience" />
                             ) : (
@@ -563,16 +780,35 @@ export function UserDrawer({ id, defaultRole, onClose }: { id: number | 'new' | 
                                 </>
                             ))}
 
-                        {step === 4 && (
-                            <Panel icon={<KeyRound className="size-4 text-sky-500" />} title={isNew ? 'Create password' : 'Change password'}>
-                                <FormGrid>
-                                    <PasswordInput label={isNew ? 'Password' : 'New password'} autoComplete="new-password" required={isNew} {...register('password')} error={errors.password?.message} hint={isNew ? 'At least 8 characters with a letter and a number.' : 'Leave blank to keep the current password. Setting one signs them out.'} />
-                                    <PasswordInput label="Confirm password" autoComplete="new-password" required={isNew} {...register('confirmPassword')} error={errors.confirmPassword?.message} hint="Type the same password again." />
-                                </FormGrid>
-                            </Panel>
+                        {step === 6 && (
+                            <>
+                                <Panel icon={<Building2 className="size-4 text-amber-500" />} title="Office contact">
+                                    <FormGrid cols={3}>
+                                        <Input
+                                            label="Office phone number"
+                                            type="tel"
+                                            inputMode="numeric"
+                                            maxLength={10}
+                                            {...register('office.phone', {
+                                                onChange: (e) => setValue('office.phone', digitsOnly10(e.target.value), { shouldValidate: true }),
+                                            })}
+                                            error={errors.office?.phone?.message}
+                                            hint="10 digits"
+                                        />
+                                        <Input label="Office email" type="email" {...register('office.email')} error={errors.office?.email?.message} placeholder="name@studio.com" />
+                                        <Input label="Login username" {...register('office.loginUsername')} error={errors.office?.loginUsername?.message} hint="Optional studio login ID" placeholder="e.g. photographer01" />
+                                    </FormGrid>
+                                </Panel>
+                                <Panel icon={<KeyRound className="size-4 text-sky-500" />} title={isNew ? 'Login password' : 'Change login password'}>
+                                    <FormGrid>
+                                        <PasswordInput label={isNew ? 'Password' : 'New password'} autoComplete="new-password" required={isNew} {...register('password')} error={errors.password?.message} hint={isNew ? 'At least 8 characters with a letter and a number.' : 'Leave blank to keep the current password. Setting one signs them out.'} />
+                                        <PasswordInput label="Confirm password" autoComplete="new-password" required={isNew} {...register('confirmPassword')} error={errors.confirmPassword?.message} hint="Type the same password again." />
+                                    </FormGrid>
+                                </Panel>
+                            </>
                         )}
 
-                        {step === 5 && (
+                        {step === 7 && (
                             <>
                                 <Panel icon={<UserRound className="size-4 text-violet-500" />} title="Role">
                                     <Field label="Role" required error={errors.roles?.message}>

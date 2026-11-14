@@ -4,12 +4,10 @@
 import clsx from 'clsx';
 import {
     Building2,
+    CircleHelp,
     ExternalLink,
-    LayoutGrid,
     LogOut,
     Menu,
-    Search,
-    Settings,
     ShieldCheck,
     User,
     X,
@@ -22,7 +20,7 @@ import { BrandMark } from '../components/brand';
 import { NotificationBell } from '../components/layout/NotificationBell';
 import { useToast } from '../components/ui/Toast';
 import { ROLE_LABELS, homeFor, useAuth, type Role } from '../hooks/useAuth';
-import { ICON_TONE_TILE, ICON_TONE_TOPBAR, toneForPath } from '../utils/iconThemes';
+import { ICON_TONE_TILE, toneForPath } from '../utils/iconThemes';
 import { useSite } from '../utils/site';
 
 export interface NavItem {
@@ -53,73 +51,83 @@ export const AREA_LINKS: AreaLink[] = [
     { to: '/customer/dashboard', label: 'My account', anyOf: ['customer.portal'] },
 ];
 
-/**
- * Nammaqr Photography studio brand lockup:
- * - Displays the client's studio name and logo in BOLD as the primary identity.
- * - Displays Nammaqr Photography co-branding subtly in small uppercase underneath.
- */
-export function NammaqrBrand({
-    clientName,
-    clientLogoUrl,
-    dark = false,
-}: {
-    clientName?: string;
-    clientLogoUrl?: string | null;
-    dark?: boolean;
-}) {
-    if (!clientName) return null;
-    const displayName = clientName.trim();
-    const initial = displayName.charAt(0).toUpperCase();
+/** Sidebar project banner (Buildnex Studio platform). */
+export function NammaqrBrand({ dark = false }: { clientName?: string; clientLogoUrl?: string | null; dark?: boolean }) {
+    return (
+        <div className={clsx('portal-brand-stack select-none', dark && 'portal-brand-dark')}>
+            <div className="portal-project-banner">
+                <BrandMark variant="light" className="portal-project-banner__mark" />
+                <div className="min-w-0">
+                    <p className="portal-project-banner__name">Buildnex Studio</p>
+                    <p className="portal-project-banner__tag">Project platform</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export const BuildnexBrand = NammaqrBrand;
+
+function useLiveClock() {
+    const [now, setNow] = useState(() => new Date());
+    useEffect(() => {
+        const id = window.setInterval(() => setNow(new Date()), 1000);
+        return () => window.clearInterval(id);
+    }, []);
+    return now;
+}
+
+function TopbarClock() {
+    const now = useLiveClock();
+    const dateLabel = new Intl.DateTimeFormat(undefined, {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+    }).format(now);
+    const timeLabel = new Intl.DateTimeFormat(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+    }).format(now);
 
     return (
-        <div className={clsx('group flex select-none items-center gap-2.5', dark && 'portal-brand-dark')}>
-            {clientLogoUrl ? (
-                <img
-                    src={clientLogoUrl}
-                    alt={displayName}
-                    className="portal-client-logo size-9 shrink-0 rounded-xl object-contain bg-white/10 p-1 border border-white/15 shadow-sm"
-                />
-            ) : (
-                <div className="portal-client-badge size-9 shrink-0 rounded-xl flex items-center justify-center font-black text-base select-none">
-                    {initial}
-                </div>
-            )}
-            <div className="min-w-0 flex-1 text-left">
-                <p className="portal-client-name truncate" title={displayName}>
-                    {displayName}
-                </p>
-            </div>
+        <div className="portal-topbar-clock" aria-live="polite">
+            <span className="portal-topbar-clock__date">{dateLabel}</span>
+            <span key={timeLabel} className="portal-topbar-clock__time">
+                {timeLabel}
+            </span>
         </div>
     );
 }
 
 function Subheader({
     pageTitle,
-    activeItem,
     area,
-    pathname,
     onMobileMenuOpen,
     notificationsLink,
+    supportLink,
     user,
+    companyName,
+    companyLogoUrl,
     profileLink,
     onLogout,
 }: {
     pageTitle: string;
-    activeItem?: NavItem;
     area?: string;
-    pathname: string;
     onMobileMenuOpen: () => void;
     notificationsLink?: string;
+    supportLink?: string;
     user: any;
+    companyName: string;
+    companyLogoUrl?: string | null;
     profileLink: string;
     onLogout: () => Promise<void>;
 }) {
-    const IconComponent = activeItem?.icon ?? LayoutGrid;
-    const tone = toneForPath(pathname, `${pageTitle} ${activeItem?.label ?? ''}`);
-    const topbarTheme = ICON_TONE_TOPBAR[tone];
-
     const isSuperAdmin = user?.roles?.includes('SUPER_ADMIN');
     const topbarRole = isSuperAdmin ? 'Super Admin' : (ROLE_LABELS[(user?.roles[0] as Role) ?? 'CUSTOMER'] ?? area);
+    const companyInitial = companyName.trim().charAt(0).toUpperCase() || 'S';
 
     return (
         <header className="portal-topbar">
@@ -127,18 +135,34 @@ function Subheader({
                 <button type="button" onClick={onMobileMenuOpen} className="portal-icon-btn lg:hidden" aria-label="Open menu">
                     <Menu className="size-5" />
                 </button>
-                <div className={clsx('portal-page-icon', topbarTheme.bg, 'shadow-lg', topbarTheme.shadow)}>
-                    <IconComponent className="size-5 text-white" strokeWidth={2.25} aria-hidden />
+
+                <div className="portal-topbar-company" title={companyName}>
+                    {companyLogoUrl ? (
+                        <img src={companyLogoUrl} alt="" className="portal-topbar-company__logo" />
+                    ) : (
+                        <span className="portal-topbar-company__badge" aria-hidden>
+                            {companyInitial}
+                        </span>
+                    )}
+                    <div className="portal-topbar-company__text">
+                        <span className="portal-topbar-company__label">Company</span>
+                        <span className="portal-topbar-company__name">{companyName}</span>
+                    </div>
                 </div>
-                <h1 className="portal-page-title">{pageTitle}</h1>
+
+                <h1 className="sr-only">{pageTitle}</h1>
             </div>
 
+            <TopbarClock />
+
             <div className="portal-topbar__trail">
-                <label className="portal-search">
-                    <Search className="size-4 shrink-0 text-accent-500" aria-hidden />
-                    <input type="search" placeholder="Search…" aria-label="Search" />
-                </label>
                 <NotificationBell allLink={notificationsLink} />
+                {supportLink ? (
+                    <Link to={supportLink} className="portal-help-btn" title="Help & support">
+                        <CircleHelp className="size-4" aria-hidden />
+                        <span className="portal-help-btn__label">Help & support</span>
+                    </Link>
+                ) : null}
                 <div className="portal-topbar-user">
                     <div className="portal-topbar-user__name">
                         {user?.name ?? 'Account'}
@@ -206,14 +230,15 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                     : activeItem.label
                 : areaDashboard;
 
-    const clientTitle = isSuperAdmin
+    const companyName = isSuperAdmin
         ? 'Platform Administration'
-        : (user?.companyName || '');
+        : (user?.companyName?.trim() || site.data?.studio?.name?.trim() || 'Your Studio');
+    const companyLogoUrl = isSuperAdmin ? null : (user?.companyLogoUrl || null);
 
     const brandHeader = (
         <div className="portal-sidebar__brand">
             <Link to={homeFor(user)} className="portal-brand-link">
-                <NammaqrBrand clientName={clientTitle} clientLogoUrl={user?.companyLogoUrl} dark />
+                <NammaqrBrand dark />
             </Link>
         </div>
     );
@@ -268,7 +293,7 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                         <aside className="portal-sidebar">
                             <div className="portal-sidebar__brand flex items-start justify-between gap-2">
                                 <Link to={homeFor(user)} className="portal-brand-link min-w-0 flex-1" onClick={() => setMobileOpen(false)}>
-                                    <NammaqrBrand clientName={clientTitle} clientLogoUrl={user?.companyLogoUrl} dark />
+                                    <NammaqrBrand dark />
                                 </Link>
                                 <button type="button" onClick={() => setMobileOpen(false)} className="portal-icon-btn shrink-0 text-white/80" aria-label="Close menu">
                                     <X className="size-5" />
@@ -282,12 +307,13 @@ export function PortalLayout({ area, sections, profileLink, notificationsLink }:
                 <div className="portal-content">
                     <Subheader
                         pageTitle={pageTitle}
-                        activeItem={activeItem}
                         area={isSuperAdmin ? 'Platform Admin' : area}
-                        pathname={location.pathname}
                         onMobileMenuOpen={() => setMobileOpen(true)}
                         notificationsLink={notificationsLink}
+                        supportLink={isSuperAdmin ? undefined : profileLink.replace(/\/profile\/?$/, '/tickets')}
                         user={user}
+                        companyName={companyName}
+                        companyLogoUrl={companyLogoUrl}
                         profileLink={profileLink}
                         onLogout={logout}
                     />

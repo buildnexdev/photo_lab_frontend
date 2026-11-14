@@ -2,7 +2,7 @@
   "name": "@photolab/web",
   "version": "1.0.0",
   "private": true,
-  "description": "Nammaqr Photography studio platform",
+  "description": "Buildnexstudio platform",
   "type": "module",
   "scripts": {
     "dev": "vite",

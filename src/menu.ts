@@ -47,10 +47,28 @@ export const masterPageMenu: MenuGroup = {
         packages: item({ id: 'packages', text: 'Packages', path: '/admin/packages', icon: 'Package', anyOf: ['pricing.manage'] }),
         coupons: item({ id: 'coupons', text: 'Coupons', path: '/admin/coupons', icon: 'Tag', anyOf: ['pricing.manage'] }),
         productTypes: item({ id: 'productTypes', text: 'Product types', path: '/admin/product-types', icon: 'Layers', anyOf: ['pricing.manage', 'orders.view'] }),
+        products: item({ id: 'products', text: 'Products & Frames', path: '/admin/products', icon: 'ShoppingBag', anyOf: ['pricing.manage', 'orders.view'] }),
+        companies: item({ id: 'companies', text: 'Companies & Studios', path: '/admin/companies', icon: 'Building2', roles: ['SUPER_ADMIN'] }),
+    },
+};
+
+/** Studio configuration, website, access and audit. */
+export const settingsPageMenu: MenuGroup = {
+    id: 'settings',
+    text: 'Settings',
+    path: '/admin/settings',
+    icon: 'Settings',
+    subMenu: {
         website: item({ id: 'website', text: 'Website content', path: '/admin/website', icon: 'Globe', anyOf: ['pricing.manage'] }),
         settings: item({ id: 'settings', text: 'Settings', path: '/admin/settings', icon: 'Settings', anyOf: ['settings.manage', 'pricing.manage', 'roles.manage'] }),
-        companies: item({ id: 'companies', text: 'Companies & Studios', path: '/admin/companies', icon: 'Building2', roles: ['SUPER_ADMIN'] }),
         audit: item({ id: 'audit', text: 'Audit logs', path: '/admin/audit-logs', icon: 'ShieldCheck', anyOf: ['audit.view'] }),
+        userAccess: item({
+            id: 'userAccess',
+            text: 'User access control',
+            path: '/admin/user-access-control',
+            icon: 'KeyRound',
+            anyOf: ['roles.manage', 'users.manage'],
+        }),
     },
 };
 
@@ -80,6 +98,7 @@ export const financePageMenu: MenuGroup = {
     path: '/admin/payments',
     icon: 'Banknote',
     subMenu: {
+        expenses: item({ id: 'expenses', text: 'Day-to-day expenses', path: '/admin/expenses', icon: 'Receipt', anyOf: ['payments.view'] }),
         payments: item({ id: 'payments', text: 'Payments management', path: '/admin/payments', icon: 'Banknote', anyOf: ['payments.view'] }),
         payroll: item({ id: 'payroll', text: 'Payroll', path: '/admin/payroll', icon: 'Briefcase', anyOf: ['payments.view', 'staff.manage'] }),
         endOfDay: item({ id: 'endOfDay', text: 'End of day', path: '/admin/closing/day', icon: 'CalendarCheck', anyOf: ['payments.view', 'reports.view'] }),
@@ -102,7 +121,6 @@ export const userManagementPageMenu = masterPageMenu;
 export const customerManagementPageMenu = masterPageMenu;
 export const packageManagementPageMenu = masterPageMenu;
 export const productManagementPageMenu = masterPageMenu;
-export const settingsPageMenu = masterPageMenu;
 export const eventManagementPageMenu = operationPageMenu;
 export const orderManagementPageMenu = operationPageMenu;
 export const assetManagementPageMenu = operationPageMenu;
@@ -122,6 +140,16 @@ export const adminMenus: MenuGroup[] = [
     operationPageMenu,
     financePageMenu,
     reportsPageMenu,
+    settingsPageMenu,
+    {
+        id: 'support',
+        text: 'Support',
+        path: '/admin/tickets',
+        icon: 'Ticket',
+        subMenu: {
+            tickets: item({ id: 'adminTickets', text: 'Tickets', path: '/admin/tickets', icon: 'Ticket' }),
+        },
+    },
 ];
 
 export const customerPageMenu: MenuGroup = {
@@ -138,6 +166,7 @@ export const customerPageMenu: MenuGroup = {
         orders: item({ id: 'customerOrders', text: 'Orders', path: '/customer/orders', icon: 'ShoppingBag' }),
         payments: item({ id: 'customerPayments', text: 'Payments', path: '/customer/payments', icon: 'Receipt' }),
         downloads: item({ id: 'customerDownloads', text: 'Downloads', path: '/customer/downloads', icon: 'Download' }),
+        tickets: item({ id: 'customerTickets', text: 'Tickets', path: '/customer/tickets', icon: 'Ticket' }),
         notifications: item({ id: 'customerNotifications', text: 'Notifications', path: '/customer/notifications', icon: 'Bell' }),
         profile: item({ id: 'customerProfile', text: 'Profile', path: '/customer/profile', icon: 'User' }),
     },
@@ -154,6 +183,7 @@ export const photographerPageMenu: MenuGroup = {
         upload: item({ id: 'photographerUpload', text: 'Upload', path: '/photographer/upload', icon: 'Upload' }),
         camera: item({ id: 'photographerCamera', text: 'Camera setup', path: '/photographer/camera-setup', icon: 'Camera' }),
         tasks: item({ id: 'photographerTasks', text: 'Tasks', path: '/photographer/tasks', icon: 'ListChecks' }),
+        tickets: item({ id: 'photographerTickets', text: 'Tickets', path: '/photographer/tickets', icon: 'Ticket' }),
         profile: item({ id: 'photographerProfile', text: 'Profile', path: '/photographer/profile', icon: 'User' }),
     },
 };
@@ -169,6 +199,7 @@ export const editorPageMenu: MenuGroup = {
         photos: item({ id: 'editorPhotos', text: 'Photos', path: '/editor/photos', icon: 'Wand2', anyOf: ['photos.edit'] }),
         albums: item({ id: 'editorAlbums', text: 'Albums', path: '/editor/albums', icon: 'BookImage', anyOf: ['proofs.manage'] }),
         proofs: item({ id: 'editorProofs', text: 'Proofs and revisions', path: '/editor/proofs', icon: 'BookOpen', anyOf: ['proofs.manage'] }),
+        tickets: item({ id: 'editorTickets', text: 'Tickets', path: '/editor/tickets', icon: 'Ticket' }),
         profile: item({ id: 'editorProfile', text: 'Profile', path: '/editor/profile', icon: 'User' }),
     },
 };
@@ -183,6 +214,7 @@ export const deliveryPageMenu: MenuGroup = {
         orders: item({ id: 'deliveryOrders', text: 'Orders', path: '/delivery/orders', icon: 'ShoppingBag', anyOf: ['orders.view'] }),
         printing: item({ id: 'deliveryPrinting', text: 'Printing', path: '/delivery/printing', icon: 'Printer', anyOf: ['printing.manage'] }),
         dispatch: item({ id: 'deliveryDispatch', text: 'Dispatch', path: '/delivery/dispatch', icon: 'Truck', anyOf: ['delivery.manage'] }),
+        tickets: item({ id: 'deliveryTickets', text: 'Tickets', path: '/delivery/tickets', icon: 'Ticket' }),
         profile: item({ id: 'deliveryProfile', text: 'Profile', path: '/delivery/profile', icon: 'User' }),
     },
 };

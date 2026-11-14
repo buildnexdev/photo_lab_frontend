@@ -398,7 +398,7 @@ function AboutSettings() {
             const w = q.data.website;
             setHistoryText(
                 w.historyText ||
-                    'Founded with a passion for authentic visual storytelling, Nammaqr Photography has spent over a decade documenting life’s most cherished celebrations.',
+                    'Founded with a passion for authentic visual storytelling, Buildnex Studio has spent over a decade documenting life’s most cherished celebrations.',
             );
             setWhyChooseUs(
                 w.whyChooseUs?.length

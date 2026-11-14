@@ -38,7 +38,7 @@ export function PublicLayout() {
                 <div className="container-page flex h-14 items-center gap-4 px-4 sm:px-6">
                     <Link to="/" className="flex items-center gap-2">
                         <BrandMark className="h-12 w-12" />
-                        <span className="font-display text-lg font-semibold">{studio?.name ?? 'Nammaqr'}</span>
+                        <span className="font-display text-lg font-semibold">{studio?.name ?? 'Buildnexstudio'}</span>
                     </Link>
                     <nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Main">
                         {LINKS.map((l) => (
@@ -94,7 +94,7 @@ export function PublicLayout() {
             <footer className="bg-ink-900 text-stone-300">
                 <div className="container-page grid gap-10 py-12 md:grid-cols-4">
                     <div className="md:col-span-2">
-                        <p className="font-display text-xl font-semibold text-white">{studio?.name ?? 'Nammaqr'}</p>
+                        <p className="font-display text-xl font-semibold text-white">{studio?.name ?? 'Buildnexstudio'}</p>
                         <p className="mt-2 max-w-md text-sm text-stone-400">{studio?.tagline}</p>
                         <div className="mt-4 flex flex-wrap gap-2">
                             {(
@@ -158,7 +158,7 @@ export function PublicLayout() {
                 </div>
                 <div className="border-t border-white/10">
                     <p className="container-page py-4 text-xs text-stone-500">
-                        © {new Date().getFullYear()} {studio?.name ?? 'Nammaqr'}. Nammaqr Photography.
+                        © {new Date().getFullYear()} {studio?.name ?? 'Buildnexstudio'}. Buildnexstudio.
                     </p>
                 </div>
             </footer>
@@ -169,7 +169,7 @@ export function PublicLayout() {
 export function AuthLayout() {
     const site = useSite();
     const location = useLocation();
-    const studioName = site.data?.studio.name ?? 'Nammaqr';
+    const studioName = site.data?.studio.name ?? 'Buildnexstudio';
 
     // Full screen view for login page (both / and /login)
     if (location.pathname === '/login' || location.pathname === '/') {
@@ -197,14 +197,14 @@ export function AuthLayout() {
                 <Link to="/" className="flex items-center gap-2 group">
                     <BrandMark variant="light" className="h-12 w-16 transition-transform group-hover:scale-105" />
                     <div className="flex items-center gap-1 font-extrabold tracking-tight text-white text-xl font-sans">
-                        <span>Nammaqr</span>
+                        <span>Buildnexstudio</span>
                     </div>
                 </Link>
 
                 <div className="flex items-center gap-3">
                     <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-accent-500/25 bg-accent-500/10 px-3 py-1 text-xs font-medium text-accent-300">
                         <span className="size-1.5 rounded-full bg-accent-400 animate-ping" />
-                        Nammaqr Photography
+                        Buildnexstudio
                     </div>
                     <Link
                         to="/login"

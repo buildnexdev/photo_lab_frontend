@@ -41,19 +41,61 @@
 }
 
 .portal-sidebar__brand {
-    padding: 1rem 0.85rem 0.85rem;
+    padding: 0.85rem 0.75rem 0.75rem;
     border-bottom: 1px solid rgba(201, 162, 75, 0.14);
 }
 
 .portal-brand-link {
     display: block;
     border-radius: 0.75rem;
-    padding: 0.25rem 0.35rem;
+    padding: 0.15rem 0.2rem;
     transition: background-color 0.15s ease;
 
     &:hover {
         background: var(--portal-sidebar-hover);
     }
+}
+
+.portal-brand-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.portal-project-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.5rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(201, 162, 75, 0.16), rgba(255, 255, 255, 0.04));
+    border: 1px solid rgba(201, 162, 75, 0.22);
+}
+
+.portal-project-banner__mark {
+    width: 1.85rem;
+    height: 1.85rem;
+    flex-shrink: 0;
+    border-radius: 0.45rem;
+}
+
+.portal-project-banner__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: #f8fafc;
+}
+
+.portal-project-banner__tag {
+    margin: 0.1rem 0 0;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(201, 162, 75, 0.85);
 }
 
 .portal-client-name {
@@ -222,11 +264,169 @@
     gap: 0.55rem;
 }
 
+.portal-topbar-company {
+    display: flex;
+    min-width: 0;
+    max-width: 12.5rem;
+    align-items: center;
+    gap: 0.5rem;
+
+    @media (min-width: 640px) {
+        max-width: 18rem;
+    }
+
+    @media (min-width: 1024px) {
+        max-width: 20rem;
+    }
+}
+
+.portal-topbar-company__logo {
+    width: 2.15rem;
+    height: 2.15rem;
+    flex-shrink: 0;
+    border-radius: 0.65rem;
+    object-fit: contain;
+    background: #f8fafc;
+    border: 1px solid rgba(214, 206, 190, 0.85);
+    padding: 0.15rem;
+}
+
+.portal-topbar-company__badge {
+    display: inline-flex;
+    width: 2.15rem;
+    height: 2.15rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.65rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #1c1917;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: 1px solid rgba(251, 191, 36, 0.5);
+}
+
+.portal-topbar-company__text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.portal-topbar-company__label {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(120, 113, 108, 0.85);
+    line-height: 1.1;
+}
+
+.portal-topbar-company__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: #1c1917;
+    line-height: 1.2;
+}
+
+.portal-topbar__divider {
+    display: none;
+    width: 1px;
+    height: 1.6rem;
+    flex-shrink: 0;
+    background: rgba(214, 206, 190, 0.95);
+
+    @media (min-width: 640px) {
+        display: block;
+    }
+}
+
+.portal-topbar-clock {
+    display: none;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 8.5rem;
+    padding: 0.15rem 0.65rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.05));
+    border: 1px solid rgba(214, 206, 190, 0.75);
+    line-height: 1.15;
+
+    @media (min-width: 768px) {
+        display: flex;
+    }
+}
+
+.portal-topbar-clock__date {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(120, 113, 108, 0.9);
+}
+
+.portal-topbar-clock__time {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #1c1917;
+    animation: portal-clock-tick 0.45s ease;
+}
+
+@keyframes portal-clock-tick {
+    from {
+        opacity: 0.35;
+        transform: translateY(3px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .portal-topbar__trail {
     display: flex;
     flex-shrink: 0;
     align-items: center;
     gap: 0.45rem;
+}
+
+.portal-help-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    padding: 0.45rem 0.7rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(214, 206, 190, 0.85);
+    background: #fff;
+    color: #44403c;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+        background: rgba(251, 191, 36, 0.12);
+        border-color: rgba(201, 162, 75, 0.55);
+        color: #1c1917;
+    }
+}
+
+.portal-help-btn__label {
+    display: none;
+
+    @media (min-width: 900px) {
+        display: inline;
+    }
 }
 
 .portal-page-icon {

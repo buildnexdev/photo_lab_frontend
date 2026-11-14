@@ -215,7 +215,7 @@ export default function AdminCustomers() {
                                                 </article>
                                             );
                                         })}
-                                    </div>
+                                            </div>
                                 )}
                                 <PageFooter page={d.page} totalPages={d.totalPages} total={d.total} onPage={setPage} pageSize={PAGE_SIZE} noun="customers" />
                             </>

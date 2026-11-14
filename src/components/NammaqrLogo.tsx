@@ -11,7 +11,7 @@ type Props = {
     transparent?: boolean;
 };
 
-export function NammaqrLogo({
+export function BuildnexLogo({
     className,
     logoClassName,
     showTagline = false,
@@ -61,3 +61,5 @@ export function NammaqrLogo({
         </div>
     );
 }
+
+export const NammaqrLogo = BuildnexLogo;

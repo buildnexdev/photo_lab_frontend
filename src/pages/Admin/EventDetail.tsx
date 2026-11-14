@@ -174,8 +174,8 @@ export default function AdminEventDetail() {
                                 <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
                                     <div className="min-w-0">
                                         <Link to="/admin/events" className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-800">
-                                            <ArrowLeft className="size-4" /> Events
-                                        </Link>
+                                        <ArrowLeft className="size-4" /> Events
+                                    </Link>
                                         <h1 className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-semibold text-stone-900">
                                             {e.title}
                                             <StatusBadge status={e.status} />
@@ -192,7 +192,7 @@ export default function AdminEventDetail() {
                                                 <span className="inline-flex items-center gap-1">
                                                     <MapPin className="size-3.5 text-rose-500" />
                                                     {e.venue}
-                                                </span>
+                                    </span>
                                             )}
                                         </p>
                                     </div>
@@ -240,9 +240,9 @@ export default function AdminEventDetail() {
                                 <div className="flex gap-1.5 overflow-x-auto border-t border-stone-100 px-4 py-2.5 sm:px-5" role="tablist">
                                     {(
                                         [
-                                            { value: 'overview', label: 'Overview' },
-                                            { value: 'selection', label: 'Customer selection' },
-                                            { value: 'culling', label: 'AI culling' },
+                                    { value: 'overview', label: 'Overview' },
+                                    { value: 'selection', label: 'Customer selection' },
+                                    { value: 'culling', label: 'AI culling' },
                                         ] as const
                                     ).map((t) => (
                                         <button key={t.value} type="button" role="tab" aria-selected={tab === t.value} onClick={() => setParams({ tab: t.value }, { replace: true })} className={clsx('rounded-full px-3 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors', tab === t.value ? 'bg-ink-900 text-accent-300' : 'bg-stone-100 text-stone-600 hover:bg-stone-200')}>
@@ -258,7 +258,7 @@ export default function AdminEventDetail() {
                                         <Kpi tone="from-violet-500 to-fuchsia-600" icon={<QrCode className="size-4" />} label="Gallery opens" value={num(e.access?.gallery_opens)} />
                                         <Kpi tone="from-amber-400 to-orange-500" icon={<Eye className="size-4" />} label="Photo views" value={num(e.access?.photo_views)} />
                                         <Kpi tone="from-emerald-500 to-teal-600" icon={<IndianRupee className="size-4" />} label="Revenue" value={money(e.revenue?.total ?? 0, true)} hint={`Orders ${money(e.revenue?.orders ?? 0, true)}`} />
-                                    </div>
+                                        </div>
                                     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.85fr)]">
                                     <div className="space-y-4">
                                         <Card title="Details">
@@ -304,12 +304,12 @@ export default function AdminEventDetail() {
                                                                     )}
                                                                 </p>
                                                             </div>
-                                                            <StatusBadge status={s.task_status} />
-                                                            {can('staff.assign') && (
+                                                                <StatusBadge status={s.task_status} />
+                                                                {can('staff.assign') && (
                                                                 <button type="button" className="rounded-lg p-1 text-stone-400 hover:bg-rose-50 hover:text-rose-600" aria-label={`Remove ${s.name}`} onClick={async () => (await ask({ title: 'Remove from event?', message: `${s.name} will no longer see this event.`, confirmLabel: 'Remove' })) && removeStaff.mutate(s.id)}>
-                                                                    <X className="size-4" />
-                                                                </button>
-                                                            )}
+                                                                        <X className="size-4" />
+                                                                    </button>
+                                                                )}
                                                         </li>
                                                     ))}
                                                 </ul>

@@ -242,7 +242,7 @@ export default function QrGallery() {
                 <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-900/50 backdrop-blur">
                     <div className="container-page flex h-14 items-center">
                         <Link to="/" className="flex items-center gap-2 font-display font-semibold text-white">
-                            <BrandMark className="h-10 w-auto" alt="Nammaqr" /> Nammaqr
+                            <BrandMark className="h-10 w-auto" alt="Buildnexstudio" /> Buildnexstudio
                         </Link>
                     </div>
                 </header>

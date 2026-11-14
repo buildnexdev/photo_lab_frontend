@@ -7,6 +7,28 @@ export default defineConfig(({ mode }) => {
     const apiTarget = env.VITE_DEV_API_TARGET || 'http://localhost:4000';
     return {
         plugins: [react(), tailwindcss()],
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    // Bootstrap 5.3 still uses legacy Sass APIs; silence until they migrate.
+                    silenceDeprecations: [
+                        'import',
+                        'if-function',
+                        'global-builtin',
+                        'color-functions',
+                    ],
+                },
+            },
+        },
+        optimizeDeps: {
+            include: [
+                'react',
+                'react-dom',
+                'react-dom/client',
+                'react-redux',
+                '@tanstack/react-query',
+            ],
+        },
         server: {
             host: '127.0.0.1',
             port: 5173,

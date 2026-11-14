@@ -289,7 +289,7 @@ export default function PhotographerUpload() {
                                         </Link>
                                     </Card>
                                 )}
-                                <Alert>For large shoots on site, the Nammaqr mobile app keeps an offline queue that survives closing the app.</Alert>
+                                <Alert>For large shoots on site, the Buildnex Studio mobile app keeps an offline queue that survives closing the app.</Alert>
                             </div>
                         </div>
                     )
