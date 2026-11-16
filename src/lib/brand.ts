@@ -1,5 +1,5 @@
-import brandEmblem from '../assets/buildnexdev-mark.png';
-import brandEmblemLight from '../assets/buildnexdev-mark.png';
+import brandEmblem from '../assets/buildnexdev-mark-gold.png';
+import brandEmblemLight from '../assets/buildnexdev-mark-gold-light.png';
 
 export const BRAND_NAME = 'Buildnex Studio';
 export const BRAND_TAGLINE = 'Building Digital Growth';
