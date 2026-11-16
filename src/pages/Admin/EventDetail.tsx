@@ -208,9 +208,14 @@ export default function AdminEventDetail() {
                                             </Button>
                                         )}
                                         {(can('photos.manage') || can('events.manage')) && (
-                                            <ButtonLink to={`/admin/events/${e.id}/upload`} variant="secondary">
-                                                <Upload className="size-4" /> Upload images
-                                            </ButtonLink>
+                                            <>
+                                                <ButtonLink to={`/admin/upload?event=${e.id}`} variant="secondary">
+                                                    <Camera className="size-4 text-emerald-600" /> Live camera upload
+                                                </ButtonLink>
+                                                <ButtonLink to={`/admin/events/${e.id}/upload`} variant="secondary">
+                                                    <Upload className="size-4" /> Upload images
+                                                </ButtonLink>
+                                            </>
                                         )}
                                         {customerLink && (
                                             <>

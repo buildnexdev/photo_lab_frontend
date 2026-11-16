@@ -6,7 +6,7 @@ import { api } from '../../services/api';
 import type { EventStatus } from '../../types';
 
 /** Statuses in which non-managers may upload photos (mirrors the server rule). */
-export const UPLOADABLE: EventStatus[] = ['LIVE', 'UPLOADING', 'PROCESSING'];
+export const UPLOADABLE: EventStatus[] = ['UPCOMING', 'LIVE', 'UPLOADING', 'PROCESSING'];
 
 export type TaskStatus = 'ASSIGNED' | 'ACCEPTED' | 'IN_PROGRESS' | 'DONE';
 

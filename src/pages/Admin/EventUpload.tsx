@@ -3,7 +3,7 @@
 // Last Edited : 27-10-2026
 import { useMutation, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { ArrowLeft, Check, Copy, ExternalLink, FolderPlus, ImagePlus, Link2, Shield, Upload } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Copy, ExternalLink, FolderPlus, ImagePlus, Link2, Shield, Upload } from 'lucide-react';
 import { useMemo, useRef, useState, type DragEvent } from 'react';
 import { Link, useParams } from 'react-router';
 import { EmptyState, QueryState } from '../../components/ui/Data';
@@ -156,6 +156,21 @@ export default function AdminEventUpload() {
             <div className="flex flex-wrap items-center gap-3">
                 <Link to={`/admin/events/${id}`} className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-800">
                     <ArrowLeft className="size-4" /> Back to event
+                </Link>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3.5 text-xs text-emerald-950 shadow-xs">
+                <div className="flex items-center gap-2.5">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                        <Camera className="size-4" />
+                    </span>
+                    <div>
+                        <p className="text-sm font-semibold text-emerald-900">Looking for Live Camera Feed / FTP Auto-Upload?</p>
+                        <p className="text-emerald-700">Connect your camera FTP folder to auto-upload shots directly to the Live QR gallery.</p>
+                    </div>
+                </div>
+                <Link to={`/admin/upload?event=${id}`} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 font-semibold text-white shadow-xs transition hover:bg-emerald-700">
+                    Open Live Camera Uploader &rarr;
                 </Link>
             </div>
 
