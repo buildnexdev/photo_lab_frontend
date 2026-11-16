@@ -84,6 +84,7 @@ export const operationPageMenu: MenuGroup = {
         galleries: item({ id: 'galleries', text: 'Galleries and QR', path: '/admin/galleries', icon: 'Images', anyOf: ['galleries.manage'] }),
         createQr: item({ id: 'createQr', text: 'Create QR', path: '/admin/qr/create', icon: 'QrCode', anyOf: ['galleries.manage'] }),
         manageQr: item({ id: 'manageQr', text: 'Manage QR', path: '/admin/qr', icon: 'ScanLine', end: true, anyOf: ['galleries.manage'] }),
+        liveUpload: item({ id: 'liveUpload', text: 'Live Camera Upload', path: '/admin/upload', icon: 'Camera', anyOf: ['photos.manage', 'events.manage'] }),
         photos: item({ id: 'photos', text: 'Photos', path: '/admin/photos', icon: 'Image', anyOf: ['photos.manage'] }),
         orders: item({ id: 'orders', text: 'Orders', path: '/admin/orders', icon: 'ShoppingBag', anyOf: ['orders.view', 'orders.manage'] }),
         printing: item({ id: 'printing', text: 'Printing', path: '/admin/printing', icon: 'Printer', anyOf: ['printing.manage'] }),
