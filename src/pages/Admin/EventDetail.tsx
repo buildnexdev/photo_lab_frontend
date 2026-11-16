@@ -148,7 +148,7 @@ export default function AdminEventDetail() {
             <QueryState query={q}>
                 {(e) => {
                     const actions = can('events.manage') ? EVENT_ACTIONS.filter((a) => a.from.includes(e.status)) : [];
-                    const customerLink = e.qr_token ? `${window.location.origin}/g/${e.qr_token}` : e.public_url;
+                    const customerLink = e.qr_token ? `${window.location.origin}/g/${e.qr_token}?src=qr` : e.public_url;
                     return (
                         <>
                             <section className="mb-4 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[var(--soft-shadow)]">

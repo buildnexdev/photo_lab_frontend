@@ -62,7 +62,7 @@ export default function QrGallery() {
     const { token: raw = '' } = useParams();
     const token = extractToken(raw);
     const [search] = useSearchParams();
-    const fromQr = useMemo(() => search.get('src') === 'qr', [search]);
+    const fromQr = true;
     const { status } = useAuth();
     const [access, setAccess] = useState<Access | null>(() => (token ? readStored(token) : null));
     const [error, setError] = useState(token ? '' : 'This gallery link is not valid.');
@@ -83,12 +83,12 @@ export default function QrGallery() {
                 title?: string | null;
                 coverUrl?: string | null;
                 openAsQr?: boolean;
-            }>('/api/gallery/access', { token, openMode: fromQr ? 'qr' : 'link' });
+            }>('/api/gallery/access', { token, openMode: 'qr' });
             const a: Access = {
                 session: r.session,
                 galleryId: r.galleryId,
                 expiresAt: Date.now() + r.expiresInHours * 3600_000,
-                openAsQr: !!r.openAsQr || fromQr,
+                openAsQr: true,
                 title: r.title ?? null,
                 coverUrl: r.coverUrl ?? null,
             };
@@ -99,15 +99,15 @@ export default function QrGallery() {
             setAccess(null);
             setError(errorMessage(e));
         }
-    }, [token, fromQr]);
+    }, [token]);
 
     // Link sessions must not keep QR bypass (and vice versa) when the same token is opened again with a different URL.
     useEffect(() => {
         if (!access || !token) return;
-        if (fromQr === !!access.openAsQr) return;
+        if (access.openAsQr) return;
         sessionStorage.removeItem(storageKey(token));
         setAccess(null);
-    }, [access, fromQr, token]);
+    }, [access, token]);
 
     useEffect(() => {
         if (status === 'loading' || access || !token || error) return;
