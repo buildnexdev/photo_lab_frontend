@@ -44,8 +44,8 @@ export default function PhotoProducts({ embedded = false }: { embedded?: boolean
     });
 
     useEffect(() => {
-        const remote = normalizeProducts(settingsData?.website?.products);
-        if (remote.length > 0) {
+        if (settingsData && settingsData.website !== undefined) {
+            const remote = normalizeProducts(settingsData?.website?.products);
             setProducts(remote);
             saveProducts(remote);
         }

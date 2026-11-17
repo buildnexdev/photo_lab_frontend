@@ -134,10 +134,8 @@ export default function PhotoShop() {
             .then((res) => {
                 if (!mounted) return;
                 const items = normalizeProducts(res);
-                if (items && items.length > 0) {
-                    setProducts(items);
-                    saveProducts(items);
-                }
+                setProducts(items);
+                saveProducts(items);
             })
             .catch((err) => {
                 console.warn('Using local catalog fallback:', err);

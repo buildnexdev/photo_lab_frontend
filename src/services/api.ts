@@ -2,7 +2,7 @@
 // Devevloper : Nandhakumar@gmail.com
 import { encryptPayload, decryptPayload } from '../utils/crypto';
 
-const DEFAULT_PROD_API = 'https://flash-studio-backend-84en.onrender.com';
+const DEFAULT_PROD_API = '';
 
 const rawApiUrl = (import.meta.env.VITE_API_URL ?? '').trim();
 const normalizedApiUrl = rawApiUrl.replace(
@@ -11,7 +11,7 @@ const normalizedApiUrl = rawApiUrl.replace(
 );
 
 export const API_BASE = (
-    normalizedApiUrl || (import.meta.env.PROD ? DEFAULT_PROD_API : '')
+    normalizedApiUrl || ''
 ).replace(/\/$/, '');
 
 const REFRESH_TIMEOUT_MS = 12_000;
@@ -48,16 +48,21 @@ export const errorMessage = (err: unknown, fallback = 'Something went wrong. Ple
 
 const ACCESS_TOKEN_KEY = 'pl_access_token';
 const STUDIO_SLUG_KEY = 'pl_studio_slug';
-let accessToken: string | null = typeof window !== 'undefined' ? sessionStorage.getItem(ACCESS_TOKEN_KEY) : null;
-let studioSlug: string | null = typeof window !== 'undefined' ? sessionStorage.getItem(STUDIO_SLUG_KEY) : null;
+let accessToken: string | null = typeof window !== 'undefined' ? (sessionStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem(ACCESS_TOKEN_KEY)) : null;
+let studioSlug: string | null = typeof window !== 'undefined' ? (sessionStorage.getItem(STUDIO_SLUG_KEY) || localStorage.getItem(STUDIO_SLUG_KEY)) : null;
 let refreshing: Promise<boolean> | null = null;
 let onSessionLost: (() => void) | null = null;
 
 export const setAccessToken = (t: string | null, slug?: string | null) => {
     accessToken = t;
     if (typeof window !== 'undefined') {
-        if (t) sessionStorage.setItem(ACCESS_TOKEN_KEY, t);
-        else sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+        if (t) {
+            sessionStorage.setItem(ACCESS_TOKEN_KEY, t);
+            localStorage.setItem(ACCESS_TOKEN_KEY, t);
+        } else {
+            sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+            localStorage.removeItem(ACCESS_TOKEN_KEY);
+        }
         if (slug !== undefined) {
             if (slug) {
                 sessionStorage.setItem(STUDIO_SLUG_KEY, slug);

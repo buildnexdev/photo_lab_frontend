@@ -1,5 +1,5 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
-import { api, refreshSession, setAccessToken, type SessionPayload } from '../../services/api';
+import { api, getAccessToken, refreshSession, setAccessToken, type SessionPayload } from '../../services/api';
 import { AUTH_LOGIN, AUTH_LOGOUT, AUTH_REGISTER, AUTH_RESTORE, authClear, authSession, type AuthLoginPayload, type AuthRegisterPayload } from './auth.types';
 
 interface Deferred {
@@ -88,7 +88,10 @@ function* logoutWorker(action: { type: typeof AUTH_LOGOUT; id: number }) {
 
 function* restoreWorker() {
     const ok: boolean = yield call(refreshSession);
-    if (!ok) yield put(authClear());
+    if (!ok) {
+        const token: string | null = yield call(getAccessToken);
+        if (!token) yield put(authClear());
+    }
 }
 
 export function* authSaga() {
