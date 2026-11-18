@@ -47,8 +47,10 @@ export const errorMessage = (err: unknown, fallback = 'Something went wrong. Ple
 /* ---------------- Access token (cached in sessionStorage across refresh; refresh token is httpOnly cookie) ---------------- */
 
 const ACCESS_TOKEN_KEY = 'pl_access_token';
+const REFRESH_TOKEN_KEY = 'pl_refresh_token';
 const STUDIO_SLUG_KEY = 'pl_studio_slug';
 let accessToken: string | null = typeof window !== 'undefined' ? (sessionStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem(ACCESS_TOKEN_KEY)) : null;
+let refreshToken: string | null = typeof window !== 'undefined' ? (sessionStorage.getItem(REFRESH_TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY)) : null;
 let studioSlug: string | null = typeof window !== 'undefined' ? (sessionStorage.getItem(STUDIO_SLUG_KEY) || localStorage.getItem(STUDIO_SLUG_KEY)) : null;
 let refreshing: Promise<boolean> | null = null;
 let onSessionLost: (() => void) | null = null;
@@ -76,7 +78,22 @@ export const setAccessToken = (t: string | null, slug?: string | null) => {
         }
     }
 };
+
+export const setRefreshToken = (rt: string | null) => {
+    refreshToken = rt;
+    if (typeof window !== 'undefined') {
+        if (rt) {
+            sessionStorage.setItem(REFRESH_TOKEN_KEY, rt);
+            localStorage.setItem(REFRESH_TOKEN_KEY, rt);
+        } else {
+            sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+            localStorage.removeItem(REFRESH_TOKEN_KEY);
+        }
+    }
+};
+
 export const getAccessToken = () => accessToken;
+export const getRefreshToken = () => refreshToken;
 export const getStudioSlug = () => studioSlug;
 export const setSessionLostHandler = (fn: (() => void) | null) => {
     onSessionLost = fn;
@@ -121,33 +138,55 @@ export function refreshSession(): Promise<boolean> {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
             try {
+                const rt = getRefreshToken();
+                const headers: Record<string, string> = {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-Encrypted': 'true',
+                    'X-Client': 'mobile',
+                    Accept: 'application/json',
+                };
+                let bodyPayload: string | undefined = undefined;
+                if (rt) {
+                    headers['Content-Type'] = 'application/json';
+                    bodyPayload = JSON.stringify({ refreshToken: rt });
+                }
+
                 const res = await fetch(`${API_BASE}/api/auth/refresh`, {
                     method: 'POST',
                     credentials: 'include',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Encrypted': 'true', Accept: 'application/json' },
+                    headers,
+                    body: bodyPayload,
                     signal: controller.signal,
                 });
                 const type = res.headers.get('content-type') ?? '';
                 if (!res.ok || !type.includes('application/json')) {
-                    accessToken = null;
-                    refreshListeners.forEach((l) => l(null));
+                    // Only clear token if we did not already have a valid session in storage
+                    const currentStorageToken = typeof window !== 'undefined' ? localStorage.getItem(ACCESS_TOKEN_KEY) : null;
+                    if (!currentStorageToken) {
+                        accessToken = null;
+                        refreshListeners.forEach((l) => l(null));
+                    }
                     return false;
                 }
                 const rawJson = (await res.json()) as any;
                 const body = (rawJson && typeof rawJson.payload === 'string'
                     ? await decryptPayload(rawJson.payload)
-                    : rawJson) as { success?: boolean; data?: SessionPayload };
+                    : rawJson) as { success?: boolean; data?: SessionPayload & { refreshToken?: string } };
                 if (body.success === false || !body.data?.accessToken || !body.data.user) {
-                    accessToken = null;
-                    refreshListeners.forEach((l) => l(null));
+                    const currentStorageToken = typeof window !== 'undefined' ? localStorage.getItem(ACCESS_TOKEN_KEY) : null;
+                    if (!currentStorageToken) {
+                        accessToken = null;
+                        refreshListeners.forEach((l) => l(null));
+                    }
                     return false;
                 }
-                accessToken = body.data.accessToken;
+                setAccessToken(body.data.accessToken, body.data.studioSlug);
+                if (body.data.refreshToken) {
+                    setRefreshToken(body.data.refreshToken);
+                }
                 refreshListeners.forEach((l) => l(body.data!));
                 return true;
             } catch {
-                accessToken = null;
-                refreshListeners.forEach((l) => l(null));
                 return false;
             } finally {
                 clearTimeout(timer);
@@ -207,6 +246,7 @@ export async function apiSend<T>(path: string, opts: RequestOptions = {}): Promi
     const headers: Record<string, string> = {
         'X-Requested-With': 'XMLHttpRequest',
         'X-Encrypted': 'true',
+        'X-Client': 'mobile',
         ...(opts.headers ?? {}),
     };
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;

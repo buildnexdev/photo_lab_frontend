@@ -1,5 +1,5 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
-import { api, getAccessToken, refreshSession, setAccessToken, type SessionPayload } from '../../services/api';
+import { api, getAccessToken, refreshSession, setAccessToken, setRefreshToken, type SessionPayload } from '../../services/api';
 import { AUTH_LOGIN, AUTH_LOGOUT, AUTH_REGISTER, AUTH_RESTORE, authClear, authSession, type AuthLoginPayload, type AuthRegisterPayload } from './auth.types';
 
 interface Deferred {
@@ -54,6 +54,9 @@ function* loginWorker(action: { type: typeof AUTH_LOGIN; payload: AuthLoginPaylo
             studio: action.payload.studio,
         });
         yield call(setAccessToken, session.accessToken, session.studioSlug);
+        if ((session as any).refreshToken) {
+            yield call(setRefreshToken, (session as any).refreshToken);
+        }
         yield put(authSession(session.user));
         finish(action.payload.id, null, session);
     } catch (error) {
@@ -66,6 +69,9 @@ function* registerWorker(action: { type: typeof AUTH_REGISTER; payload: AuthRegi
         const { id, ...body } = action.payload;
         const session: SessionPayload = yield call(registerRequest, body);
         yield call(setAccessToken, session.accessToken, session.studioSlug);
+        if ((session as any).refreshToken) {
+            yield call(setRefreshToken, (session as any).refreshToken);
+        }
         yield put(authSession(session.user));
         finish(id, null, session);
     } catch (error) {
@@ -77,16 +83,29 @@ function* logoutWorker(action: { type: typeof AUTH_LOGOUT; id: number }) {
     try {
         yield call(logoutRequest);
         yield call(setAccessToken, null);
+        yield call(setRefreshToken, null);
         yield put(authClear());
         finish(action.id, null);
     } catch (error) {
         yield call(setAccessToken, null);
+        yield call(setRefreshToken, null);
         yield put(authClear());
         finish(action.id, error);
     }
 }
 
 function* restoreWorker() {
+    const existingToken: string | null = yield call(getAccessToken);
+    if (existingToken) {
+        // User already has an authenticated session in localStorage/sessionStorage.
+        // We attempt a silent background refresh to keep the token fresh.
+        // If refresh fails (e.g. cookie issue or offline), we NEVER force-logout the user!
+        try {
+            yield call(refreshSession);
+        } catch {}
+        return;
+    }
+
     const ok: boolean = yield call(refreshSession);
     if (!ok) {
         const token: string | null = yield call(getAccessToken);
